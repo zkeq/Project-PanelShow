@@ -121,123 +121,195 @@ export default function Home() {
                 核心优势
               </h2>
               <p className="mt-4 text-muted-foreground">
-                基于现代技术栈构建的下一代作品集展示平台
+                为开发者打造的现代化项目展示解决方案
               </p>
             </div>
             
             <div className="mx-auto mt-16 max-w-6xl">
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50">
-                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-blue-500/10" />
-                  <CardHeader className="relative">
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-                      <Monitor className="h-5 w-5 text-blue-600" />
+                <Card className="group relative overflow-hidden hover:shadow-lg transition-all duration-300 border bg-gradient-to-b from-blue-50/50 to-white dark:from-blue-950/20 dark:to-background">
+                  <CardHeader className="pb-4">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors duration-300">
+                      <Monitor className="h-6 w-6 text-blue-700 dark:text-blue-400" />
                     </div>
-                    <CardTitle>真实交互体验</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                      Live Interactive Demo
+                    </CardTitle>
                     <CardDescription>
-                      告别静态截图，体验真正的项目界面
+                      真实项目交互，非静态展示
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative">
-                    <p className="text-sm text-muted-foreground">
-                      访客可以点击、滚动、输入，完整体验每个项目的用户界面和交互流程，
-                      获得与真实在线应用完全一致的使用体验。
+                  <CardContent>
+                    <p className="text-sm leading-relaxed text-muted-foreground mb-4">
+                      支持完整的用户交互操作，包括点击、表单输入、路由跳转等，
+                      让访客体验真实的应用功能流程。
                     </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-950/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        React
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-950/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        Vue
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-950/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        Angular
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
 
-                <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/50 dark:to-pink-950/50">
-                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-purple-500/10" />
-                  <CardHeader className="relative">
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10">
-                      <Database className="h-5 w-5 text-purple-600" />
+                <Card className="group relative overflow-hidden hover:shadow-lg transition-all duration-300 border bg-gradient-to-b from-purple-50/50 to-white dark:from-purple-950/20 dark:to-background">
+                  <CardHeader className="pb-4">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition-colors duration-300">
+                      <Database className="h-6 w-6 text-purple-700 dark:text-purple-400" />
                     </div>
-                    <CardTitle>智能 API 快照</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                      API Snapshot Engine
+                    </CardTitle>
                     <CardDescription>
-                      本地化后端服务，永久保持项目活力
+                      智能 API 响应缓存与管理
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative">
-                    <p className="text-sm text-muted-foreground">
-                      自动缓存和管理 API 响应数据，即使原始后端服务停止运行，
-                      项目依然能够完美展示所有功能特性。
+                  <CardContent>
+                    <p className="text-sm leading-relaxed text-muted-foreground mb-4">
+                      自动记录和回放 API 请求响应，确保项目在原始后端服务下线后
+                      依然能够完整展示业务逻辑。
                     </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-950/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                        REST
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-950/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                        GraphQL
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-purple-50 dark:bg-purple-950/30 px-2 py-1 text-xs font-medium text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                        WebSocket
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
 
-                <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50">
-                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-green-500/10" />
-                  <CardHeader className="relative">
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
-                      <Rocket className="h-5 w-5 text-green-600" />
+                <Card className="group relative overflow-hidden hover:shadow-lg transition-all duration-300 border bg-gradient-to-b from-emerald-50/50 to-white dark:from-emerald-950/20 dark:to-background">
+                  <CardHeader className="pb-4">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/30 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/50 transition-colors duration-300">
+                      <Rocket className="h-6 w-6 text-emerald-700 dark:text-emerald-400" />
                     </div>
-                    <CardTitle>现代化架构</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                      Modern Tech Stack
+                    </CardTitle>
                     <CardDescription>
-                      基于最新技术栈的高性能展示平台
+                      企业级技术架构与性能优化
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative">
-                    <p className="text-sm text-muted-foreground">
-                      采用 Next.js 14、TypeScript、Tailwind CSS 等前沿技术，
-                      确保极致的用户体验和开发效率。
+                  <CardContent>
+                    <p className="text-sm leading-relaxed text-muted-foreground mb-4">
+                      基于 Next.js 14、TypeScript、Tailwind CSS 构建，
+                      支持 SSR、ISR、Edge Runtime 等现代化特性。
                     </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-950/30 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        Next.js
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-950/30 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        TypeScript
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-950/30 px-2 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        Vercel
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
 
-                <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/50 dark:to-red-950/50">
-                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-orange-500/10" />
-                  <CardHeader className="relative">
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
-                      <Shield className="h-5 w-5 text-orange-600" />
+                <Card className="group relative overflow-hidden hover:shadow-lg transition-all duration-300 border bg-gradient-to-b from-orange-50/50 to-white dark:from-orange-950/20 dark:to-background">
+                  <CardHeader className="pb-4">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50 transition-colors duration-300">
+                      <Shield className="h-6 w-6 text-orange-700 dark:text-orange-400" />
                     </div>
-                    <CardTitle>企业级安全</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                      Security & Privacy
+                    </CardTitle>
                     <CardDescription>
-                      数据安全与隐私保护的完美平衡
+                      数据安全与隐私保护机制
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative">
-                    <p className="text-sm text-muted-foreground">
-                      所有敏感数据本地化处理，确保项目信息安全的同时，
-                      为访客提供完整的功能演示体验。
+                  <CardContent>
+                    <p className="text-sm leading-relaxed text-muted-foreground mb-4">
+                      敏感数据本地化处理，支持数据脱敏、访问控制、
+                      审计日志等企业级安全特性。
                     </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center rounded-md bg-orange-50 dark:bg-orange-950/30 px-2 py-1 text-xs font-medium text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+                        HTTPS
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-orange-50 dark:bg-orange-950/30 px-2 py-1 text-xs font-medium text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+                        OAuth
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-orange-50 dark:bg-orange-950/30 px-2 py-1 text-xs font-medium text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
+                        RBAC
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
 
-                <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950/50 dark:to-blue-950/50">
-                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-cyan-500/10" />
-                  <CardHeader className="relative">
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/10">
-                      <Zap className="h-5 w-5 text-cyan-600" />
+                <Card className="group relative overflow-hidden hover:shadow-lg transition-all duration-300 border bg-gradient-to-b from-cyan-50/50 to-white dark:from-cyan-950/20 dark:to-background">
+                  <CardHeader className="pb-4">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900/30 group-hover:bg-cyan-200 dark:group-hover:bg-cyan-900/50 transition-colors duration-300">
+                      <Zap className="h-6 w-6 text-cyan-700 dark:text-cyan-400" />
                     </div>
-                    <CardTitle>极速响应</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                      Performance Optimized
+                    </CardTitle>
                     <CardDescription>
-                      毫秒级响应，流畅的用户体验
+                      极致性能与用户体验优化
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative">
-                    <p className="text-sm text-muted-foreground">
-                      基于边缘计算和智能缓存技术，实现毫秒级响应速度，
-                      为用户提供丝滑流畅的项目体验过程。
+                  <CardContent>
+                    <p className="text-sm leading-relaxed text-muted-foreground mb-4">
+                      Edge CDN 分发、智能预加载、资源压缩、
+                      Tree Shaking 等多种性能优化策略。
                     </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center rounded-md bg-cyan-50 dark:bg-cyan-950/30 px-2 py-1 text-xs font-medium text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                        CDN
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-cyan-50 dark:bg-cyan-950/30 px-2 py-1 text-xs font-medium text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                        Cache
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-cyan-50 dark:bg-cyan-950/30 px-2 py-1 text-xs font-medium text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                        Lighthouse
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
 
-                <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50">
-                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-indigo-500/10" />
-                  <CardHeader className="relative">
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10">
-                      <Users className="h-5 w-5 text-indigo-600" />
+                <Card className="group relative overflow-hidden hover:shadow-lg transition-all duration-300 border bg-gradient-to-b from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-background">
+                  <CardHeader className="pb-4">
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900/30 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50 transition-colors duration-300">
+                      <Users className="h-6 w-6 text-indigo-700 dark:text-indigo-400" />
                     </div>
-                    <CardTitle>多用户支持</CardTitle>
+                    <CardTitle className="text-lg font-semibold">
+                      Developer Experience
+                    </CardTitle>
                     <CardDescription>
-                      支持多人同时访问和体验项目
+                      完整的开发者工具链支持
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative">
-                    <p className="text-sm text-muted-foreground">
-                      高并发架构设计，支持多人同时访问和体验项目，
-                      满足团队展示和客户演示的各种场景需求。
+                  <CardContent>
+                    <p className="text-sm leading-relaxed text-muted-foreground mb-4">
+                      提供 CLI 工具、SDK、API 文档、
+                      项目模板等完整开发者生态。
                     </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-950/30 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                        CLI
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-950/30 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                        SDK
+                      </span>
+                      <span className="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-950/30 px-2 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                        API
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -248,88 +320,155 @@ export default function Home() {
         <Separator />
 
         {/* Architecture Section */}
-        <section id="architecture" className="py-24 bg-muted/50">
+        <section id="architecture" className="py-24 bg-muted/30">
           <div className="container">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">
                 系统架构
               </h2>
               <p className="mt-4 text-muted-foreground">
-                双服务架构，完美平衡展示效果与技术实现
+                微服务架构设计，高可用与高性能并存
               </p>
             </div>
             
-            <div className="mx-auto mt-16 max-w-4xl">
-              <div className="grid gap-8 md:grid-cols-2">
-                <Card className="group relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5" />
+            <div className="mx-auto mt-16 max-w-5xl">
+              <div className="grid gap-8 lg:grid-cols-2">
+                <Card className="group relative overflow-hidden border-0 shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800" />
                   <CardHeader className="relative">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
-                      <Globe className="h-6 w-6 text-blue-600" />
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-slate-900 dark:bg-slate-100">
+                      <Globe className="h-6 w-6 text-slate-100 dark:text-slate-900" />
                     </div>
-                    <CardTitle className="text-xl">作品集展示网站</CardTitle>
+                    <CardTitle className="text-xl font-mono">Frontend Service</CardTitle>
                     <CardDescription className="text-base">
-                      精美的项目展示与交互平台
+                      Next.js 全栈应用 • 项目展示与管理平台
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-blue-500" />
-                        <span className="text-sm font-medium">项目状态实时监控</span>
+                  <CardContent className="relative space-y-6">
+                    <div className="space-y-4">
+                      <div className="rounded-md border bg-background/50 p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-green-500" />
+                          <span className="text-sm font-mono font-medium">SSR/SSG Rendering</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">服务端渲染与静态生成，SEO 友好</p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-blue-500" />
-                        <span className="text-sm font-medium">交互式项目预览</span>
+                      
+                      <div className="rounded-md border bg-background/50 p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-blue-500" />
+                          <span className="text-sm font-mono font-medium">Interactive Previews</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">项目交互式预览与实时演示</p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-blue-500" />
-                        <span className="text-sm font-medium">详细技术说明</span>
+                      
+                      <div className="rounded-md border bg-background/50 p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-purple-500" />
+                          <span className="text-sm font-mono font-medium">Admin Dashboard</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">项目管理与配置控制台</p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-blue-500" />
-                        <span className="text-sm font-medium">响应式设计适配</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-blue-500" />
-                        <span className="text-sm font-medium">SEO 优化支持</span>
-                      </div>
+                    </div>
+                    
+                    <div className="border-t pt-4">
+                      <p className="text-xs text-muted-foreground font-mono">
+                        Tech Stack: Next.js 14 • React 19 • TypeScript • Tailwind CSS
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="group relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5" />
+                <Card className="group relative overflow-hidden border-0 shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800" />
                   <CardHeader className="relative">
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10">
-                      <Database className="h-6 w-6 text-purple-600" />
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-slate-900 dark:bg-slate-100">
+                      <Database className="h-6 w-6 text-slate-100 dark:text-slate-900" />
                     </div>
-                    <CardTitle className="text-xl">API 快照服务</CardTitle>
+                    <CardTitle className="text-xl font-mono">Snapshot Service</CardTitle>
                     <CardDescription className="text-base">
-                      智能化后端数据缓存系统
+                      API 快照引擎 • 数据缓存与回放系统
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="relative space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-purple-500" />
-                        <span className="text-sm font-medium">API 响应自动缓存</span>
+                  <CardContent className="relative space-y-6">
+                    <div className="space-y-4">
+                      <div className="rounded-md border bg-background/50 p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-orange-500" />
+                          <span className="text-sm font-mono font-medium">Request Interceptor</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">HTTP/API 请求拦截与记录</p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-purple-500" />
-                        <span className="text-sm font-medium">本地化数据服务</span>
+                      
+                      <div className="rounded-md border bg-background/50 p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-red-500" />
+                          <span className="text-sm font-mono font-medium">Data Storage</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">响应数据本地化存储与管理</p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-purple-500" />
-                        <span className="text-sm font-medium">遗留项目续命</span>
+                      
+                      <div className="rounded-md border bg-background/50 p-3">
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-cyan-500" />
+                          <span className="text-sm font-mono font-medium">Mock Server</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">智能 Mock 服务与数据回放</p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-purple-500" />
-                        <span className="text-sm font-medium">无缝数据迁移</span>
+                    </div>
+                    
+                    <div className="border-t pt-4">
+                      <p className="text-xs text-muted-foreground font-mono">
+                        Tech Stack: Node.js • Express • SQLite • Redis • Docker
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Data Flow Diagram */}
+              <div className="mt-12">
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="text-center font-mono">Data Flow Architecture</CardTitle>
+                    <CardDescription className="text-center">
+                      请求流程与数据处理管道
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-center space-x-4 overflow-x-auto py-6">
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="rounded-lg bg-slate-100 dark:bg-slate-800 p-3">
+                          <Users className="h-6 w-6" />
+                        </div>
+                        <span className="text-xs font-mono">User Request</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-purple-500" />
-                        <span className="text-sm font-medium">智能数据更新</span>
+                      
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="rounded-lg bg-slate-100 dark:bg-slate-800 p-3">
+                          <Globe className="h-6 w-6" />
+                        </div>
+                        <span className="text-xs font-mono">Frontend</span>
+                      </div>
+                      
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="rounded-lg bg-slate-100 dark:bg-slate-800 p-3">
+                          <Database className="h-6 w-6" />
+                        </div>
+                        <span className="text-xs font-mono">Snapshot API</span>
+                      </div>
+                      
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="rounded-lg bg-slate-100 dark:bg-slate-800 p-3">
+                          <Monitor className="h-6 w-6" />
+                        </div>
+                        <span className="text-xs font-mono">Live Demo</span>
                       </div>
                     </div>
                   </CardContent>
