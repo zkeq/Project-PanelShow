@@ -42,7 +42,27 @@ export default function Home() {
       <main>
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-background pb-16 pt-20">
+          {/* Animated background with flowing gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-950/20 dark:via-transparent dark:to-purple-950/20" />
+          
+          {/* Flowing light effect */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -right-32 w-80 h-80 bg-gradient-radial from-blue-400/20 via-purple-400/10 to-transparent rounded-full blur-3xl animate-pulse" 
+                 style={{ 
+                   background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(168, 85, 247, 0.05) 50%, transparent 100%)',
+                   animation: 'float 6s ease-in-out infinite' 
+                 }} />
+            <div className="absolute -bottom-40 -left-32 w-80 h-80 bg-gradient-radial from-purple-400/20 via-blue-400/10 to-transparent rounded-full blur-3xl animate-pulse delay-1000" 
+                 style={{ 
+                   background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(59, 130, 246, 0.05) 50%, transparent 100%)',
+                   animation: 'float 8s ease-in-out infinite reverse' 
+                 }} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-cyan-400/10 via-transparent to-transparent rounded-full blur-3xl animate-spin" 
+                 style={{ 
+                   background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(34, 211, 238, 0.1) 90deg, transparent 180deg, rgba(168, 85, 247, 0.1) 270deg, transparent 360deg)',
+                   animationDuration: '20s' 
+                 }} />
+          </div>
           <div className="container relative">
             <div className="mx-auto max-w-4xl text-center">
               <div className="mb-6">
