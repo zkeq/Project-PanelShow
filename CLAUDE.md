@@ -1,56 +1,277 @@
 # Project-PanelShow
 
-A comprehensive portfolio showcase project that displays interactive frontend projects with localized backend functionality.
+一个全面的作品集展示项目，展示交互式前端项目并提供本地化后端功能。
 
-## Project Overview
+## 项目概述
 
-Project-PanelShow is a dual-service portfolio platform consisting of:
+Project-PanelShow 是一个双服务作品集平台，包含：
 
-1. **Portfolio Showcase Website** - A beautiful display site showing project status, descriptions, and interactive demos
-2. **API Snapshot Service** - A caching service that stores and serves API responses locally to keep legacy projects functional
+1. **作品集展示网站** - 一个美观的展示网站，显示项目状态、描述和交互式演示
+2. **API 快照服务** - 一个缓存服务，本地存储和提供 API 响应，保持遗留项目的功能
 
-## Architecture
+## 架构
 
-### Frontend Portfolio Site
-- **Framework**: Next.js with TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **Features**:
-  - Interactive project gallery
-  - Live project previews (not just screenshots)
-  - Project status indicators
-  - Detailed project descriptions
-  - Responsive design
+### 前端作品集网站
+- **框架**: Next.js + TypeScript
+- **样式**: Tailwind CSS + shadcn/ui 组件
+- **特性**:
+  - 交互式项目画廊
+  - 实时项目预览（不仅仅是截图）
+  - 项目状态指示器
+  - 详细项目描述
+  - 响应式设计
 
-### API Snapshot Service
-- **Purpose**: Cache and serve API responses for projects with deprecated backends
-- **Functionality**:
-  - Store API response snapshots
-  - Serve cached data to frontend projects
-  - Maintain project functionality even when original APIs are down
+### API 快照服务
+- **目的**: 为已弃用后端的项目缓存和提供 API 响应
+- **功能**:
+  - 存储 API 响应快照
+  - 为前端项目提供缓存数据
+  - 即使原始 API 下线也能维持项目功能
 
-## Development Commands
+## 开发命令
 
-### Frontend Development
+### 前端开发
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run typecheck    # Run TypeScript checks
+npm run dev          # 启动开发服务器
+npm run build        # 构建生产版本
+npm run start        # 启动生产服务器
+npm run lint         # 运行 ESLint
+npm run typecheck    # 运行 TypeScript 检查
 ```
 
-### Project Goals
-- Create an interactive portfolio that goes beyond static screenshots
-- Enable visitors to explore actual UI interfaces of showcased projects
-- Maintain functionality of legacy projects through API snapshots
-- Provide a professional showcase of development work
+### 项目目标
+- 创建一个超越静态截图的交互式作品集
+- 让访客能够探索展示项目的实际 UI 界面
+- 通过 API 快照维持遗留项目的功能
+- 提供专业的开发工作展示
 
-## Timeline
-Target completion: 1 month
+## 时间线
+目标完成时间：1个月
 
-## Key Features
-- ✨ Interactive project exploration
-- 📱 Responsive design
-- 🚀 Modern tech stack
-- 🔄 API response caching
-- 💼 Professional portfolio presentation
+## 核心功能
+- ✨ 交互式项目探索
+- 📱 响应式设计
+- 🚀 现代技术栈
+- 🔄 API 响应缓存
+- 💼 专业作品集展示
+
+---
+
+# UI 设计系统规范
+
+## 🎨 设计理念
+
+Project-PanelShow 设计系统遵循现代、专业的美学风格，精心打造视觉层次和流畅的交互体验。设计强调：
+
+- **现代极简主义**: 简洁、整齐的布局，有目的地使用空间
+- **专业优雅**: 精致的配色方案和排版
+- **交互卓越**: 流畅的动画和引人入胜的悬停效果
+- **无障碍优先**: 高对比度比率和包容性设计模式
+- **响应式设计**: 移动优先的方法，在所有设备上无缝适应
+
+## 🌈 色彩系统
+
+### 主要色彩调色板
+- **蓝色渐变**: `from-blue-600 to-purple-600`（Hero文本渐变）
+- **浅蓝色强调**: `blue-50/50`、`blue-100`、`blue-700`、`blue-400` 系列
+- **紫色强调**: `purple-50/50`、`purple-100`、`purple-700`、`purple-400` 系列
+
+### 主题色彩（CSS 自定义属性）
+#### 浅色主题
+- **背景**: `oklch(1 0 0)` - 纯白色
+- **前景**: `oklch(0.145 0 0)` - 极深灰色
+- **卡片背景**: `oklch(1 0 0)` - 纯白色
+- **柔和色**: `oklch(0.97 0 0)` - 浅灰色
+- **柔和前景**: `oklch(0.556 0 0)` - 中灰色
+- **边框**: `oklch(0.922 0 0)` - 浅边框
+
+#### 深色主题
+- **背景**: `oklch(0.145 0 0)` - 极深灰色
+- **前景**: `oklch(0.985 0 0)` - 近白色
+- **卡片背景**: `oklch(0.205 0 0)` - 深色卡片背景
+- **柔和色**: `oklch(0.269 0 0)` - 深色柔和
+- **边框**: `oklch(1 0 0 / 10%)` - 透明白色边框
+
+### 特定区段配色方案
+
+#### 特性区段卡片
+- **蓝色卡片**: `from-blue-50/50 to-white`、`bg-blue-100`、`text-blue-700`
+- **紫色卡片**: `from-purple-50/50 to-white`、`bg-purple-100`、`text-purple-700`
+- **翠绿卡片**: `from-emerald-50/50 to-white`、`bg-emerald-100`、`text-emerald-700`
+- **橙色卡片**: `from-orange-50/50 to-white`、`bg-orange-100`、`text-orange-700`
+- **青色卡片**: `from-cyan-50/50 to-white`、`bg-cyan-100`、`text-cyan-700`
+- **靛蓝卡片**: `from-indigo-50/50 to-white`、`bg-indigo-100`、`text-indigo-700`
+
+## 🎭 背景图案与效果
+
+### Hero 区段背景
+- **基础渐变**: `bg-gradient-to-r from-blue-50/50 via-transparent to-purple-50/50`
+- **深色模式**: `dark:from-blue-950/20 dark:via-transparent dark:to-purple-950/20`
+
+### 动画背景元素
+- **浮动光效**: 带有自定义动画的多个定位渐变球体
+- **径向渐变**: `radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(168, 85, 247, 0.05) 50%, transparent 100%)`
+- **圆锥渐变**: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(34, 211, 238, 0.1) 90deg, transparent 180deg, rgba(168, 85, 247, 0.1) 270deg, transparent 360deg)`
+
+### 区段背景
+- **默认**: `bg-background`（主题感知）
+- **架构区段**: `bg-muted/30`
+- **CTA 区段**: `bg-muted/50`
+- **卡片**: 带有微妙透明度的渐变背景
+
+## 📝 排版系统
+
+### 字体栈
+- **无衬线字体**: `var(--font-geist-sans)`（Geist Sans）
+- **等宽字体**: `var(--font-geist-mono)`（Geist Mono）
+
+### 排版比例
+- **超大显示**: `text-7xl`（大屏幕上的 Hero 标题）
+- **大显示**: `text-6xl`（中等屏幕上的 Hero 标题）
+- **小显示**: `text-5xl`（小屏幕上的 Hero 标题）
+- **大标题**: `text-4xl`（区段标题）
+- **中标题**: `text-3xl`（子区段标题）
+- **小标题**: `text-2xl`（卡片标题、统计数据）
+- **标题**: `text-xl`（卡片标题、架构服务名称）
+- **大正文**: `text-lg`（Hero 描述）
+- **正文**: `text-base`（默认正文）
+- **小正文**: `text-sm`（描述、标签）
+- **说明文字**: `text-xs`（小细节、技术栈）
+
+### 字重
+- **粗体**: `font-bold`（标题、统计数据、重要文本）
+- **半粗**: `font-semibold`（卡片标题、页脚标题）
+- **中等**: `font-medium`（导航、标签）
+- **常规**: 正文文本的默认字重
+- **等宽**: `font-mono`（技术内容、架构细节）
+
+### 文本颜色
+- **主要**: `text-foreground`（主要内容）
+- **次要**: `text-muted-foreground`（描述、次要文本）
+- **渐变**: `bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent`
+
+## 🏗️ 布局系统
+
+### 容器与间距
+- **容器**: 自定义最大宽度 `max-w-7xl` 的 `container` 和响应式内边距
+- **区段内边距**: 主要区段使用 `py-24`
+- **Hero 内边距**: Hero 区段使用 `pb-16 pt-20`
+- **卡片间距**: 卡片内部内容使用 `space-y-6`、`space-y-4`
+- **网格间隙**: 不同布局密度使用 `gap-8`、`gap-4`、`gap-2`
+
+### 网格系统
+- **特性网格**: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
+- **架构网格**: `lg:grid-cols-2`
+- **统计网格**: `grid-cols-2 sm:grid-cols-4`
+- **页脚网格**: `grid-cols-2 md:grid-cols-4`
+
+### 响应式断点（Tailwind CSS）
+- **小屏**: `sm:` - 640px 及以上
+- **中屏**: `md:` - 768px 及以上
+- **大屏**: `lg:` - 1024px 及以上
+- **超大屏**: `xl:` - 1280px 及以上
+
+## 🎯 组件设计模式
+
+### 头部导航
+- **结构**: 带有背景模糊的粘性头部
+- **背景**: `bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60`
+- **高度**: `h-16`
+- **边框**: `border-b` 底边框
+- **导航**: 在移动端隐藏（`hidden md:flex`），水平间距
+
+### Hero 区段
+- **布局**: 带有最大宽度约束的居中内容
+- **徽章**: 带有图标和文本的次要变体
+- **标题**: 带有渐变文字效果的大型响应式排版
+- **描述**: `max-w-2xl` 约束以获得最佳阅读宽度
+- **技术栈**: 带有图标的内联徽章
+- **CTA**: 带有图标的主要和轮廓按钮变体
+- **统计**: 带有大数字和小描述的网格布局
+
+### 卡片组件
+- **基础卡片**: 带有 `CardHeader`、`CardContent` 的 `Card` 组件
+- **悬停效果**: `hover:shadow-lg transition-all duration-300`
+- **组合悬停**: 用于协调悬停动画的 `group` 类
+- **图标容器**: 带有主题色背景的圆角方形
+- **徽章/标签**: 带有主题色的小型圆角元素
+
+### 特性区段卡片
+- **渐变背景**: 匹配主题色的微妙渐变
+- **图标设计**: 12x12 带有主题背景和悬停状态的圆角容器
+- **内容结构**: 带有图标和标题的头部，后面是描述和标签
+- **标签系统**: 带有颜色编码技术标签的内联弹性布局
+
+### 架构区段
+- **背景**: 柔和背景（`bg-muted/30`）
+- **服务卡片**: 带有阴影和渐变背景的无边框卡片
+- **状态指示器**: 带有标签的彩色圆点（绿、蓝、紫、橙、红、青）
+- **技术栈**: 技术规范使用等宽字体
+- **数据流**: 带有箭头连接器和图标节点的水平流
+
+### 进度区段
+- **里程碑卡片**: 基于状态的样式（已完成：绿色，进行中：蓝色，计划中：柔和色）
+- **状态徽章**: 匹配里程碑状态的颜色编码徽章
+- **图标系统**: 彩色圆圈中的编号或复选标记图标
+
+## ✨ 动画与交互设计
+
+### 悬停效果
+- **卡片悬停**: `hover:shadow-lg transition-all duration-300`
+- **图标悬停**: 组合悬停时的背景颜色过渡
+- **导航**: 文本的颜色过渡（`hover:text-foreground/80`）
+- **按钮悬停**: 内置 shadcn/ui 按钮悬停状态
+
+### 背景动画
+- **浮动动画**: 浮动元素的自定义关键帧动画
+  ```css
+  animation: 'float 6s ease-in-out infinite'
+  animation: 'float 8s ease-in-out infinite reverse'
+  ```
+- **脉冲动画**: 带有延迟的 `animate-pulse`（`delay-1000`）
+- **旋转动画**: 带有自定义持续时间的 `animate-spin`（`animationDuration: '20s'`）
+
+### 过渡规范
+- **持续时间**: 大多数过渡使用 `duration-300`（300ms）
+- **缓动**: 自然运动使用 `ease-in-out`
+- **属性**: 全面状态变化使用 `transition-all`
+- **颜色**: 仅颜色过渡使用 `transition-colors`
+
+## 🔧 组件使用指南
+
+### 何时使用各种组件类型
+
+#### 卡片
+- **特性卡片**: 使用渐变背景、图标容器和标签系统
+- **架构卡片**: 使用无边框设计，带有阴影和技术等宽字体
+- **进度卡片**: 使用基于状态的颜色，带有徽章和图标
+
+#### 按钮
+- **主要**: 带有实心背景的主要行动号召按钮
+- **轮廓**: 带有边框和透明背景的次要操作
+- **幽灵**: 如导航项等微妙操作
+- **尺寸**: 基于重要性和上下文使用 `sm`、默认、`lg`
+
+#### 排版
+- **标题**: 始终使用语义层次（h1、h2、h3）
+- **描述**: 对于不太突出的文本使用 `text-muted-foreground`
+- **技术内容**: 对于代码、API 和技术规范使用 `font-mono`
+
+#### 间距
+- **区段间距**: 主要区段始终使用 `py-24`
+- **内容间距**: 使用 `space-y-*` 工具保持一致的垂直节奏
+- **组件边距**: 使用 `gap-*` 工具保持一致的间隙
+
+### 响应式设计模式
+- **移动优先**: 从移动布局开始，为更大屏幕增强
+- **网格适应**: 使用响应式网格列（1 → 2 → 3 列）
+- **排版缩放**: 在各个断点上适当缩放字体大小
+- **间距调整**: 为不同屏幕尺寸调整内边距和外边距
+
+### 无障碍指南
+- **颜色对比**: 确保文本/背景组合符合 WCAG AA 标准
+- **焦点状态**: 为键盘导航维护可见的焦点指示器
+- **语义 HTML**: 使用适当的标题层次和语义元素
+- **图标标签**: 为图标提供适当的替代文本和 aria 标签
+
+此设计系统确保整个 Project-PanelShow 平台的视觉一致性、可维护性和专业用户体验。
