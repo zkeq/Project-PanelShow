@@ -52,23 +52,28 @@ export default function ProjectCard({
   const imageSrc = project.previewImage || defaultImages[imageIndex]
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      {/* 圆角图片预览 */}
-      <div className="relative aspect-video bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 p-3">
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group border bg-card text-card-foreground shadow-sm">
+      {/* 圆角图片预览 - ShadCN UI 风格 */}
+      <div className="relative aspect-video bg-muted/50 p-3 border-b">
         <div className="relative w-full h-full rounded-lg overflow-hidden">
           <Image
             src={imageSrc}
             alt={project.name}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </div>
         
         {/* 状态标识 */}
         {project.status === 'active' && (
-          <Badge className="absolute top-5 right-5 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+          <Badge variant="secondary" className="absolute top-4 right-4">
             活跃
+          </Badge>
+        )}
+        {project.status === 'maintained' && (
+          <Badge variant="outline" className="absolute top-4 right-4">
+            维护中
           </Badge>
         )}
       </div>
@@ -77,23 +82,23 @@ export default function ProjectCard({
         {/* 项目标题 */}
         <h3 className="text-xl font-semibold mb-4">{project.name}</h3>
 
-        {/* 四个展示数据 */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-muted-foreground">技术栈</p>
-            <p className="font-medium">{project.techStack || 'Vue + Python'}</p>
+        {/* 四个展示数据 - 一行显示 */}
+        <div className="grid grid-cols-4 gap-3 mb-4">
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">技术栈</p>
+            <p className="font-medium text-sm">{project.techStack || 'Vue + Python'}</p>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">项目类型</p>
-            <p className="font-medium">{project.projectType || '个人项目'}</p>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">项目类型</p>
+            <p className="font-medium text-sm">{project.projectType || '个人项目'}</p>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">月PV</p>
-            <p className="font-medium">{project.monthlyPV || '10w'}</p>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">月PV</p>
+            <p className="font-medium text-sm">{project.monthlyPV || '10w'}</p>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">开发周期</p>
-            <p className="font-medium">{project.developmentPeriod || '3个月'}</p>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">开发周期</p>
+            <p className="font-medium text-sm">{project.developmentPeriod || '3个月'}</p>
           </div>
         </div>
 
