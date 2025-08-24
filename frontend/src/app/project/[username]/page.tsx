@@ -431,17 +431,17 @@ export default function UserProjectPage() {
       {/* 主体内容区 */}
       <div className="flex">
         {/* 左侧目录栏 */}
-        <aside className={`border-r border-border/40 bg-card/50 transition-all duration-300 ${
-          sidebarCollapsed ? 'w-12' : 'w-56'
-        } hidden md:flex md:flex-col`}>
+        <aside className={`border-r bg-muted/10 transition-all duration-300 ${
+          sidebarCollapsed ? 'w-16' : 'w-60'
+        }`}>
           <div className="h-full flex flex-col">
             {/* 项目/时间线 切换标签 */}
             {!sidebarCollapsed && (
-              <div className="p-3 pb-2">
-                <div className="flex bg-muted/60 rounded-md p-0.5">
+              <div className="p-4 pb-2">
+                <div className="flex bg-muted rounded-lg p-1">
                   <button
                     onClick={() => setActiveTab('projects')}
-                    className={`flex-1 px-2.5 py-1 text-xs font-medium rounded-sm transition-colors ${
+                    className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'projects' 
                         ? 'bg-background text-foreground shadow-sm' 
                         : 'text-muted-foreground hover:text-foreground'
@@ -451,7 +451,7 @@ export default function UserProjectPage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('timeline')}
-                    className={`flex-1 px-2.5 py-1 text-xs font-medium rounded-sm transition-colors ${
+                    className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'timeline' 
                         ? 'bg-background text-foreground shadow-sm' 
                         : 'text-muted-foreground hover:text-foreground'
@@ -464,23 +464,23 @@ export default function UserProjectPage() {
             )}
 
             <ScrollArea className="flex-1">
-              <div className="p-3 pt-2">
+              <div className="p-4 pt-2">
                 {activeTab === 'projects' ? (
                   <div className="space-y-2">
                     {/* 所有项目选项 */}
                     <button
                       onClick={() => handleNavClick('all-projects')}
-                      className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                      className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
                         activeSection === 'all-projects' 
                           ? 'bg-primary/10 text-primary font-medium' 
-                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
                     >
-                      <Layers className="w-3.5 h-3.5" />
+                      <Layers className="w-4 h-4" />
                       {!sidebarCollapsed && <span>所有项目</span>}
                     </button>
 
-                    <Separator className="my-2" />
+                    <Separator className="my-3" />
 
                     {techStackStructure.map((category) => {
                       const Icon = category.icon
@@ -491,11 +491,11 @@ export default function UserProjectPage() {
                           {/* 分类标题 */}
                           <button
                             onClick={() => toggleCategory(category.id)}
-                            className="w-full flex items-center justify-between px-2.5 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/30 rounded-md transition-colors"
+                            className="w-full flex items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                           >
                             <div className="flex items-center space-x-2">
-                              <Icon className="w-3.5 h-3.5" />
-                              {!sidebarCollapsed && <span className="text-xs font-medium">{category.label.replace('技术栈 - ', '')}</span>}
+                              <Icon className="w-4 h-4" />
+                              {!sidebarCollapsed && <span>{category.label}</span>}
                             </div>
                             {!sidebarCollapsed && (
                               isExpanded ? 
@@ -506,7 +506,7 @@ export default function UserProjectPage() {
                           
                           {/* 子项目 */}
                           {isExpanded && !sidebarCollapsed && category.children && (
-                            <div className="ml-5 space-y-0.5 mt-1">
+                            <div className="ml-6 space-y-1">
                               {category.children.map((child) => {
                                 const ChildIcon = child.icon
                                 const isActive = activeSection === child.id
@@ -515,10 +515,10 @@ export default function UserProjectPage() {
                                   <button
                                     key={child.id}
                                     onClick={() => handleNavClick(child.id)}
-                                    className={`w-full flex items-center space-x-2 px-2 py-1 rounded-md text-xs transition-colors ${
+                                    className={`w-full flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
                                       isActive 
                                         ? 'bg-primary/10 text-primary font-medium' 
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                     }`}
                                   >
                                     <ChildIcon className="w-3 h-3" />
@@ -533,31 +533,31 @@ export default function UserProjectPage() {
                     })}
 
                     {/* 分隔线 */}
-                    <Separator className="my-2" />
+                    <Separator className="my-3" />
                     
                     {/* 单独的页面项 */}
-                    <div className="space-y-0.5">
+                    <div className="space-y-1">
                       <button
                         onClick={() => handleNavClick('experience')}
-                        className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                        className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
                           activeSection === 'experience' 
                             ? 'bg-primary/10 text-primary font-medium' 
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                         }`}
                       >
-                        <Briefcase className="w-3.5 h-3.5" />
+                        <Briefcase className="w-4 h-4" />
                         {!sidebarCollapsed && <span>工作经历</span>}
                       </button>
                       
                       <button
                         onClick={() => handleNavClick('about')}
-                        className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                        className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
                           activeSection === 'about' 
                             ? 'bg-primary/10 text-primary font-medium' 
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                         }`}
                       >
-                        <User className="w-3.5 h-3.5" />
+                        <User className="w-4 h-4" />
                         {!sidebarCollapsed && <span>关于我</span>}
                       </button>
                     </div>
@@ -570,23 +570,23 @@ export default function UserProjectPage() {
 
                 {!sidebarCollapsed && (
                   <>
-                    <Separator className="my-3" />
+                    <Separator className="my-4" />
                     
                     {/* 快速链接 */}
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground px-2.5 mb-1.5">快速链接</p>
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground px-3 mb-2">快速链接</p>
                       <a 
                         href="#" 
-                        className="flex items-center space-x-2 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded-md transition-colors"
+                        className="flex items-center space-x-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                       >
-                        <Github className="w-3 h-3" />
+                        <Github className="w-4 h-4" />
                         <span>GitHub</span>
                       </a>
                       <a 
                         href="#" 
-                        className="flex items-center space-x-2 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded-md transition-colors"
+                        className="flex items-center space-x-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                       >
-                        <Globe className="w-3 h-3" />
+                        <Globe className="w-4 h-4" />
                         <span>个人网站</span>
                       </a>
                     </div>
@@ -596,16 +596,16 @@ export default function UserProjectPage() {
             </ScrollArea>
 
             {/* 折叠按钮 */}
-            <div className="border-t border-border/40 p-2">
+            <div className="border-t p-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full h-7"
+                className="w-full"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               >
                 {sidebarCollapsed ? 
-                  <ChevronRight className="w-3 h-3" /> : 
-                  <ChevronDown className="w-3 h-3 rotate-90" />
+                  <ChevronRight className="w-4 h-4" /> : 
+                  <ChevronDown className="w-4 h-4 rotate-90" />
                 }
               </Button>
             </div>
