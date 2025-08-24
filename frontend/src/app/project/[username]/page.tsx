@@ -687,7 +687,7 @@ export default function UserProjectPage() {
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {/* 点状背景层 */}
             <div 
-              className="absolute inset-0"
+              className="absolute inset-0 dark:hidden"
               style={{
                 backgroundImage: `radial-gradient(circle at 1px 1px, rgba(156, 163, 175, 0.4) 1px, transparent 0)`,
                 backgroundSize: '20px 20px',
@@ -695,11 +695,11 @@ export default function UserProjectPage() {
               }}
             />
             
-            {/* 暗色主题下的点状背景 */}
+            {/* 暗色模式下的点状背景 - 更淡 */}
             <div 
-              className="absolute inset-0 dark:block hidden"
+              className="absolute inset-0 hidden dark:block"
               style={{
-                backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1px, transparent 0)`,
+                backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.2) 1px, transparent 0)`,
                 backgroundSize: '20px 20px',
                 backgroundPosition: '0 0'
               }}

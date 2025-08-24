@@ -114,14 +114,14 @@ export default function ProjectCard({
   // 根据索引选择颜色主题，确保相邻项目颜色不重合
   const theme = colorThemes[index % colorThemes.length]
   
-  // 为暗色模式定义具体的背景颜色
+  // 为暗色模式定义具体的背景颜色 - 带彩色渐变但遮盖点状图案
   const darkBackgrounds = [
-    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // blue
-    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // purple  
-    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // emerald
-    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // orange
-    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // cyan
-    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))'  // indigo
+    'linear-gradient(to bottom, rgba(59, 130, 246, 0.08), rgba(13, 13, 13, 0.75))', // blue - 更浅
+    'linear-gradient(to bottom, rgba(168, 85, 247, 0.08), rgba(13, 13, 13, 0.75))', // purple - 更浅
+    'linear-gradient(to bottom, rgba(34, 197, 94, 0.08), rgba(13, 13, 13, 0.75))', // emerald - 更浅
+    'linear-gradient(to bottom, rgba(249, 115, 22, 0.08), rgba(13, 13, 13, 0.75))', // orange - 更浅
+    'linear-gradient(to bottom, rgba(34, 211, 238, 0.08), rgba(13, 13, 13, 0.75))', // cyan - 更浅
+    'linear-gradient(to bottom, rgba(99, 102, 241, 0.08), rgba(13, 13, 13, 0.75))'  // indigo - 更浅
   ]
 
   return (
