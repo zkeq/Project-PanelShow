@@ -711,7 +711,7 @@ export default function UserProjectPage() {
             <div className="absolute top-1/2 left-1/3 w-32 h-32 bg-gradient-to-br from-cyan-500/8 to-blue-500/8 rounded-full blur-xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
           </div>
 
-          <div className="h-[calc(100vh-3.5rem)] overflow-auto relative z-10">
+          <div className="relative z-10">
             <div className="max-w-none p-4 sm:p-6 lg:p-8">
               {renderContent()}
             </div>
