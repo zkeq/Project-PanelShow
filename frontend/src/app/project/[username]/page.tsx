@@ -500,7 +500,7 @@ export default function UserProjectPage() {
       {/* 主体内容区 */}
       <div className="flex">
         {/* 左侧目录栏 */}
-        <aside className={`border-r bg-muted/10 transition-all duration-300 ${
+        <aside className={`border-r bg-muted/10 transition-all duration-300 fixed h-[calc(100vh-3.5rem)] z-40 ${
           sidebarCollapsed ? 'w-16' : 'w-56'
         }`}>
           <div className="h-full flex flex-col">
@@ -682,12 +682,12 @@ export default function UserProjectPage() {
         </aside>
 
         {/* 右侧内容区 */}
-        <main className="flex-1 min-w-0 relative">
+        <main className={`flex-1 min-w-0 relative min-h-[calc(100vh-3.5rem)] ${sidebarCollapsed ? 'ml-16' : 'ml-56'}`}>
           {/* 点状背景装饰 - 使用 CSS background-image 避免 hydration 问题 */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 min-h-[calc(100vh-3.5rem)] overflow-hidden pointer-events-none">
             {/* 点状背景层 */}
             <div 
-              className="absolute inset-0 dark:hidden"
+              className="absolute inset-0 min-h-full dark:hidden"
               style={{
                 backgroundImage: `radial-gradient(circle at 1px 1px, rgba(156, 163, 175, 0.4) 1px, transparent 0)`,
                 backgroundSize: '20px 20px',
@@ -697,7 +697,7 @@ export default function UserProjectPage() {
             
             {/* 暗色模式下的点状背景 - 更淡 */}
             <div 
-              className="absolute inset-0 hidden dark:block"
+              className="absolute inset-0 min-h-full hidden dark:block"
               style={{
                 backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.2) 1px, transparent 0)`,
                 backgroundSize: '20px 20px',
