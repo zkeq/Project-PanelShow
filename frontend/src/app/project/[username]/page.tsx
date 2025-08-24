@@ -615,7 +615,7 @@ export default function UserProjectPage() {
         {/* 右侧内容区 */}
         <main className="flex-1 min-w-0">
           <div className="h-[calc(100vh-3.5rem)] overflow-auto">
-            <div className="max-w-none p-6 sm:p-8 lg:p-12">
+            <div className="max-w-none p-4 sm:p-6 lg:p-8">
               {/* 背景装饰 */}
               <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
                 <div className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-blue-500/3 to-purple-500/3 rounded-full blur-3xl" />
