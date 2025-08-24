@@ -220,7 +220,7 @@ export default function ProjectCard({
           </div>
 
           {/* 展开按钮 */}
-          <div className="flex justify-center pt-2">
+          <div className="flex justify-center">
             <Button 
               variant="ghost" 
               size="sm" 
