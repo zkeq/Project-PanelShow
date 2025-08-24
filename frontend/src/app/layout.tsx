@@ -30,8 +30,9 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
+          storageKey="panelshow-theme"
           disableTransitionOnChange
         >
           {children}
