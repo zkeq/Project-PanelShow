@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
   },
   // 添加开发时的热重载配置
   ...(process.env.NODE_ENV === 'development' && {
-    webpack: (config: any) => {
+    webpack: (config: import('webpack').Configuration) => {
       config.watchOptions = {
         poll: 1000,
         aggregateTimeout: 300,
