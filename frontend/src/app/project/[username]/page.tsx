@@ -19,7 +19,8 @@ import {
   ChevronRight,
   ChevronDown,
   Cpu,
-  Layers
+  Layers,
+  Star
 } from 'lucide-react'
 
 export default function UserProjectPage() {
@@ -136,16 +137,75 @@ export default function UserProjectPage() {
       const sortedProjects = [...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       
       return (
-        <div className="grid gap-3 sm:gap-4 lg:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-          {sortedProjects.map((project, index) => (
-            <ProjectCard 
-              key={project.id}
-              project={project}
-              expandedProjects={expandedProjects}
-              onToggleExpand={toggleProjectExpansion}
-              index={index}
-            />
-          ))}
+        <div className="space-y-6">
+          {/* Zkeq 用户信息区域 */}
+          <div className="w-full bg-background border border-border/40 rounded-lg">
+            <div className="p-6">
+              <div className="flex items-start space-x-4">
+                {/* 头像 */}
+                <div className="flex-shrink-0">
+                  <img
+                    src="https://avatars.githubusercontent.com/u/62864752"
+                    alt="Zkeq"
+                    className="w-16 h-16 rounded-full border-2 border-border/60"
+                  />
+                </div>
+                
+                {/* 用户信息 */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <h1 className="text-xl font-bold text-foreground">Zkeq</h1>
+                    <span className="text-muted-foreground text-base">zkeq</span>
+                  </div>
+                  
+                  <p className="text-muted-foreground mb-2 text-sm leading-relaxed">
+                    A front-end engineer. Enjoy something that brings convenience to people. Just show, Just love.
+                  </p>
+                  
+                  <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-2">
+                    <span>195 followers</span>
+                    <span>·</span>
+                    <span>15 following</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-1 text-sm text-muted-foreground mb-2">
+                    <Briefcase className="w-4 h-4" />
+                    <span>广州图欧科技有限公司</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-4 text-sm">
+                    <span className="text-muted-foreground">Aspire to be a pure thinker.</span>
+                    <a 
+                      href="https://icodeq.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors flex items-center space-x-1"
+                    >
+                      <Globe className="w-4 h-4" />
+                      <span>icodeq.com</span>
+                    </a>
+                    <div className="flex items-center space-x-1 text-muted-foreground">
+                      <span>610</span>
+                      <Star className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 项目网格 */}
+          <div className="grid gap-3 sm:gap-4 lg:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+            {sortedProjects.map((project, index) => (
+              <ProjectCard 
+                key={project.id}
+                project={project}
+                expandedProjects={expandedProjects}
+                onToggleExpand={toggleProjectExpansion}
+                index={index}
+              />
+            ))}
+          </div>
         </div>
       )
     }
