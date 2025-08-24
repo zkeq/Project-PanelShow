@@ -16,7 +16,7 @@ RUN source ~/.zshrc && \
 RUN source ~/.zshrc && \
     npm install -g @anthropic-ai/claude-code
 
-RUN export ANTHROPIC_BASE_URL=https://code.imyaichat.com
+RUN export ANTHROPIC_BASE_URL=https://code.imyaichat.com && \
     export ANTHROPIC_AUTH_TOKEN=sk-YThp8qwJxpq6ZDERR1zqPuDqabq5Oix7StA8vAyONjS762DR
 # 以及按需安装其他软件
 # RUN apt-get update && apt-get install -y wget unzip openssh-server yarn htop
