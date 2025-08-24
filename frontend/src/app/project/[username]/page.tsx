@@ -615,15 +615,37 @@ export default function UserProjectPage() {
         </aside>
 
         {/* 右侧内容区 */}
-        <main className="flex-1 min-w-0">
-          <div className="h-[calc(100vh-3.5rem)] overflow-auto">
-            <div className="max-w-none p-4 sm:p-6 lg:p-8">
-              {/* 背景装饰 */}
-              <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-blue-500/3 to-purple-500/3 rounded-full blur-3xl" />
-                <div className="absolute bottom-20 left-20 w-72 h-72 bg-gradient-to-r from-purple-500/3 to-pink-500/3 rounded-full blur-3xl" />
-              </div>
+        <main className="flex-1 min-w-0 relative">
+          {/* 点状背景装饰 - 使用 CSS background-image 避免 hydration 问题 */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* 点状背景层 */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `radial-gradient(circle at 1px 1px, rgba(156, 163, 175, 0.4) 1px, transparent 0)`,
+                backgroundSize: '20px 20px',
+                backgroundPosition: '0 0'
+              }}
+            />
+            
+            {/* 暗色主题下的点状背景 */}
+            <div 
+              className="absolute inset-0 dark:block hidden"
+              style={{
+                backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.15) 1px, transparent 0)`,
+                backgroundSize: '20px 20px',
+                backgroundPosition: '0 0'
+              }}
+            />
+            
+            {/* 渐变装饰元素 - 与现有设计系统颜色一致 */}
+            <div className="absolute top-16 right-16 w-40 h-40 bg-gradient-to-br from-blue-500/8 to-purple-500/8 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s' }} />
+            <div className="absolute bottom-32 left-32 w-48 h-48 bg-gradient-to-tr from-purple-500/8 to-pink-500/8 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }} />
+            <div className="absolute top-1/2 left-1/3 w-32 h-32 bg-gradient-to-br from-cyan-500/8 to-blue-500/8 rounded-full blur-xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
+          </div>
 
+          <div className="h-[calc(100vh-3.5rem)] overflow-auto relative z-10">
+            <div className="max-w-none p-4 sm:p-6 lg:p-8">
               {renderContent()}
             </div>
           </div>
