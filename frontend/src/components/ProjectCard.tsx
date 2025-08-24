@@ -53,10 +53,10 @@ export default function ProjectCard({
   const imageIndex = parseInt(project.id) % defaultImages.length
   const imageSrc = project.previewImage || defaultImages[imageIndex]
 
-  // 颜色主题数组 - 从首页移植
+  // 颜色主题数组 - 根据首页核心优势卡片样式
   const colorThemes = [
     {
-      bg: 'bg-gradient-to-b from-blue-50/50 to-white dark:from-blue-950/20 dark:to-background',
+      bg: 'bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/20 dark:to-background',
       iconBg: 'bg-blue-100 dark:bg-blue-900/30',
       iconHoverBg: 'group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50',
       iconColor: 'text-blue-700 dark:text-blue-400',
@@ -65,7 +65,7 @@ export default function ProjectCard({
       tagBorder: 'border-blue-200 dark:border-blue-800'
     },
     {
-      bg: 'bg-gradient-to-b from-purple-50/50 to-white dark:from-purple-950/20 dark:to-background',
+      bg: 'bg-gradient-to-b from-purple-50 to-white dark:from-purple-950/20 dark:to-background',
       iconBg: 'bg-purple-100 dark:bg-purple-900/30',
       iconHoverBg: 'group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50',
       iconColor: 'text-purple-700 dark:text-purple-400',
@@ -74,7 +74,7 @@ export default function ProjectCard({
       tagBorder: 'border-purple-200 dark:border-purple-800'
     },
     {
-      bg: 'bg-gradient-to-b from-emerald-50/50 to-white dark:from-emerald-950/20 dark:to-background',
+      bg: 'bg-gradient-to-b from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background',
       iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
       iconHoverBg: 'group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/50',
       iconColor: 'text-emerald-700 dark:text-emerald-400',
@@ -83,7 +83,7 @@ export default function ProjectCard({
       tagBorder: 'border-emerald-200 dark:border-emerald-800'
     },
     {
-      bg: 'bg-gradient-to-b from-orange-50/50 to-white dark:from-orange-950/20 dark:to-background',
+      bg: 'bg-gradient-to-b from-orange-50 to-white dark:from-orange-950/20 dark:to-background',
       iconBg: 'bg-orange-100 dark:bg-orange-900/30',
       iconHoverBg: 'group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50',
       iconColor: 'text-orange-700 dark:text-orange-400',
@@ -92,7 +92,7 @@ export default function ProjectCard({
       tagBorder: 'border-orange-200 dark:border-orange-800'
     },
     {
-      bg: 'bg-gradient-to-b from-cyan-50/50 to-white dark:from-cyan-950/20 dark:to-background',
+      bg: 'bg-gradient-to-b from-cyan-50 to-white dark:from-cyan-950/20 dark:to-background',
       iconBg: 'bg-cyan-100 dark:bg-cyan-900/30',
       iconHoverBg: 'group-hover:bg-cyan-200 dark:group-hover:bg-cyan-900/50',
       iconColor: 'text-cyan-700 dark:text-cyan-400',
@@ -101,7 +101,7 @@ export default function ProjectCard({
       tagBorder: 'border-cyan-200 dark:border-cyan-800'
     },
     {
-      bg: 'bg-gradient-to-b from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-background',
+      bg: 'bg-gradient-to-b from-indigo-50 to-white dark:from-indigo-950/20 dark:to-background',
       iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
       iconHoverBg: 'group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50',
       iconColor: 'text-indigo-700 dark:text-indigo-400',
@@ -115,9 +115,9 @@ export default function ProjectCard({
   const theme = colorThemes[index % colorThemes.length]
 
   return (
-    <Card className={`group relative overflow-hidden border hover:shadow-lg transition-all duration-300 ${theme.bg}`}>
-      {/* 网站截图 - 现代化设计 */}
-      <div className="relative aspect-video overflow-hidden">
+    <Card className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border hover:shadow-lg transition-all duration-300 ${theme.bg}`}>
+      {/* 网站截图 - 完全贴合顶部 */}
+      <div className="relative aspect-video overflow-hidden rounded-t-xl">
         <Image
           src={imageSrc}
           alt={project.name}
@@ -161,7 +161,7 @@ export default function ProjectCard({
         </div>
       </div>
 
-      <CardContent className="p-5 space-y-4">
+      <CardContent className="px-5 pb-5 pt-3 space-y-4">
         {/* 项目统计信息 - 带图标的现代设计 */}
         <div className="grid grid-cols-4 gap-3">
           <div className="text-center space-y-1.5">
