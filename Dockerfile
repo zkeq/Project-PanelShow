@@ -5,7 +5,7 @@ SHELL ["zsh", "-c"]
 
 RUN source ~/.zshrc && \
     nvm install 20 && \
-    nvm alias default 20 && \
+    nvm use 20 && \
     node --version
 # install frontend dependencies
 RUN ls / -a
