@@ -113,135 +113,161 @@ export default function ProjectCard({
 
   // 根据索引选择颜色主题，确保相邻项目颜色不重合
   const theme = colorThemes[index % colorThemes.length]
+  
+  // 为暗色模式定义具体的背景颜色
+  const darkBackgrounds = [
+    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // blue
+    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // purple  
+    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // emerald
+    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // orange
+    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))', // cyan
+    'linear-gradient(to bottom, rgb(13, 13, 13), rgb(13, 13, 13))'  // indigo
+  ]
 
   return (
-    <Card className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border hover:shadow-lg transition-all duration-300 ${theme.bg}`}>
-      {/* 网站截图 - 完全贴合顶部 */}
-      <div className="relative aspect-video overflow-hidden rounded-t-xl">
-        <Image
-          src={imageSrc}
-          alt={project.name}
-          fill
-          className="object-cover transition-all duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
-        
-        {/* 渐变遮罩 */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-        
-        {/* 状态标识 */}
-        {project.status === 'active' && (
-          <Badge 
-            variant="secondary" 
-            className="absolute top-3 right-3 bg-green-500/90 text-white border-0 shadow-sm backdrop-blur-sm"
-          >
-            <div className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />
-            活跃
-          </Badge>
-        )}
-        {project.status === 'maintained' && (
-          <Badge 
-            variant="secondary" 
-            className="absolute top-3 right-3 bg-blue-500/90 text-white border-0 shadow-sm backdrop-blur-sm"
-          >
-            <div className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />
-            维护中
-          </Badge>
-        )}
-        
-        {/* 悬浮操作按钮 */}
-        <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
-            size="sm"
-            variant="secondary"
-            className="h-7 w-7 p-0 bg-white/90 hover:bg-white border-0 shadow-sm backdrop-blur-sm"
-          >
-            <ExternalLink className="h-3 w-3 text-gray-700" />
-          </Button>
-        </div>
-      </div>
-
-      <CardContent className="px-5 pb-3 space-y-4">
-        {/* 项目统计信息 - 带图标的现代设计 */}
-        <div className="grid grid-cols-4 gap-3">
-          <div className="text-center space-y-1">
-            <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
-              <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
-            </div>
-            <p className="text-xs text-muted-foreground font-medium">技术栈</p>
-            <p className="font-semibold text-xs text-foreground">{project.techStack || 'Vue + Python'}</p>
-          </div>
-          <div className="text-center space-y-1">
-            <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
-              <Calendar className={`w-3 h-3 ${theme.tagText}`} />
-            </div>
-            <p className="text-xs text-muted-foreground font-medium">项目类型</p>
-            <p className="font-semibold text-xs text-foreground">{project.projectType || '个人项目'}</p>
-          </div>
-          <div className="text-center space-y-1">
-            <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
-              <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
-            </div>
-            <p className="text-xs text-muted-foreground font-medium">月PV</p>
-            <p className="font-semibold text-xs text-foreground">{project.monthlyPV || '10w'}</p>
-          </div>
-          <div className="text-center space-y-1">
-            <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
-              <Calendar className={`w-3 h-3 ${theme.tagText}`} />
-            </div>
-            <p className="text-xs text-muted-foreground font-medium">开发周期</p>
-            <p className="font-semibold text-xs text-foreground">{project.developmentPeriod || '3个月'}</p>
-          </div>
-        </div>
-
-        <Separator className="my-4" />
-
-        {/* 项目标题和简介 */}
-        <div className="space-y-3">
-          {/* 项目标题 */}
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{project.name}</h3>
-          </div>
+    <Card className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border hover:shadow-lg transition-all duration-300`}>
+      {/* 亮色模式背景 */}
+      <div 
+        className={`absolute inset-0 rounded-xl dark:hidden ${theme.bg}`}
+      />
+      
+      {/* 暗色模式背景 - 实心背景遮盖点状图案 */}
+      <div 
+        className="absolute inset-0 hidden dark:block rounded-xl"
+        style={{
+          background: darkBackgrounds[index % darkBackgrounds.length]
+        }}
+      />
+      
+      {/* 内容层 */}
+      <div className="relative z-10">
+        {/* 网站截图 - 完全贴合顶部 */}
+        <div className="relative aspect-video overflow-hidden rounded-t-xl">
+          <Image
+            src={imageSrc}
+            alt={project.name}
+            fill
+            className="object-cover transition-all duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
           
-          {/* 项目简介 */}
-          <div className="relative">
-            <div 
-              className={`text-muted-foreground leading-relaxed transition-all duration-300 ${
-                isExpanded ? 'max-h-none' : 'max-h-[3.5rem] overflow-hidden'
-              }`}
+          {/* 渐变遮罩 */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+          
+          {/* 状态标识 */}
+          {project.status === 'active' && (
+            <Badge 
+              variant="secondary" 
+              className="absolute top-3 right-3 bg-green-500/90 text-white border-0 shadow-sm backdrop-blur-sm"
             >
-              <p className="text-xs leading-relaxed">{project.description}</p>
-            </div>
-            
-            {/* 渐变遮罩 */}
-            {!isExpanded && (
-              <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-card to-transparent" />
-            )}
-          </div>
-
-          {/* 展开按钮 */}
-          <div className="flex justify-center">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleToggleExpand}
-              className="text-xs text-muted-foreground hover:text-primary h-7 px-3 transition-colors hover:bg-muted/50"
+              <div className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />
+              活跃
+            </Badge>
+          )}
+          {project.status === 'maintained' && (
+            <Badge 
+              variant="secondary" 
+              className="absolute top-3 right-3 bg-blue-500/90 text-white border-0 shadow-sm backdrop-blur-sm"
             >
-              {isExpanded ? (
-                <>
-                  收起
-                  <ChevronUp className="w-3 h-3 ml-1" />
-                </>
-              ) : (
-                <>
-                  展开阅读
-                  <ChevronDown className="w-3 h-3 ml-1" />
-                </>
-              )}
+              <div className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />
+              维护中
+            </Badge>
+          )}
+          
+          {/* 悬浮操作按钮 */}
+          <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-7 w-7 p-0 bg-white/90 hover:bg-white border-0 shadow-sm backdrop-blur-sm"
+            >
+              <ExternalLink className="h-3 w-3 text-gray-700" />
             </Button>
           </div>
         </div>
-      </CardContent>
+
+        <CardContent className="px-5 pt-4 pb-3 space-y-4">
+          {/* 项目统计信息 - 带图标的现代设计 */}
+          <div className="grid grid-cols-4 gap-3">
+            <div className="text-center space-y-1">
+              <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
+                <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium">技术栈</p>
+              <p className="font-semibold text-xs text-foreground">{project.techStack || 'Vue + Python'}</p>
+            </div>
+            <div className="text-center space-y-1">
+              <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
+                <Calendar className={`w-3 h-3 ${theme.tagText}`} />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium">项目类型</p>
+              <p className="font-semibold text-xs text-foreground">{project.projectType || '个人项目'}</p>
+            </div>
+            <div className="text-center space-y-1">
+              <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
+                <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium">月PV</p>
+              <p className="font-semibold text-xs text-foreground">{project.monthlyPV || '10w'}</p>
+            </div>
+            <div className="text-center space-y-1">
+              <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
+                <Calendar className={`w-3 h-3 ${theme.tagText}`} />
+              </div>
+              <p className="text-xs text-muted-foreground font-medium">开发周期</p>
+              <p className="font-semibold text-xs text-foreground">{project.developmentPeriod || '3个月'}</p>
+            </div>
+          </div>
+
+          <Separator className="my-4" />
+
+          {/* 项目标题和简介 */}
+          <div className="space-y-3">
+            {/* 项目标题 */}
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{project.name}</h3>
+            </div>
+            
+            {/* 项目简介 */}
+            <div className="relative">
+              <div 
+                className={`text-muted-foreground leading-relaxed transition-all duration-300 ${
+                  isExpanded ? 'max-h-none' : 'max-h-[3.5rem] overflow-hidden'
+                }`}
+              >
+                <p className="text-xs leading-relaxed">{project.description}</p>
+              </div>
+              
+              {/* 渐变遮罩 */}
+              {!isExpanded && (
+                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-card to-transparent" />
+              )}
+            </div>
+
+            {/* 展开按钮 */}
+            <div className="flex justify-center">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleToggleExpand}
+                className="text-xs text-muted-foreground hover:text-primary h-7 px-3 transition-colors hover:bg-muted/50"
+              >
+                {isExpanded ? (
+                  <>
+                    收起
+                    <ChevronUp className="w-3 h-3 ml-1" />
+                  </>
+                ) : (
+                  <>
+                    展开阅读
+                    <ChevronDown className="w-3 h-3 ml-1" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </div>
     </Card>
   )
 }

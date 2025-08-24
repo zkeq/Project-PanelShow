@@ -23,7 +23,7 @@ import {
   Layers,
   Star
 } from 'lucide-react'
-import { ModeToggle } from '@/components/mode-toggle'
+import { ThemeSwitch } from '@/components/theme-switch'
 
 export default function UserProjectPage() {
   const params = useParams()
@@ -488,7 +488,7 @@ export default function UserProjectPage() {
           </div>
           <div className="flex-1" />
           <div className="flex items-center space-x-2">
-            <ModeToggle />
+            <ThemeSwitch />
             <Button variant="outline" size="sm" className="h-8">
               <Settings className="w-3 h-3 mr-1.5" />
               管理
@@ -699,7 +699,7 @@ export default function UserProjectPage() {
             <div 
               className="absolute inset-0 dark:block hidden"
               style={{
-                backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.15) 1px, transparent 0)`,
+                backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1px, transparent 0)`,
                 backgroundSize: '20px 20px',
                 backgroundPosition: '0 0'
               }}
