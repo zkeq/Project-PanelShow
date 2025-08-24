@@ -46,7 +46,7 @@ export default function UserProjectPage() {
   const [activeSection, setActiveSection] = useState('all-projects')
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['backend', 'frontend'])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [expandedProjects, setExpandedProjects] = useState<number[]>([])
+  const [expandedProjects, setExpandedProjects] = useState<string[]>([])
 
   // 技术栈结构
   const techStackStructure = [
@@ -74,7 +74,7 @@ export default function UserProjectPage() {
 
   const projects = [
     {
-      id: 1,
+      id: '1',
       name: 'E-Commerce Platform',
       description: '现代化的全栈电商解决方案，具有实时库存管理和支付集成。该项目采用微服务架构，支持高并发访问，集成了第三方支付、物流追踪、用户评价等功能模块。前端采用响应式设计，提供了优秀的用户体验，后端使用Django框架构建RESTful API，数据库采用PostgreSQL和Redis缓存方案，确保了系统的稳定性和性能。',
       stars: 128,
@@ -82,7 +82,7 @@ export default function UserProjectPage() {
       language: 'Python',
       languageColor: 'bg-yellow-500',
       technologies: ['Django', 'PostgreSQL', 'Redis', 'Celery'],
-      status: 'active',
+      status: 'active' as const,
       category: 'backend-python',
       createdAt: '2024-01-15',
       updatedAt: '2024-08-20',
@@ -93,7 +93,7 @@ export default function UserProjectPage() {
       previewImage: '/Snipaste_2025-08-23_22-52-13.png'
     },
     {
-      id: 2,
+      id: '2',
       name: 'Microservices API',
       description: '高性能的微服务架构 API 网关，采用Go语言开发，具有极低的延迟和高吞吐量。项目包含服务发现、负载均衡、熔断器、限流等功能，支持gRPC和HTTP协议，可以水平扩展。使用Docker容器化部署，通过Kubernetes进行编排管理，提供了完善的监控和日志系统。',
       stars: 256,
@@ -101,7 +101,7 @@ export default function UserProjectPage() {
       language: 'Go',
       languageColor: 'bg-cyan-500',
       technologies: ['Gin', 'gRPC', 'Docker', 'Kubernetes'],
-      status: 'active',
+      status: 'active' as const,
       category: 'backend-go',
       createdAt: '2024-03-22',
       updatedAt: '2024-08-18',
@@ -112,7 +112,7 @@ export default function UserProjectPage() {
       previewImage: '/Snipaste_2025-08-23_22-52-25.png'
     },
     {
-      id: 3,
+      id: '3',
       name: 'Admin Dashboard',
       description: '企业级管理后台系统，提供了完整的权限管理、用户管理、数据统计等功能。采用Vue 3 + TypeScript开发，使用Pinia进行状态管理，Element Plus作为UI组件库。支持多主题切换、国际化、动态路由等功能，具有良好的可扩展性和维护性。后台数据通过图表和表格展示，支持数据导出和打印功能。',
       stars: 189,
@@ -120,7 +120,7 @@ export default function UserProjectPage() {
       language: 'Vue',
       languageColor: 'bg-green-500',
       technologies: ['Vue 3', 'Pinia', 'Element Plus', 'Vite'],
-      status: 'maintained',
+      status: 'maintained' as const,
       category: 'frontend-vue',
       createdAt: '2023-11-08',
       updatedAt: '2024-07-30',
@@ -131,7 +131,7 @@ export default function UserProjectPage() {
       previewImage: '/Snipaste_2025-08-23_22-52-25.png'
     },
     {
-      id: 4,
+      id: '4',
       name: 'SaaS Platform',
       description: '多租户 SaaS 平台解决方案，支持多个租户共享同一套系统资源，同时保证数据隔离和安全性。使用Next.js构建前端应用，Prisma作为ORM工具，tRPC提供类型安全的API调用。平台提供了用户管理、订阅管理、支付集成、数据分析等核心功能，支持自定义品牌和域名。',
       stars: 312,
@@ -139,7 +139,7 @@ export default function UserProjectPage() {
       language: 'TypeScript',
       languageColor: 'bg-blue-500',
       technologies: ['Next.js', 'Prisma', 'tRPC', 'Tailwind CSS'],
-      status: 'active',
+      status: 'active' as const,
       category: 'frontend-nextjs',
       createdAt: '2024-05-10',
       updatedAt: '2024-08-22',
@@ -163,7 +163,7 @@ export default function UserProjectPage() {
     setActiveSection(id)
   }
 
-  const toggleProjectExpansion = (projectId: number) => {
+  const toggleProjectExpansion = (projectId: string) => {
     setExpandedProjects(prev =>
       prev.includes(projectId)
         ? prev.filter(id => id !== projectId)
@@ -177,7 +177,7 @@ export default function UserProjectPage() {
       const sortedProjects = [...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       
       return (
-        <div className="grid gap-6 lg:gap-8" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr))' }}>
+        <div className="grid gap-3 sm:gap-4 lg:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
           {sortedProjects.map((project) => (
             <ProjectCard 
               key={project.id}
@@ -209,7 +209,7 @@ export default function UserProjectPage() {
             </p>
           </div>
 
-          <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}>
+          <div className="grid gap-3 sm:gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
             {filteredProjects.map((project) => (
               <ProjectCard 
                 key={project.id}
@@ -416,7 +416,7 @@ export default function UserProjectPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-start space-x-4">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              <div className="w-16 h-16 bg-muted/80 border border-border/60 rounded-full flex items-center justify-center text-foreground text-xl font-semibold">
                 {username?.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1">
@@ -448,40 +448,41 @@ export default function UserProjectPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* 顶部导航栏 - ShadCN UI 风格 */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-16">
-        <div className="flex h-full items-center px-6 max-w-full">
-          <div className="flex items-center space-x-4">
-            <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-              <span className="text-sm font-medium">{username?.charAt(0).toUpperCase()}</span>
+    <div className="min-h-screen bg-background">
+      {/* 顶部导航栏 - 更简洁的设计 */}
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-14 items-center px-4 lg:px-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-7 h-7 bg-muted/80 border border-border/60 rounded-md flex items-center justify-center text-foreground text-sm font-semibold">
+              {username?.charAt(0).toUpperCase()}
             </div>
-            <h1 className="text-xl font-semibold">
-              {username} 的作品集
-            </h1>
+            <div className="flex items-center space-x-2">
+              <h1 className="text-lg font-semibold text-foreground">{username}</h1>
+              <span className="text-muted-foreground text-sm">的作品集</span>
+            </div>
           </div>
           <div className="flex-1" />
-          <Button variant="default" size="sm">
-            <Settings className="w-4 h-4 mr-2" />
-            管理后台
+          <Button variant="outline" size="sm" className="h-8">
+            <Settings className="w-3 h-3 mr-1.5" />
+            管理
           </Button>
         </div>
       </header>
 
       {/* 主体内容区 */}
-      <div className="flex-1 flex">
+      <div className="flex">
         {/* 左侧目录栏 */}
-        <aside className={`border-r bg-muted/10 transition-all duration-300 ${
-          sidebarCollapsed ? 'w-16' : 'w-64'
-        }`}>
+        <aside className={`border-r border-border/40 bg-card/50 transition-all duration-300 ${
+          sidebarCollapsed ? 'w-12' : 'w-56'
+        } hidden md:flex md:flex-col`}>
           <div className="h-full flex flex-col">
             {/* 项目/时间线 切换标签 */}
             {!sidebarCollapsed && (
-              <div className="p-4 pb-2">
-                <div className="flex bg-muted rounded-lg p-1">
+              <div className="p-3 pb-2">
+                <div className="flex bg-muted/60 rounded-md p-0.5">
                   <button
                     onClick={() => setActiveTab('projects')}
-                    className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    className={`flex-1 px-2.5 py-1 text-xs font-medium rounded-sm transition-colors ${
                       activeTab === 'projects' 
                         ? 'bg-background text-foreground shadow-sm' 
                         : 'text-muted-foreground hover:text-foreground'
@@ -491,7 +492,7 @@ export default function UserProjectPage() {
                   </button>
                   <button
                     onClick={() => setActiveTab('timeline')}
-                    className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    className={`flex-1 px-2.5 py-1 text-xs font-medium rounded-sm transition-colors ${
                       activeTab === 'timeline' 
                         ? 'bg-background text-foreground shadow-sm' 
                         : 'text-muted-foreground hover:text-foreground'
@@ -504,23 +505,23 @@ export default function UserProjectPage() {
             )}
 
             <ScrollArea className="flex-1">
-              <div className="p-4 pt-2">
+              <div className="p-3 pt-2">
                 {activeTab === 'projects' ? (
                   <div className="space-y-2">
                     {/* 所有项目选项 */}
                     <button
                       onClick={() => handleNavClick('all-projects')}
-                      className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                      className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
                         activeSection === 'all-projects' 
                           ? 'bg-primary/10 text-primary font-medium' 
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                       }`}
                     >
-                      <Layers className="w-4 h-4" />
+                      <Layers className="w-3.5 h-3.5" />
                       {!sidebarCollapsed && <span>所有项目</span>}
                     </button>
 
-                    <Separator className="my-3" />
+                    <Separator className="my-2" />
 
                     {techStackStructure.map((category) => {
                       const Icon = category.icon
@@ -531,11 +532,11 @@ export default function UserProjectPage() {
                           {/* 分类标题 */}
                           <button
                             onClick={() => toggleCategory(category.id)}
-                            className="w-full flex items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            className="w-full flex items-center justify-between px-2.5 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/30 rounded-md transition-colors"
                           >
                             <div className="flex items-center space-x-2">
-                              <Icon className="w-4 h-4" />
-                              {!sidebarCollapsed && <span>{category.label}</span>}
+                              <Icon className="w-3.5 h-3.5" />
+                              {!sidebarCollapsed && <span className="text-xs font-medium">{category.label.replace('技术栈 - ', '')}</span>}
                             </div>
                             {!sidebarCollapsed && (
                               isExpanded ? 
@@ -546,7 +547,7 @@ export default function UserProjectPage() {
                           
                           {/* 子项目 */}
                           {isExpanded && !sidebarCollapsed && category.children && (
-                            <div className="ml-6 space-y-1">
+                            <div className="ml-5 space-y-0.5 mt-1">
                               {category.children.map((child) => {
                                 const ChildIcon = child.icon
                                 const isActive = activeSection === child.id
@@ -555,10 +556,10 @@ export default function UserProjectPage() {
                                   <button
                                     key={child.id}
                                     onClick={() => handleNavClick(child.id)}
-                                    className={`w-full flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                                    className={`w-full flex items-center space-x-2 px-2 py-1 rounded-md text-xs transition-colors ${
                                       isActive 
                                         ? 'bg-primary/10 text-primary font-medium' 
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                                     }`}
                                   >
                                     <ChildIcon className="w-3 h-3" />
@@ -573,31 +574,31 @@ export default function UserProjectPage() {
                     })}
 
                     {/* 分隔线 */}
-                    <Separator className="my-3" />
+                    <Separator className="my-2" />
                     
                     {/* 单独的页面项 */}
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <button
                         onClick={() => handleNavClick('experience')}
-                        className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                        className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
                           activeSection === 'experience' 
                             ? 'bg-primary/10 text-primary font-medium' 
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                         }`}
                       >
-                        <Briefcase className="w-4 h-4" />
+                        <Briefcase className="w-3.5 h-3.5" />
                         {!sidebarCollapsed && <span>工作经历</span>}
                       </button>
                       
                       <button
                         onClick={() => handleNavClick('about')}
-                        className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
+                        className={`w-full flex items-center space-x-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
                           activeSection === 'about' 
                             ? 'bg-primary/10 text-primary font-medium' 
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
                         }`}
                       >
-                        <User className="w-4 h-4" />
+                        <User className="w-3.5 h-3.5" />
                         {!sidebarCollapsed && <span>关于我</span>}
                       </button>
                     </div>
@@ -610,23 +611,23 @@ export default function UserProjectPage() {
 
                 {!sidebarCollapsed && (
                   <>
-                    <Separator className="my-4" />
+                    <Separator className="my-3" />
                     
                     {/* 快速链接 */}
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground px-3 mb-2">快速链接</p>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground px-2.5 mb-1.5">快速链接</p>
                       <a 
                         href="#" 
-                        className="flex items-center space-x-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                        className="flex items-center space-x-2 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded-md transition-colors"
                       >
-                        <Github className="w-4 h-4" />
+                        <Github className="w-3 h-3" />
                         <span>GitHub</span>
                       </a>
                       <a 
                         href="#" 
-                        className="flex items-center space-x-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                        className="flex items-center space-x-2 px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/40 rounded-md transition-colors"
                       >
-                        <Globe className="w-4 h-4" />
+                        <Globe className="w-3 h-3" />
                         <span>个人网站</span>
                       </a>
                     </div>
@@ -636,16 +637,16 @@ export default function UserProjectPage() {
             </ScrollArea>
 
             {/* 折叠按钮 */}
-            <div className="border-t p-2">
+            <div className="border-t border-border/40 p-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full"
+                className="w-full h-7"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               >
                 {sidebarCollapsed ? 
-                  <ChevronRight className="w-4 h-4" /> : 
-                  <ChevronDown className="w-4 h-4 rotate-90" />
+                  <ChevronRight className="w-3 h-3" /> : 
+                  <ChevronDown className="w-3 h-3 rotate-90" />
                 }
               </Button>
             </div>
@@ -653,18 +654,18 @@ export default function UserProjectPage() {
         </aside>
 
         {/* 右侧内容区 */}
-        <main className="flex-1 overflow-auto">
-          <ScrollArea className="h-full">
-            <div className="w-full p-6">
+        <main className="flex-1 min-w-0">
+          <div className="h-[calc(100vh-3.5rem)] overflow-auto">
+            <div className="max-w-none p-3 sm:p-4 lg:p-6">
               {/* 背景装饰 */}
               <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-full blur-3xl" />
-                <div className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-full blur-3xl" />
+                <div className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-blue-500/3 to-purple-500/3 rounded-full blur-3xl" />
+                <div className="absolute bottom-20 left-20 w-72 h-72 bg-gradient-to-r from-purple-500/3 to-pink-500/3 rounded-full blur-3xl" />
               </div>
 
               {renderContent()}
             </div>
-          </ScrollArea>
+          </div>
         </main>
       </div>
     </div>

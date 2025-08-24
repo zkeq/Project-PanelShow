@@ -1,6 +1,5 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp } from 'lucide-react'
@@ -17,7 +16,7 @@ interface ProjectCardProps {
     monthlyPV?: string
     developmentPeriod?: string
     previewImage?: string
-    status?: 'active' | 'archived'
+    status?: 'active' | 'archived' | 'maintained'
   }
   expandedProjects?: string[]
   onToggleExpand?: (projectId: string) => void
@@ -52,94 +51,100 @@ export default function ProjectCard({
   const imageSrc = project.previewImage || defaultImages[imageIndex]
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group border bg-card text-card-foreground shadow-sm">
-      {/* 圆角图片预览 - ShadCN UI 风格 */}
-      <div className="relative aspect-video bg-muted/50 p-3 border-b">
-        <div className="relative w-full h-full rounded-lg overflow-hidden">
-          <Image
-            src={imageSrc}
-            alt={project.name}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
-        </div>
+    <div className="group space-y-6">
+      {/* 网站截图 - 圆角无边框 */}
+      <div className="relative aspect-video overflow-hidden rounded-xl bg-muted/50">
+        <Image
+          src={imageSrc}
+          alt={project.name}
+          fill
+          className="object-cover transition-all duration-500 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
         
         {/* 状态标识 */}
         {project.status === 'active' && (
-          <Badge variant="secondary" className="absolute top-4 right-4">
+          <Badge 
+            variant="secondary" 
+            className="absolute top-4 right-4 bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+          >
             活跃
           </Badge>
         )}
         {project.status === 'maintained' && (
-          <Badge variant="outline" className="absolute top-4 right-4">
+          <Badge 
+            variant="outline" 
+            className="absolute top-4 right-4 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-700"
+          >
             维护中
           </Badge>
         )}
       </div>
 
-      <CardContent className="p-6">
-        {/* 项目标题 */}
-        <h3 className="text-xl font-semibold mb-4">{project.name}</h3>
-
-        {/* 四个展示数据 - 一行显示 */}
-        <div className="grid grid-cols-4 gap-3 mb-4">
-          <div className="text-center">
+      {/* 项目内容区域 */}
+      <div className="space-y-4">
+        {/* 项目统计信息 - 一行四个 */}
+        <div className="grid grid-cols-4 gap-3">
+          <div className="text-center space-y-1">
             <p className="text-xs text-muted-foreground">技术栈</p>
             <p className="font-medium text-sm">{project.techStack || 'Vue + Python'}</p>
           </div>
-          <div className="text-center">
+          <div className="text-center space-y-1">
             <p className="text-xs text-muted-foreground">项目类型</p>
             <p className="font-medium text-sm">{project.projectType || '个人项目'}</p>
           </div>
-          <div className="text-center">
+          <div className="text-center space-y-1">
             <p className="text-xs text-muted-foreground">月PV</p>
             <p className="font-medium text-sm">{project.monthlyPV || '10w'}</p>
           </div>
-          <div className="text-center">
+          <div className="text-center space-y-1">
             <p className="text-xs text-muted-foreground">开发周期</p>
             <p className="font-medium text-sm">{project.developmentPeriod || '3个月'}</p>
           </div>
         </div>
 
-        {/* 项目简介 - 可展开/收缩 */}
+        {/* 项目标题和简介 */}
         <div className="relative">
+          {/* 项目标题 */}
+          <div className="text-sm font-bold">{project.name}</div>
+          
+          {/* 项目简介 */}
           <div 
-            className={`text-sm text-muted-foreground transition-all duration-300 ${
-              isExpanded ? 'max-h-none' : 'max-h-[150px] overflow-hidden'
+            className={`text-muted-foreground leading-relaxed transition-all duration-300 ${
+              isExpanded ? 'max-h-none' : 'max-h-[4.5rem] overflow-hidden'
             }`}
           >
-            <p>{project.description}</p>
+            <p className="text-sm">{project.description}</p>
           </div>
           
           {/* 渐变遮罩 */}
           {!isExpanded && (
-            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-background via-background/80 to-transparent" />
           )}
-          
-          {/* 展开/收起按钮 */}
-          <div className="flex justify-end mt-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleToggleExpand}
-              className="text-primary hover:text-primary/80 p-0 h-auto"
-            >
-              {isExpanded ? (
-                <>
-                  收起
-                  <ChevronUp className="w-4 h-4 ml-1" />
-                </>
-              ) : (
-                <>
-                  展开
-                  <ChevronDown className="w-4 h-4 ml-1" />
-                </>
-              )}
-            </Button>
-          </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* 展开按钮 */}
+        <div className="flex justify-start">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleToggleExpand}
+            className="text-xs text-muted-foreground hover:text-foreground h-8 px-3 transition-colors"
+          >
+            {isExpanded ? (
+              <>
+                收起
+                <ChevronUp className="w-3 h-3 ml-1" />
+              </>
+            ) : (
+              <>
+                展开阅读
+                <ChevronDown className="w-3 h-3 ml-1" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }
