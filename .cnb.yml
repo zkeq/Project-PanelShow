@@ -1,0 +1,17 @@
+$:
+  vscode:
+    - docker:
+        build: ./Dockerfile
+        volumes:
+          - frontend/node_modules:cow
+      env:
+        CNB_WELCOME_CMD: |
+          cd frontend && yarn dev
+      runner:
+        cpus: 32
+      services:
+        - vscode
+        - docker
+      stages:
+        - name: start docker env
+          script: echo "docker env"
