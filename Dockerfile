@@ -16,7 +16,7 @@ RUN source ~/.zshrc && \
 RUN source ~/.zshrc && \
     npm install -g @anthropic-ai/claude-code
 
-RUN unset CI
+RUN echo "unset CI" >> ~/.zshrc
 
 RUN echo "export ANTHROPIC_BASE_URL=https://code.imyaichat.com" >> ~/.zshrc && \
     echo "export ANTHROPIC_AUTH_TOKEN=sk-YThp8qwJxpq6ZDERR1zqPuDqabq5Oix7StA8vAyONjS762DR" >> ~/.zshrc
