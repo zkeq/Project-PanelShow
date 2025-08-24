@@ -27,8 +27,9 @@ interface ProjectCardProps {
 export default function ProjectCard({ 
   project, 
   expandedProjects = [], 
-  onToggleExpand 
-}: ProjectCardProps) {
+  onToggleExpand,
+  index = 0
+}: ProjectCardProps & { index?: number }) {
   const [localExpanded, setLocalExpanded] = useState(false)
   
   // 使用传入的展开状态或本地状态
@@ -52,8 +53,69 @@ export default function ProjectCard({
   const imageIndex = parseInt(project.id) % defaultImages.length
   const imageSrc = project.previewImage || defaultImages[imageIndex]
 
+  // 颜色主题数组 - 从首页移植
+  const colorThemes = [
+    {
+      bg: 'bg-gradient-to-b from-blue-50/50 to-white dark:from-blue-950/20 dark:to-background',
+      iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+      iconHoverBg: 'group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50',
+      iconColor: 'text-blue-700 dark:text-blue-400',
+      tagBg: 'bg-blue-50 dark:bg-blue-950/30',
+      tagText: 'text-blue-700 dark:text-blue-300',
+      tagBorder: 'border-blue-200 dark:border-blue-800'
+    },
+    {
+      bg: 'bg-gradient-to-b from-purple-50/50 to-white dark:from-purple-950/20 dark:to-background',
+      iconBg: 'bg-purple-100 dark:bg-purple-900/30',
+      iconHoverBg: 'group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50',
+      iconColor: 'text-purple-700 dark:text-purple-400',
+      tagBg: 'bg-purple-50 dark:bg-purple-950/30',
+      tagText: 'text-purple-700 dark:text-purple-300',
+      tagBorder: 'border-purple-200 dark:border-purple-800'
+    },
+    {
+      bg: 'bg-gradient-to-b from-emerald-50/50 to-white dark:from-emerald-950/20 dark:to-background',
+      iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+      iconHoverBg: 'group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/50',
+      iconColor: 'text-emerald-700 dark:text-emerald-400',
+      tagBg: 'bg-emerald-50 dark:bg-emerald-950/30',
+      tagText: 'text-emerald-700 dark:text-emerald-300',
+      tagBorder: 'border-emerald-200 dark:border-emerald-800'
+    },
+    {
+      bg: 'bg-gradient-to-b from-orange-50/50 to-white dark:from-orange-950/20 dark:to-background',
+      iconBg: 'bg-orange-100 dark:bg-orange-900/30',
+      iconHoverBg: 'group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50',
+      iconColor: 'text-orange-700 dark:text-orange-400',
+      tagBg: 'bg-orange-50 dark:bg-orange-950/30',
+      tagText: 'text-orange-700 dark:text-orange-300',
+      tagBorder: 'border-orange-200 dark:border-orange-800'
+    },
+    {
+      bg: 'bg-gradient-to-b from-cyan-50/50 to-white dark:from-cyan-950/20 dark:to-background',
+      iconBg: 'bg-cyan-100 dark:bg-cyan-900/30',
+      iconHoverBg: 'group-hover:bg-cyan-200 dark:group-hover:bg-cyan-900/50',
+      iconColor: 'text-cyan-700 dark:text-cyan-400',
+      tagBg: 'bg-cyan-50 dark:bg-cyan-950/30',
+      tagText: 'text-cyan-700 dark:text-cyan-300',
+      tagBorder: 'border-cyan-200 dark:border-cyan-800'
+    },
+    {
+      bg: 'bg-gradient-to-b from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-background',
+      iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
+      iconHoverBg: 'group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50',
+      iconColor: 'text-indigo-700 dark:text-indigo-400',
+      tagBg: 'bg-indigo-50 dark:bg-indigo-950/30',
+      tagText: 'text-indigo-700 dark:text-indigo-300',
+      tagBorder: 'border-indigo-200 dark:border-indigo-800'
+    }
+  ]
+
+  // 根据索引选择颜色主题，确保相邻项目颜色不重合
+  const theme = colorThemes[index % colorThemes.length]
+
   return (
-    <Card className="group overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 bg-card/50 backdrop-blur-sm">
+    <Card className={`group relative overflow-hidden border hover:shadow-lg transition-all duration-300 ${theme.bg}`}>
       {/* 网站截图 - 现代化设计 */}
       <div className="relative aspect-video overflow-hidden">
         <Image
@@ -103,29 +165,29 @@ export default function ProjectCard({
         {/* 项目统计信息 - 带图标的现代设计 */}
         <div className="grid grid-cols-4 gap-3">
           <div className="text-center space-y-1.5">
-            <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/20 rounded-md flex items-center justify-center mx-auto mb-1">
-              <BarChart3 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+            <div className={`w-6 h-6 ${theme.iconBg} ${theme.iconHoverBg} rounded-md flex items-center justify-center mx-auto mb-1 transition-colors duration-300`}>
+              <BarChart3 className={`w-3 h-3 ${theme.iconColor}`} />
             </div>
             <p className="text-xs text-muted-foreground font-medium">技术栈</p>
             <p className="font-semibold text-xs text-foreground">{project.techStack || 'Vue + Python'}</p>
           </div>
           <div className="text-center space-y-1.5">
-            <div className="w-6 h-6 bg-green-100 dark:bg-green-900/20 rounded-md flex items-center justify-center mx-auto mb-1">
-              <Calendar className="w-3 h-3 text-green-600 dark:text-green-400" />
+            <div className={`w-6 h-6 ${theme.iconBg} ${theme.iconHoverBg} rounded-md flex items-center justify-center mx-auto mb-1 transition-colors duration-300`}>
+              <Calendar className={`w-3 h-3 ${theme.iconColor}`} />
             </div>
             <p className="text-xs text-muted-foreground font-medium">项目类型</p>
             <p className="font-semibold text-xs text-foreground">{project.projectType || '个人项目'}</p>
           </div>
           <div className="text-center space-y-1.5">
-            <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/20 rounded-md flex items-center justify-center mx-auto mb-1">
-              <BarChart3 className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+            <div className={`w-6 h-6 ${theme.iconBg} ${theme.iconHoverBg} rounded-md flex items-center justify-center mx-auto mb-1 transition-colors duration-300`}>
+              <BarChart3 className={`w-3 h-3 ${theme.iconColor}`} />
             </div>
             <p className="text-xs text-muted-foreground font-medium">月PV</p>
             <p className="font-semibold text-xs text-foreground">{project.monthlyPV || '10w'}</p>
           </div>
           <div className="text-center space-y-1.5">
-            <div className="w-6 h-6 bg-orange-100 dark:bg-orange-900/20 rounded-md flex items-center justify-center mx-auto mb-1">
-              <Calendar className="w-3 h-3 text-orange-600 dark:text-orange-400" />
+            <div className={`w-6 h-6 ${theme.iconBg} ${theme.iconHoverBg} rounded-md flex items-center justify-center mx-auto mb-1 transition-colors duration-300`}>
+              <Calendar className={`w-3 h-3 ${theme.iconColor}`} />
             </div>
             <p className="text-xs text-muted-foreground font-medium">开发周期</p>
             <p className="font-semibold text-xs text-foreground">{project.developmentPeriod || '3个月'}</p>

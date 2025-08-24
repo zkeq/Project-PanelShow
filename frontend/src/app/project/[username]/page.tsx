@@ -137,12 +137,13 @@ export default function UserProjectPage() {
       
       return (
         <div className="grid gap-3 sm:gap-4 lg:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-          {sortedProjects.map((project) => (
+          {sortedProjects.map((project, index) => (
             <ProjectCard 
               key={project.id}
               project={project}
               expandedProjects={expandedProjects}
               onToggleExpand={toggleProjectExpansion}
+              index={index}
             />
           ))}
         </div>
@@ -169,12 +170,13 @@ export default function UserProjectPage() {
           </div>
 
           <div className="grid gap-3 sm:gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-            {filteredProjects.map((project) => (
+            {filteredProjects.map((project, index) => (
               <ProjectCard 
                 key={project.id}
                 project={project}
                 expandedProjects={expandedProjects}
                 onToggleExpand={toggleProjectExpansion}
+                index={index}
               />
             ))}
           </div>
