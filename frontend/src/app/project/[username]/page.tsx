@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ import {
   Layers,
   Star
 } from 'lucide-react'
+import { ModeToggle } from '@/components/mode-toggle'
 
 export default function UserProjectPage() {
   const params = useParams()
@@ -144,10 +146,12 @@ export default function UserProjectPage() {
               <div className="flex items-start space-x-4">
                 {/* 头像 */}
                 <div className="flex-shrink-0">
-                  <img
+                  <Image
                     src="https://avatars.githubusercontent.com/u/62864752"
                     alt="Zkeq"
-                    className="w-16 h-16 rounded-full border-2 border-border/60"
+                    width={64}
+                    height={64}
+                    className="rounded-full border-2 border-border/60"
                   />
                 </div>
                 
@@ -483,10 +487,13 @@ export default function UserProjectPage() {
             </div>
           </div>
           <div className="flex-1" />
-          <Button variant="outline" size="sm" className="h-8">
-            <Settings className="w-3 h-3 mr-1.5" />
-            管理
-          </Button>
+          <div className="flex items-center space-x-2">
+            <ModeToggle />
+            <Button variant="outline" size="sm" className="h-8">
+              <Settings className="w-3 h-3 mr-1.5" />
+              管理
+            </Button>
+          </div>
         </div>
       </header>
 

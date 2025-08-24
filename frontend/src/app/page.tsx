@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Code2, Database, Globe, Monitor, Rocket, Shield, Star, Users, Zap } from "lucide-react";
+import { ThemeSwitch } from "@/components/theme-switch";
 
 export default function Home() {
   return (
@@ -29,6 +30,7 @@ export default function Home() {
             </a>
           </nav>
           <div className="flex items-center space-x-2">
+            <ThemeSwitch />
             <Button variant="ghost" size="sm">
               GitHub
             </Button>
@@ -43,10 +45,10 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative overflow-hidden bg-background pb-16 pt-20">
           {/* Animated background with flowing gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-950/20 dark:via-transparent dark:to-purple-950/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-purple-50/50 dark:bg-none" />
           
           {/* Flowing light effect */}
-          <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden dark:hidden">
             <div className="absolute -top-40 -right-32 w-80 h-80 bg-gradient-radial from-blue-400/20 via-purple-400/10 to-transparent rounded-full blur-3xl animate-pulse" 
                  style={{ 
                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(168, 85, 247, 0.05) 50%, transparent 100%)',
@@ -73,7 +75,7 @@ export default function Home() {
               </div>
               <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
                 重新定义
-                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600  dark:from-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent">
                   项目展示
                 </span>
                 体验
