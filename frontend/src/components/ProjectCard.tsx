@@ -161,33 +161,33 @@ export default function ProjectCard({
         </div>
       </div>
 
-      <CardContent className="px-5 pb-5 pt-3 space-y-4">
+      <CardContent className="px-5 pb-3 space-y-4">
         {/* 项目统计信息 - 带图标的现代设计 */}
         <div className="grid grid-cols-4 gap-3">
-          <div className="text-center space-y-1.5">
-            <div className={`w-6 h-6 ${theme.iconBg} ${theme.iconHoverBg} rounded-md flex items-center justify-center mx-auto mb-1 transition-colors duration-300`}>
-              <BarChart3 className={`w-3 h-3 ${theme.iconColor}`} />
+          <div className="text-center space-y-1">
+            <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
+              <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
             </div>
             <p className="text-xs text-muted-foreground font-medium">技术栈</p>
             <p className="font-semibold text-xs text-foreground">{project.techStack || 'Vue + Python'}</p>
           </div>
-          <div className="text-center space-y-1.5">
-            <div className={`w-6 h-6 ${theme.iconBg} ${theme.iconHoverBg} rounded-md flex items-center justify-center mx-auto mb-1 transition-colors duration-300`}>
-              <Calendar className={`w-3 h-3 ${theme.iconColor}`} />
+          <div className="text-center space-y-1">
+            <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
+              <Calendar className={`w-3 h-3 ${theme.tagText}`} />
             </div>
             <p className="text-xs text-muted-foreground font-medium">项目类型</p>
             <p className="font-semibold text-xs text-foreground">{project.projectType || '个人项目'}</p>
           </div>
-          <div className="text-center space-y-1.5">
-            <div className={`w-6 h-6 ${theme.iconBg} ${theme.iconHoverBg} rounded-md flex items-center justify-center mx-auto mb-1 transition-colors duration-300`}>
-              <BarChart3 className={`w-3 h-3 ${theme.iconColor}`} />
+          <div className="text-center space-y-1">
+            <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
+              <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
             </div>
             <p className="text-xs text-muted-foreground font-medium">月PV</p>
             <p className="font-semibold text-xs text-foreground">{project.monthlyPV || '10w'}</p>
           </div>
-          <div className="text-center space-y-1.5">
-            <div className={`w-6 h-6 ${theme.iconBg} ${theme.iconHoverBg} rounded-md flex items-center justify-center mx-auto mb-1 transition-colors duration-300`}>
-              <Calendar className={`w-3 h-3 ${theme.iconColor}`} />
+          <div className="text-center space-y-1">
+            <div className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}>
+              <Calendar className={`w-3 h-3 ${theme.tagText}`} />
             </div>
             <p className="text-xs text-muted-foreground font-medium">开发周期</p>
             <p className="font-semibold text-xs text-foreground">{project.developmentPeriod || '3个月'}</p>
