@@ -199,7 +199,7 @@ export default function UserProjectPage() {
           </div>
 
           {/* 项目网格 */}
-          <div className="grid gap-3 sm:gap-4 lg:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+          <div className="grid gap-3 sm:gap-4 lg:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
             {sortedProjects.map((project, index) => (
               <ProjectCard 
                 key={project.id}
@@ -233,7 +233,7 @@ export default function UserProjectPage() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+          <div className="grid gap-3 sm:gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
             {filteredProjects.map((project, index) => (
               <ProjectCard 
                 key={project.id}
