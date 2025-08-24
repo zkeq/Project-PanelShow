@@ -432,7 +432,7 @@ export default function UserProjectPage() {
       <div className="flex">
         {/* 左侧目录栏 */}
         <aside className={`border-r bg-muted/10 transition-all duration-300 ${
-          sidebarCollapsed ? 'w-16' : 'w-60'
+          sidebarCollapsed ? 'w-16' : 'w-56'
         }`}>
           <div className="h-full flex flex-col">
             {/* 项目/时间线 切换标签 */}
@@ -615,7 +615,7 @@ export default function UserProjectPage() {
         {/* 右侧内容区 */}
         <main className="flex-1 min-w-0">
           <div className="h-[calc(100vh-3.5rem)] overflow-auto">
-            <div className="max-w-none p-3 sm:p-4 lg:p-6">
+            <div className="max-w-none p-6 sm:p-8 lg:p-12">
               {/* 背景装饰 */}
               <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
                 <div className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-blue-500/3 to-purple-500/3 rounded-full blur-3xl" />
