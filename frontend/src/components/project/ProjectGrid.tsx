@@ -1,0 +1,43 @@
+'use client'
+
+import ProjectCard from '@/components/ProjectCard'
+
+interface Project {
+  id: string
+  name: string
+  description: string
+  status: 'active' | 'maintained' | 'archived'
+  category: string
+  techStack: string
+  projectType: string
+  monthlyPV: string
+  developmentPeriod: string
+  previewImage: string
+  updatedAt: string
+}
+
+interface ProjectGridProps {
+  projects: Project[]
+  expandedProjects: string[]
+  onToggleExpand: (projectId: string) => void
+}
+
+export default function ProjectGrid({ 
+  projects, 
+  expandedProjects, 
+  onToggleExpand 
+}: ProjectGridProps) {
+  return (
+    <div className="grid gap-3 sm:gap-4 lg:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(365px, 1fr))' }}>
+      {projects.map((project, index) => (
+        <ProjectCard 
+          key={project.id}
+          project={project}
+          expandedProjects={expandedProjects}
+          onToggleExpand={onToggleExpand}
+          index={index}
+        />
+      ))}
+    </div>
+  )
+}
