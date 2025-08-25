@@ -59,7 +59,7 @@ export default function TimelineCard({ item }: TimelineCardProps) {
   const hasMoreImages = item.project.previewImages.length > 4
 
   return (
-    <Card className="w-full bg-background border border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
+    <Card className="py-0 w-full bg-background border border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardContent className="p-6 space-y-4">
         {/* 头部信息：时间、昵称 */}
         <div className="flex items-center justify-between">
