@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
@@ -30,6 +30,18 @@ export default function TimelineCard({ item }: TimelineCardProps) {
   const [isLiked, setIsLiked] = useState(item.isLiked || false)
   const [likes, setLikes] = useState(item.likes)
   const [showAllImages, setShowAllImages] = useState(false)
+  const [showExpandButton, setShowExpandButton] = useState(false)
+  
+  const contentRef = useRef<HTMLDivElement>(null)
+
+  // 检测内容是否超出容器
+  useEffect(() => {
+    if (contentRef.current && item.project.readme) {
+      const element = contentRef.current
+      // 检查内容的scrollHeight是否大于clientHeight
+      setShowExpandButton(element.scrollHeight > element.clientHeight)
+    }
+  }, [item.project.readme])
 
   // 处理点赞
   const handleLike = () => {
@@ -113,23 +125,26 @@ export default function TimelineCard({ item }: TimelineCardProps) {
           {/* README详情 - 可展开 */}
           {item.project.readme && (
             <div className="space-y-2">
-              <div className={`text-sm text-muted-foreground leading-relaxed transition-all duration-300 ${
-                isExpanded ? 'max-h-none' : 'max-h-20 overflow-hidden'
-              }`}>
+              <div 
+                ref={contentRef}
+                className={`text-sm text-muted-foreground leading-relaxed transition-all duration-300 ${
+                  isExpanded ? 'max-h-none' : 'max-h-20 overflow-hidden'
+                }`}
+              >
                 <p className="whitespace-pre-line">
                   {item.project.readme}
                 </p>
               </div>
               
               {/* 渐变遮罩 */}
-              {!isExpanded && item.project.readme.length > 200 && (
+              {!isExpanded && showExpandButton && (
                 <div className="relative">
-                  <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-card to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-background to-transparent" />
                 </div>
               )}
               
               {/* 展开按钮 */}
-              {item.project.readme.length > 200 && (
+              {showExpandButton && (
                 <div className="relative">
                   <Button 
                     variant="ghost" 

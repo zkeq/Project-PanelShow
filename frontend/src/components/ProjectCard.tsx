@@ -240,7 +240,7 @@ export default function ProjectCard({
               
               {/* 渐变遮罩 */}
               {!isExpanded && (
-                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-card to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-background to-transparent" />
               )}
             </div>
 
