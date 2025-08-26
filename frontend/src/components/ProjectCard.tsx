@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { ChevronDown, ChevronUp, ExternalLink, Calendar, BarChart3 } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState } from 'react'
 
 interface ProjectCardProps {
@@ -225,7 +226,12 @@ export default function ProjectCard({
           <div className="space-y-3">
             {/* 项目标题 */}
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{project.name}</h3>
+              <Link 
+                href={`/project/zkeq/${project.id}`}
+                className="font-bold text-sm text-foreground hover:text-primary transition-colors cursor-pointer"
+              >
+                {project.name}
+              </Link>
             </div>
             
             {/* 项目简介 */}
