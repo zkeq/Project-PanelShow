@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "github-markdown-css/github-markdown-light.css";
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -135,7 +134,8 @@
   max-width: 980px;
   margin: 0 auto;
   padding: 5px;
-  font-size: 12px;
+  color: var(--foreground);
+  background-color: transparent !important;   
 }
 
 @media (max-width: 767px) {
