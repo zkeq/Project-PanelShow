@@ -1,32 +1,28 @@
-'use client'
+"use client";
 
-import TimelineCard from '@/components/TimelineCard'
-import { TimelineItem } from '@/types/timeline'
-import { Layers } from 'lucide-react'
+import TimelineCard from "@/components/TimelineCard";
+import { TimelineItem } from "@/types/timeline";
+import { Layers } from "lucide-react";
 
 interface TimelineContentProps {
-  timelineItems: TimelineItem[]
-  title: string
-  description: string
+  timelineItems: TimelineItem[];
+  title: string;
+  description: string;
 }
 
-export default function TimelineContent({ 
-  timelineItems, 
-  title, 
-  description 
+export default function TimelineContent({
+  timelineItems,
+  title,
+  description,
 }: TimelineContentProps) {
   return (
     <div className="w-full space-y-6 max-w-4xl mx-auto">
       {/* 时间线标题 */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold">
-          {title}
-        </h1>
-        <p className="text-muted-foreground">
-          {description}
-        </p>
+        <h1 className="text-3xl font-bold">{title}</h1>
+        <p className="text-muted-foreground">{description}</p>
       </div>
-      
+
       {/* 时间线卡片列表 - 左对齐宽屏布局 */}
       <div className="w-full max-w-none space-y-6">
         {timelineItems.map((item) => (
@@ -35,7 +31,7 @@ export default function TimelineContent({
           </div>
         ))}
       </div>
-      
+
       {/* 空状态 */}
       {timelineItems.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16">
@@ -49,5 +45,5 @@ export default function TimelineContent({
         </div>
       )}
     </div>
-  )
+  );
 }

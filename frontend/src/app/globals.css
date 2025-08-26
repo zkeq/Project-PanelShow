@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "github-markdown-css/github-markdown-light.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -125,5 +126,20 @@
 @layer utilities {
   .container {
     @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+.markdown-body {
+  box-sizing: border-box;
+  min-width: 100px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 5px;
+  font-size: 12px;
+}
+
+@media (max-width: 767px) {
+  .markdown-body {
+    padding: 15px;
   }
 }
