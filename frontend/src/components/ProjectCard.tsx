@@ -126,7 +126,11 @@ export default function ProjectCard({
   ]
 
   return (
-    <Card className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border hover:shadow-lg transition-all duration-300`}>
+    <Link 
+      href={`/project/zkeq/${project.id}`}
+      className="block transition-transform hover:scale-[1.02]"
+    >
+      <Card className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border hover:shadow-lg hover:border-primary/50 transition-all duration-300 cursor-pointer`}>
       {/* 亮色模式背景 */}
       <div 
         className={`absolute inset-0 rounded-xl dark:hidden ${theme.bg}`}
@@ -180,10 +184,17 @@ export default function ProjectCard({
             <Button
               size="sm"
               variant="secondary"
-              className="h-7 w-7 p-0 bg-white/90 hover:bg-white border-0 shadow-sm backdrop-blur-sm"
+              className="h-7 w-7 p-0 bg-white/90 hover:bg-white border-0 shadow-sm backdrop-blur-sm pointer-events-none"
             >
               <ExternalLink className="h-3 w-3 text-gray-700" />
             </Button>
+          </div>
+
+          {/* 点击提示 */}
+          <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <div className="bg-white/95 dark:bg-black/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
+              <p className="text-sm font-medium text-foreground">点击查看项目详情</p>
+            </div>
           </div>
         </div>
 
@@ -226,12 +237,7 @@ export default function ProjectCard({
           <div className="space-y-3">
             {/* 项目标题 */}
             <div className="flex items-center justify-between">
-              <Link 
-                href={`/project/zkeq/${project.id}`}
-                className="font-bold text-sm text-foreground hover:text-primary transition-colors cursor-pointer"
-              >
-                {project.name}
-              </Link>
+              <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{project.name}</h3>
             </div>
             
             {/* 项目简介 */}
@@ -255,7 +261,11 @@ export default function ProjectCard({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={handleToggleExpand}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleToggleExpand()
+                }}
                 className="text-xs text-muted-foreground hover:text-primary h-7 px-3 transition-colors hover:bg-muted/50"
               >
                 {isExpanded ? (
@@ -275,5 +285,6 @@ export default function ProjectCard({
         </CardContent>
       </div>
     </Card>
+    </Link>
   )
 }
