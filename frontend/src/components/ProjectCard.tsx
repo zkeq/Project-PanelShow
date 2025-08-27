@@ -203,14 +203,6 @@ export default function ProjectCard({
               </Button>
             </div>
 
-            {/* 点击提示 */}
-            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              <div className="bg-white/95 dark:bg-black/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg">
-                <p className="text-sm font-medium text-foreground">
-                  点击查看项目详情
-                </p>
-              </div>
-            </div>
           </div>
 
           <CardContent className="px-5 pt-4 pb-3 space-y-4">
