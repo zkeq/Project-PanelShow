@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Markdown from "@/components/Markdown";
 import FeatureGallery from "@/components/project/FeatureGallery";
-import { useState, useEffect, useRef } from "react";
+import DevelopmentTimelineSection from "@/components/project/DevelopmentTimelineSection";
+import { useState, useEffect } from "react";
 import {
-  Calendar,
   Users,
   Eye,
   Clock,
@@ -17,11 +17,7 @@ import {
   ExternalLink,
   GitBranch,
   BarChart3,
-  CheckCircle,
-  Circle,
-  Play,
 } from "lucide-react";
-import Image from "next/image";
 
 interface ProjectContentProps {
   project: {
@@ -65,9 +61,10 @@ interface ProjectContentProps {
       };
     };
   };
+  username?: string;
 }
 
-export default function ProjectContent({ project }: ProjectContentProps) {
+export default function ProjectContent({ project, username }: ProjectContentProps) {
   const [isStackedLayout, setIsStackedLayout] = useState(false);
   
   useEffect(() => {
@@ -234,60 +231,6 @@ export default function ProjectContent({ project }: ProjectContentProps) {
     },
   ];
 
-  const renderTimelineItems = () => {
-    if (!project.timeline) return null;
-
-    const years = Object.keys(project.timeline).sort(
-      (a, b) => parseInt(b) - parseInt(a),
-    );
-
-    return years.map((year) => (
-      <div key={year} className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-primary" />
-          {year}年
-        </h3>
-        <div className="space-y-6">
-          {Object.keys(project.timeline![year])
-            .sort((a, b) => parseInt(b) - parseInt(a))
-            .map((month) => (
-              <div key={`${year}-${month}`} className="space-y-3">
-                <h4 className="text-md font-medium text-muted-foreground">
-                  {parseInt(month)}月
-                </h4>
-                <div className="space-y-2 pl-4">
-                  {project.timeline![year][month].map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex-shrink-0 mt-0.5">
-                        {item.status === "completed" ? (
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        ) : item.status === "in-progress" ? (
-                          <Play className="w-4 h-4 text-blue-500" />
-                        ) : (
-                          <Circle className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">
-                          {item.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.date}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-        </div>
-      </div>
-    ));
-  };
-
   return (
     <div className="space-y-8">
       {/* 项目概览面板 */}
@@ -431,14 +374,12 @@ export default function ProjectContent({ project }: ProjectContentProps) {
 
       <Separator />
 
-      {/* 开发周期介绍 */}
-      <section id="timeline" className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground">开发周期介绍</h2>
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-6">{renderTimelineItems()}</div>
-          </CardContent>
-        </Card>
+      {/* 开发周期介绍 - 使用动态时间线组件 */}
+      <section id="timeline">
+        <DevelopmentTimelineSection
+          projectId={project.id}
+          username={username || 'zkeq'}
+        />
       </section>
     </div>
   );

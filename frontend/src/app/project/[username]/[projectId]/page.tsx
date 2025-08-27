@@ -273,7 +273,7 @@ export default function ProjectDetailPage() {
 
           <div className="relative z-10">
             <div className="max-w-none p-4 sm:p-6 lg:p-8">
-              <ProjectContent project={projectData} />
+              <ProjectContent project={projectData} username={username} />
             </div>
           </div>
         </main>
