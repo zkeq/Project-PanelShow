@@ -242,17 +242,15 @@ export default function ProjectContent({ project, username }: ProjectContentProp
     <div className="space-y-8">
       {/* 项目概览面板 */}
       <section id="overview" className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-foreground">项目概览</h2>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <GitBranch className="w-4 h-4 mr-2" />
-              源码
-            </Button>
-            <Button size="sm">
-              <ExternalLink className="w-4 h-4 mr-2" />
-              在线预览
-            </Button>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">项目概览</h2>
+            <p className="text-sm text-muted-foreground">
+              项目的基本信息、技术栈以及在线演示
+            </p>
           </div>
         </div>
 
@@ -261,8 +259,18 @@ export default function ProjectContent({ project, username }: ProjectContentProp
           <div className={`${isStackedLayout ? 'w-full' : 'flex-1 min-w-0'}`}>
             {/* 项目统计信息 - 5×4布局 */}
             <Card className="h-[460px] flex flex-col">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">项目信息</CardTitle>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">
+                    <GitBranch className="w-4 h-4 mr-2" />
+                    源码
+                  </Button>
+                  <Button size="sm">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    在线预览
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="flex-1 flex items-center">
                 <div className="grid grid-cols-5 gap-4 w-full">
@@ -305,8 +313,18 @@ export default function ProjectContent({ project, username }: ProjectContentProp
       <Separator />
 
       {/* 项目说明 */}
-      <section id="description" className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">项目说明</h2>
+      <section id="description" className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+            <Code className="w-4 h-4 text-green-600 dark:text-green-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">项目说明</h2>
+            <p className="text-sm text-muted-foreground">
+              项目的详细介绍、技术架构和实现方案
+            </p>
+          </div>
+        </div>
         <Card>
           <CardContent className="p-6">
             <div className="prose prose-sm max-w-none dark:prose-invert">
