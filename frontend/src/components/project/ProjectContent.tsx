@@ -253,12 +253,12 @@ export default function ProjectContent({ project, username }: ProjectContentProp
           {/* 左侧信息面板 - 弹性区域 */}
           <div className={`${isStackedLayout ? 'w-full' : 'flex-1 min-w-0'}`}>
             {/* 项目统计信息 - 5×4布局 */}
-            <Card>
+            <Card className="h-[460px] flex flex-col">
               <CardHeader>
                 <CardTitle className="text-lg">项目信息</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-5 gap-4">
+              <CardContent className="flex-1 flex items-center">
+                <div className="grid grid-cols-5 gap-4 w-full">
                   {projectStats.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
@@ -288,7 +288,7 @@ export default function ProjectContent({ project, username }: ProjectContentProp
           <div className={`${isStackedLayout ? 'w-full' : 'flex-shrink-0 w-[410px]'}`}>
             <FeatureGallery 
               images={project.images || []}
-              variant="grid"
+              variant="carousel"
               className="w-full"
             />
           </div>

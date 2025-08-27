@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,7 +18,7 @@ interface FeatureGalleryProps {
   images: FeatureImage[];
   previewUrl?: string;
   className?: string;
-  variant?: "grid" | "compact"; // grid: 9张图片带背景, compact: 6张图片无背景
+  variant?: "grid" | "compact" | "carousel"; // grid: 9张图片带背景, compact: 6张图片无背景, carousel: 轮播图
 }
 
 export default function FeatureGallery({ 
@@ -29,8 +29,23 @@ export default function FeatureGallery({
 }: FeatureGalleryProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   if (!images || images.length === 0) return null;
+
+  // 自动轮播功能
+  useEffect(() => {
+    if (variant !== "carousel" || images.length <= 1 || isPaused) return;
+
+    const interval = setInterval(() => {
+      setCurrentSlideIndex((prev) => 
+        prev < images.length - 1 ? prev + 1 : 0
+      );
+    }, 4000); // 4秒切换一次
+
+    return () => clearInterval(interval);
+  }, [variant, images.length, isPaused]);
 
   // 根据模式设置显示图片数量
   const maxImages = variant === "grid" ? 8 : 5; // grid模式9张(8+1), compact模式6张(5+1)
@@ -59,6 +74,31 @@ export default function FeatureGallery({
     );
   };
 
+  const handleCarouselPrevious = () => {
+    setCurrentSlideIndex((prev) => 
+      prev > 0 ? prev - 1 : images.length - 1
+    );
+    // 手动操作时暂时暂停自动切换
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 6000); // 6秒后恢复自动切换
+  };
+
+  const handleCarouselNext = () => {
+    setCurrentSlideIndex((prev) => 
+      prev < images.length - 1 ? prev + 1 : 0
+    );
+    // 手动操作时暂时暂停自动切换
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 6000); // 6秒后恢复自动切换
+  };
+
+  const handleIndicatorClick = (index: number) => {
+    setCurrentSlideIndex(index);
+    // 手动操作时暂时暂停自动切换
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 6000); // 6秒后恢复自动切换
+  };
+
   const handleBackgroundClick = (e: React.MouseEvent) => {
     // 只有当点击的是背景容器本身时才关闭
     if (e.target === e.currentTarget) {
@@ -68,7 +108,90 @@ export default function FeatureGallery({
 
   return (
     <div className={className}>
-      {variant === "grid" ? (
+      {variant === "carousel" ? (
+        // Carousel模式：轮播图
+        <Card className="overflow-hidden w-full h-[460px] flex flex-col">
+          <CardContent className="p-0 h-full flex flex-col">
+            <div 
+              className="relative flex-1 w-full"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+            >
+              {/* 主轮播图 */}
+              <div className="relative w-full h-full overflow-hidden rounded-t-lg bg-muted/10 flex items-center justify-center">
+                <Image
+                  src={images[currentSlideIndex].src}
+                  alt={images[currentSlideIndex].alt}
+                  fill
+                  className="object-contain"
+                  sizes="410px"
+                />
+                
+                {/* 轮播导航按钮 */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      onClick={handleCarouselPrevious}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-white/80 hover:text-white p-2 rounded-full bg-black/50 hover:bg-black/70 transition-all duration-200"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={handleCarouselNext}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-white/80 hover:text-white p-2 rounded-full bg-black/50 hover:bg-black/70 transition-all duration-200"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+
+                {/* 轮播图指示器 */}
+                {images.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+                    {images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleIndicatorClick(index)}
+                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                          index === currentSlideIndex
+                            ? "bg-white scale-110"
+                            : "bg-white/50 hover:bg-white/75"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* 点击查看大图区域 - 移除加号图标 */}
+                <button
+                  onClick={() => handleImageClick(currentSlideIndex)}
+                  className="absolute inset-0 bg-transparent hover:bg-black/5 transition-colors duration-200"
+                >
+                </button>
+              </div>
+            </div>
+
+            {/* 底部信息栏 - 固定在底部 */}
+            <div className="flex-shrink-0 p-4 bg-card border-t">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold text-foreground truncate">
+                    {images[currentSlideIndex].label}
+                  </h3>
+                  {images[currentSlideIndex].description && (
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {images[currentSlideIndex].description}
+                    </p>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground ml-4 flex-shrink-0">
+                  {currentSlideIndex + 1} / {images.length}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : variant === "grid" ? (
         // Grid模式：9张图片，带Card背景
         <Card className="overflow-hidden w-full">
           <CardContent className="p-2 flex justify-center">

@@ -54,7 +54,7 @@ export default function UserProjectPage() {
 - 适配不同屏幕尺寸`,
         previewImages: [
           '/Snipaste_2025-08-23_22-52-13.png',
-          '/Snipaste_2025-08-23_22-52-25.png'
+          '/Snipaste_2025-08-23_22-52-25.png',
         ],
         repositoryUrl: 'https://github.com/zkeq/sparkai-frontend',
         liveUrl: 'https://sparkai-frontend.vercel.app'
