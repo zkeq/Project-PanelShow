@@ -59,6 +59,13 @@ export default function FeatureGallery({
     );
   };
 
+  const handleBackgroundClick = (e: React.MouseEvent) => {
+    // 只有当点击的是背景容器本身时才关闭
+    if (e.target === e.currentTarget) {
+      setIsPreviewOpen(false);
+    }
+  };
+
   return (
     <div className={className}>
       {variant === "grid" ? (
@@ -256,9 +263,12 @@ export default function FeatureGallery({
           )}
 
           {/* 图片展示容器 */}
-          <div className="relative w-full h-full flex items-center justify-center">
+          <div 
+            className="relative w-full h-full flex items-center justify-center cursor-pointer"
+            onClick={handleBackgroundClick}
+          >
             {images[selectedImageIndex] && (
-              <div className="relative">
+              <div className="relative cursor-default" onClick={(e) => e.stopPropagation()}>
                 <Image
                   src={images[selectedImageIndex].src}
                   alt={images[selectedImageIndex].alt}
