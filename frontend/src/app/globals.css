@@ -131,7 +131,7 @@
 .markdown-body {
   box-sizing: border-box;
   min-width: 100px;
-  max-width: 980px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 5px;
   color: var(--foreground);
