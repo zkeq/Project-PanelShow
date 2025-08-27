@@ -32,11 +32,9 @@ export default function FeatureGallery({
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  if (!images || images.length === 0) return null;
-
-  // 自动轮播功能
+  // 自动轮播功能 - 必须在所有hook之前定义
   useEffect(() => {
-    if (variant !== "carousel" || images.length <= 1 || isPaused) return;
+    if (variant !== "carousel" || !images || images.length <= 1 || isPaused) return;
 
     const interval = setInterval(() => {
       setCurrentSlideIndex((prev) => 
@@ -45,7 +43,9 @@ export default function FeatureGallery({
     }, 4000); // 4秒切换一次
 
     return () => clearInterval(interval);
-  }, [variant, images.length, isPaused]);
+  }, [variant, images, isPaused]);
+
+  if (!images || images.length === 0) return null;
 
   // 根据模式设置显示图片数量
   const maxImages = variant === "grid" ? 8 : 5; // grid模式9张(8+1), compact模式6张(5+1)
