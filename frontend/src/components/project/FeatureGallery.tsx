@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, X, Plus, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, ExternalLink } from "lucide-react";
 
 interface FeatureImage {
   src: string;
@@ -269,24 +269,26 @@ export default function FeatureGallery({
                   priority
                 />
                 
-                {/* 图片信息 - 左下角 */}
-                <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 text-white max-w-sm">
-                  <h3 className="text-base font-semibold mb-1">
-                    {images[selectedImageIndex]?.label}
-                  </h3>
-                  {images[selectedImageIndex]?.description && (
-                    <p className="text-sm text-white/80 mb-2">
-                      {images[selectedImageIndex].description}
-                    </p>
-                  )}
-                  <div className="text-xs text-white/60">
-                    {selectedImageIndex + 1} / {images.length}
+                {/* 图片底部渐变信息栏 */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent p-6 text-white">
+                  <div className="max-w-lg">
+                    <h3 className="text-lg font-semibold mb-1">
+                      {images[selectedImageIndex]?.label}
+                    </h3>
+                    {images[selectedImageIndex]?.description && (
+                      <p className="text-sm text-white/90 mb-2 leading-relaxed">
+                        {images[selectedImageIndex].description}
+                      </p>
+                    )}
+                    <div className="text-xs text-white/70">
+                      {selectedImageIndex + 1} / {images.length}
+                    </div>
                   </div>
                 </div>
                 
                 {/* 图片切换指示器 - 图片底部中间 */}
                 {images.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2">
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 z-10">
                     {images.map((_, index) => (
                       <button
                         key={index}
