@@ -236,27 +236,19 @@ export default function FeatureGallery({
           <DialogTitle className="sr-only">
             图片预览 - {images[selectedImageIndex]?.alt}
           </DialogTitle>
-          
-          {/* 关闭按钮 */}
-          <button
-            onClick={() => setIsPreviewOpen(false)}
-            className="absolute top-6 right-6 z-50 text-white/80 hover:text-white p-2 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
 
           {/* 导航按钮 */}
           {images.length > 1 && (
             <>
               <button
                 onClick={handlePrevious}
-                className="absolute left-6 top-1/2 -translate-y-1/2 z-50 text-white/80 hover:text-white p-3 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
+                className="absolute left-6 top-1/2 -translate-y-1/2 z-50 text-white/80 hover:text-white p-3 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <button
                 onClick={handleNext}
-                className="absolute right-6 top-1/2 -translate-y-1/2 z-50 text-white/80 hover:text-white p-3 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
+                className="absolute right-6 top-1/2 -translate-y-1/2 z-50 text-white/80 hover:text-white p-3 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
               >
                 <ChevronRight className="w-6 h-6" />
               </button>
@@ -266,48 +258,48 @@ export default function FeatureGallery({
           {/* 图片展示容器 */}
           <div className="relative w-full h-full flex items-center justify-center">
             {images[selectedImageIndex] && (
-              <Image
-                src={images[selectedImageIndex].src}
-                alt={images[selectedImageIndex].alt}
-                width={1200}
-                height={800}
-                className="max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain"
-                sizes="90vw"
-                priority
-              />
-            )}
-          </div>
-
-          {/* 图片信息 - 底部居中 */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 text-white">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-1">
-                {images[selectedImageIndex]?.label}
-              </h3>
-              {images[selectedImageIndex]?.description && (
-                <p className="text-sm text-white/80 mb-2">
-                  {images[selectedImageIndex].description}
-                </p>
-              )}
-              <div className="text-xs text-white/60">
-                {selectedImageIndex + 1} / {images.length}
-              </div>
-            </div>
-            
-            {/* 图片切换指示器 - 在信息下方 */}
-            {images.length > 1 && (
-              <div className="flex justify-center gap-2 mt-4">
-                {images.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index === selectedImageIndex
-                        ? "bg-white"
-                        : "bg-white/40 hover:bg-white/60"
-                    }`}
-                  />
-                ))}
+              <div className="relative">
+                <Image
+                  src={images[selectedImageIndex].src}
+                  alt={images[selectedImageIndex].alt}
+                  width={1200}
+                  height={800}
+                  className="max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain"
+                  sizes="90vw"
+                  priority
+                />
+                
+                {/* 图片信息 - 左下角 */}
+                <div className="absolute bottom-4 left-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 text-white max-w-sm">
+                  <h3 className="text-base font-semibold mb-1">
+                    {images[selectedImageIndex]?.label}
+                  </h3>
+                  {images[selectedImageIndex]?.description && (
+                    <p className="text-sm text-white/80 mb-2">
+                      {images[selectedImageIndex].description}
+                    </p>
+                  )}
+                  <div className="text-xs text-white/60">
+                    {selectedImageIndex + 1} / {images.length}
+                  </div>
+                </div>
+                
+                {/* 图片切换指示器 - 图片底部中间 */}
+                {images.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2">
+                    {images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          index === selectedImageIndex
+                            ? "bg-white"
+                            : "bg-white/40 hover:bg-white/60"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
