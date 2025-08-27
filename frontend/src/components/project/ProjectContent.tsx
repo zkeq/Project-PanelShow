@@ -44,6 +44,13 @@ interface ProjectContentProps {
       title: string;
       description: string;
       icon: string;
+      techStack?: Array<{
+        name: string;
+        color: string;
+        bgColor: string;
+        textColor: string;
+        borderColor: string;
+      }>;
       images?: Array<{
         src: string;
         alt: string;
@@ -320,42 +327,89 @@ export default function ProjectContent({ project, username }: ProjectContentProp
       <Separator />
 
       {/* 特色功能介绍 */}
-      <section id="features" className="space-y-4">
-        <h2 className="text-2xl font-bold text-foreground">特色功能介绍</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section id="features" className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+            <Package className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">特色功能介绍</h2>
+            <p className="text-sm text-muted-foreground">
+              探索项目的核心功能特色，了解所使用的技术栈和实现方案
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {(
             project.features || [
               {
                 title: "响应式设计",
                 description: "适配各种设备尺寸，提供一致的用户体验",
                 icon: "📱",
+                techStack: [
+                  { name: 'CSS Grid', color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50 hover:bg-blue-100', textColor: 'text-blue-700', borderColor: 'border-blue-200' },
+                  { name: 'Flexbox', color: 'from-indigo-500 to-indigo-600', bgColor: 'bg-indigo-50 hover:bg-indigo-100', textColor: 'text-indigo-700', borderColor: 'border-indigo-200' }
+                ]
               },
               {
                 title: "高性能缓存",
                 description: "使用Redis缓存，提升系统响应速度",
                 icon: "⚡",
+                techStack: [
+                  { name: 'Redis', color: 'from-red-500 to-red-600', bgColor: 'bg-red-50 hover:bg-red-100', textColor: 'text-red-700', borderColor: 'border-red-200' },
+                  { name: 'Memory Cache', color: 'from-orange-500 to-orange-600', bgColor: 'bg-orange-50 hover:bg-orange-100', textColor: 'text-orange-700', borderColor: 'border-orange-200' }
+                ]
               },
               {
                 title: "安全支付",
                 description: "集成多种支付方式，保障交易安全",
                 icon: "🔒",
+                techStack: [
+                  { name: 'SSL/TLS', color: 'from-green-500 to-green-600', bgColor: 'bg-green-50 hover:bg-green-100', textColor: 'text-green-700', borderColor: 'border-green-200' },
+                  { name: 'OAuth 2.0', color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50 hover:bg-blue-100', textColor: 'text-blue-700', borderColor: 'border-blue-200' }
+                ]
               },
             ]
           ).map((feature, index) => (
             <Card key={index} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
+              <CardContent className="p-5">
                 <div className="space-y-4">
+                  {/* Header with icon and title */}
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl">{feature.icon}</div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {feature.title}
-                    </h3>
+                    <div className="text-2xl">
+                      {feature.icon}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {feature.title}
+                      </h3>
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  
+                  {/* Description */}
+                  <p className="text-muted-foreground leading-relaxed text-sm">
                     {feature.description}
                   </p>
                   
-                  {/* 功能图片展示 */}
+                  {/* Tech Stack Tags */}
+                  {feature.techStack && feature.techStack.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-foreground/80 uppercase tracking-wide">技术栈</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {feature.techStack.map((tech, techIndex) => (
+                          <div
+                            key={techIndex}
+                            className={`px-2.5 py-1 rounded-full border text-xs font-medium ${tech.bgColor} ${tech.textColor} ${tech.borderColor}`}
+                          >
+                            {tech.name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Feature Images */}
                   {feature.images && feature.images.length > 0 && (
                     <div className="mt-4">
                       <FeatureGallery 

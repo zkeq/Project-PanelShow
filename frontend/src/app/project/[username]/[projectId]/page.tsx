@@ -116,8 +116,14 @@ const projectData = {
   features: [
     {
       title: '响应式设计',
-      description: '适配各种设备尺寸，提供一致的用户体验',
+      description: '适配各种设备尺寸，提供一致的用户体验，支持多种屏幕规格的完美适配',
       icon: '📱',
+      techStack: [
+        { name: 'CSS Grid', color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50 hover:bg-blue-100', textColor: 'text-blue-700', borderColor: 'border-blue-200' },
+        { name: 'Flexbox', color: 'from-indigo-500 to-indigo-600', bgColor: 'bg-indigo-50 hover:bg-indigo-100', textColor: 'text-indigo-700', borderColor: 'border-indigo-200' },
+        { name: 'Tailwind CSS', color: 'from-cyan-500 to-cyan-600', bgColor: 'bg-cyan-50 hover:bg-cyan-100', textColor: 'text-cyan-700', borderColor: 'border-cyan-200' },
+        { name: 'Mobile First', color: 'from-emerald-500 to-emerald-600', bgColor: 'bg-emerald-50 hover:bg-emerald-100', textColor: 'text-emerald-700', borderColor: 'border-emerald-200' }
+      ],
       images: [
         {
           src: '/Snipaste_2025-08-23_22-52-13.png',
@@ -141,8 +147,14 @@ const projectData = {
     },
     {
       title: '高性能缓存',
-      description: '使用Redis缓存，提升系统响应速度',
+      description: '使用Redis缓存系统，配合智能缓存策略，大幅提升系统响应速度和用户体验',
       icon: '⚡',
+      techStack: [
+        { name: 'Redis', color: 'from-red-500 to-red-600', bgColor: 'bg-red-50 hover:bg-red-100', textColor: 'text-red-700', borderColor: 'border-red-200' },
+        { name: 'Memory Cache', color: 'from-orange-500 to-orange-600', bgColor: 'bg-orange-50 hover:bg-orange-100', textColor: 'text-orange-700', borderColor: 'border-orange-200' },
+        { name: 'CDN', color: 'from-purple-500 to-purple-600', bgColor: 'bg-purple-50 hover:bg-purple-100', textColor: 'text-purple-700', borderColor: 'border-purple-200' },
+        { name: 'HTTP Cache', color: 'from-pink-500 to-pink-600', bgColor: 'bg-pink-50 hover:bg-pink-100', textColor: 'text-pink-700', borderColor: 'border-pink-200' }
+      ],
       images: [
         {
           src: '/Snipaste_2025-08-23_22-52-25.png',
@@ -160,8 +172,14 @@ const projectData = {
     },
     {
       title: '安全支付',
-      description: '集成多种支付方式，保障交易安全',
+      description: '集成多种主流支付方式，采用端到端加密和多重验证，保障每笔交易的安全性',
       icon: '🔒',
+      techStack: [
+        { name: 'SSL/TLS', color: 'from-green-500 to-green-600', bgColor: 'bg-green-50 hover:bg-green-100', textColor: 'text-green-700', borderColor: 'border-green-200' },
+        { name: 'OAuth 2.0', color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-50 hover:bg-blue-100', textColor: 'text-blue-700', borderColor: 'border-blue-200' },
+        { name: 'JWT Token', color: 'from-violet-500 to-violet-600', bgColor: 'bg-violet-50 hover:bg-violet-100', textColor: 'text-violet-700', borderColor: 'border-violet-200' },
+        { name: 'AES Encryption', color: 'from-teal-500 to-teal-600', bgColor: 'bg-teal-50 hover:bg-teal-100', textColor: 'text-teal-700', borderColor: 'border-teal-200' }
+      ],
       images: [
         {
           src: '/Snipaste_2025-08-23_22-52-13.png',
