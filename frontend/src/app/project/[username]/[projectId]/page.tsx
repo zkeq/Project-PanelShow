@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import HeaderNavigation from '@/components/layout/HeaderNavigation'
 import ProjectSidebar from '@/components/project/ProjectSidebar'
+import ProjectHero from '@/components/project/ProjectHero'
 import ProjectContent from '@/components/project/ProjectContent'
 import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
 
@@ -272,7 +273,10 @@ export default function ProjectDetailPage() {
           <BackgroundDecorations />
 
           <div className="relative z-10">
-            <div className="max-w-none p-4 sm:p-6 lg:p-8">
+            <div className="w-full p-4 sm:p-6 lg:p-8">
+              {/* 项目Hero区段作为内容的一部分 */}
+              <ProjectHero project={projectData} username={username} />
+              
               <ProjectContent project={projectData} username={username} />
             </div>
           </div>

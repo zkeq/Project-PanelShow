@@ -121,10 +121,28 @@
   }
 }
 
+/* 浮动动画关键帧 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
 /* 添加容器样式确保正确居中 */
 @layer utilities {
   .container {
     @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-float-reverse {
+    animation: float 8s ease-in-out infinite reverse;
   }
 }
 
