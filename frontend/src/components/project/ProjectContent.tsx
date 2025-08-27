@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Markdown from "@/components/Markdown";
+import { useState, useEffect, useRef } from "react";
 import {
   Calendar,
   Users,
@@ -53,6 +54,25 @@ interface ProjectContentProps {
 }
 
 export default function ProjectContent({ project }: ProjectContentProps) {
+  const [isStackedLayout, setIsStackedLayout] = useState(false);
+  
+  useEffect(() => {
+    const checkWindowSize = () => {
+      // 基于窗口宽度来决定布局，更简单稳定
+      // 当窗口宽度小于1200px时使用垂直布局
+      setIsStackedLayout(window.innerWidth < 1400);
+    };
+
+    // 初始检查
+    checkWindowSize();
+
+    // 监听窗口大小变化
+    window.addEventListener('resize', checkWindowSize);
+    
+    return () => {
+      window.removeEventListener('resize', checkWindowSize);
+    };
+  }, []);
   const projectStats = [
     // 第一行
     {
@@ -272,9 +292,9 @@ export default function ProjectContent({ project }: ProjectContentProps) {
           </div>
         </div>
 
-        <div className="flex gap-6 items-start">
+        <div className={`${isStackedLayout ? 'space-y-6' : 'flex gap-6 items-start'}`}>
           {/* 左侧信息面板 - 弹性区域 */}
-          <div className="flex-1 min-w-0">
+          <div className={`${isStackedLayout ? 'w-full' : 'flex-1 min-w-0'}`}>
             {/* 项目统计信息 - 5×4布局 */}
             <Card>
               <CardHeader>
@@ -307,11 +327,11 @@ export default function ProjectContent({ project }: ProjectContentProps) {
             </Card>
           </div>
 
-          {/* 右侧项目图集 - 固定正方形 */}
-          <div className="flex-shrink-0 w-[410px]">
+          {/* 项目图集 - 响应式布局 */}
+          <div className={`${isStackedLayout ? 'w-full' : 'flex-shrink-0 w-[410px]'}`}>
             <Card className="overflow-hidden">
               <CardContent className="p-2">
-                <div className="w-full aspect-square">
+                <div className={`w-full ${isStackedLayout ? 'aspect-[3/2]' : 'aspect-square'}`}>
                   <div className="grid grid-cols-3 gap-1 h-full">
                     {/* 九宫格图片 */}
                     {Array.from({ length: 9 }).map((_, index) => (
@@ -328,7 +348,7 @@ export default function ProjectContent({ project }: ProjectContentProps) {
                           alt={`${project.name} 预览 ${index + 1}`}
                           fill
                           className="object-cover transition-all duration-300 group-hover:scale-110"
-                          sizes="120px"
+                          sizes={isStackedLayout ? "200px" : "120px"}
                         />
                         {/* 悬停遮罩 */}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
