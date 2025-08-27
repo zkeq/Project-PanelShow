@@ -70,9 +70,9 @@ export default function FeatureGallery({
     <div className={className}>
       {variant === "grid" ? (
         // Grid模式：9张图片，带Card背景
-        <Card className="overflow-hidden">
-          <CardContent className="p-2">
-            <div className="aspect-square">
+        <Card className="overflow-hidden w-full">
+          <CardContent className="p-2 flex justify-center">
+            <div className="aspect-square w-full max-w-[410px]">
               <div className="grid grid-cols-3 gap-1 h-full">
                 {/* 显示前8张图片 */}
                 {displayImages.map((image, index) => (

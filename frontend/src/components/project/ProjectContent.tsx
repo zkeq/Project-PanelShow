@@ -289,7 +289,7 @@ export default function ProjectContent({ project, username }: ProjectContentProp
             <FeatureGallery 
               images={project.images || []}
               variant="grid"
-              className={isStackedLayout ? 'w-[410px] mx-auto' : 'w-full'}
+              className="w-full"
             />
           </div>
         </div>
