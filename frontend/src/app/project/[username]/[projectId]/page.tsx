@@ -20,6 +20,7 @@ const projectData = {
   componentLibrary: 'shadcn/ui',
   status: 'active' as const,
   previewImage: '/Snipaste_2025-08-23_22-52-13.png',
+  previewUrl: 'http://localhost:3000/project/zkeq/1',
   longDescription: `
 # 项目说明
 
@@ -37,21 +38,149 @@ const projectData = {
 
 采用微服务架构，前后端分离，支持高并发访问。前端使用Vue 3 + TypeScript，后端采用Python Django框架。
   `,
+  images: [
+    {
+      src: '/Snipaste_2025-08-23_22-52-13.png',
+      alt: 'E-Commerce Platform 主页',
+      label: '主页',
+      description: '项目主页展示，包含产品列表和导航功能'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-25.png',
+      alt: '用户登录页面',
+      label: '登录',
+      description: '用户登录界面，支持多种登录方式'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-13.png',
+      alt: '管理后台仪表板',
+      label: '仪表板',
+      description: '管理员后台仪表板，显示关键业务指标'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-25.png',
+      alt: '用户管理页面',
+      label: '用户',
+      description: '用户信息管理和权限设置'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-13.png',
+      alt: '系统设置页面',
+      label: '设置',
+      description: '系统配置和个性化设置'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-25.png',
+      alt: '数据图表页面',
+      label: '图表',
+      description: '销售数据和用户行为分析图表'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-13.png',
+      alt: '产品列表页面',
+      label: '列表',
+      description: '产品列表管理和搜索功能'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-25.png',
+      alt: '产品详情页面',
+      label: '详情',
+      description: '产品详细信息和用户评价'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-13.png',
+      alt: '移动端界面',
+      label: '移动',
+      description: '移动端响应式界面展示'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-25.png',
+      alt: '购物车页面',
+      label: '购物车',
+      description: '购物车管理和结算流程'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-13.png',
+      alt: '订单管理页面',
+      label: '订单',
+      description: '订单状态跟踪和管理'
+    },
+    {
+      src: '/Snipaste_2025-08-23_22-52-25.png',
+      alt: '支付界面',
+      label: '支付',
+      description: '安全的支付流程和多种支付方式'
+    }
+  ],
   features: [
     {
       title: '响应式设计',
       description: '适配各种设备尺寸，提供一致的用户体验',
-      icon: '📱'
+      icon: '📱',
+      images: [
+        {
+          src: '/Snipaste_2025-08-23_22-52-13.png',
+          alt: '桌面端响应式展示',
+          label: '桌面端',
+          description: '桌面端完整界面展示'
+        },
+        {
+          src: '/Snipaste_2025-08-23_22-52-25.png',
+          alt: '平板端适配',
+          label: '平板端',
+          description: '平板设备界面适配'
+        },
+        {
+          src: '/Snipaste_2025-08-23_22-52-13.png',
+          alt: '手机端界面',
+          label: '手机端',
+          description: '移动端优化界面'
+        }
+      ]
     },
     {
       title: '高性能缓存',
       description: '使用Redis缓存，提升系统响应速度',
-      icon: '⚡'
+      icon: '⚡',
+      images: [
+        {
+          src: '/Snipaste_2025-08-23_22-52-25.png',
+          alt: '缓存监控页面',
+          label: '监控',
+          description: 'Redis缓存状态监控'
+        },
+        {
+          src: '/Snipaste_2025-08-23_22-52-13.png',
+          alt: '性能分析图表',
+          label: '性能',
+          description: '系统性能分析报告'
+        }
+      ]
     },
     {
       title: '安全支付',
       description: '集成多种支付方式，保障交易安全',
-      icon: '🔒'
+      icon: '🔒',
+      images: [
+        {
+          src: '/Snipaste_2025-08-23_22-52-13.png',
+          alt: '支付页面',
+          label: '支付',
+          description: '安全支付界面'
+        },
+        {
+          src: '/Snipaste_2025-08-23_22-52-25.png',
+          alt: '订单确认',
+          label: '订单',
+          description: '订单确认页面'
+        },
+        {
+          src: '/Snipaste_2025-08-23_22-52-13.png',
+          alt: '支付成功',
+          label: '成功',
+          description: '支付成功反馈'
+        }
+      ]
     }
   ],
   timeline: {

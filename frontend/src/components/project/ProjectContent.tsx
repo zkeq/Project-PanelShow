@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Markdown from "@/components/Markdown";
+import FeatureGallery from "@/components/project/FeatureGallery";
 import { useState, useEffect, useRef } from "react";
 import {
   Calendar,
@@ -35,11 +36,24 @@ interface ProjectContentProps {
     componentLibrary?: string;
     status: "active" | "archived" | "maintained";
     previewImage?: string;
+    previewUrl?: string;
     longDescription?: string;
+    images?: Array<{
+      src: string;
+      alt: string;
+      label: string;
+      description?: string;
+    }>;
     features?: Array<{
       title: string;
       description: string;
       icon: string;
+      images?: Array<{
+        src: string;
+        alt: string;
+        label: string;
+        description?: string;
+      }>;
     }>;
     timeline?: {
       [year: string]: {
@@ -329,71 +343,11 @@ export default function ProjectContent({ project }: ProjectContentProps) {
 
           {/* 项目图集 - 响应式布局 */}
           <div className={`${isStackedLayout ? 'w-full' : 'flex-shrink-0 w-[410px]'}`}>
-            <Card className="overflow-hidden">
-              <CardContent className="p-2">
-                <div className={`${isStackedLayout ? 'w-[410px] mx-auto' : 'w-full'} aspect-square`}>
-                  <div className="grid grid-cols-3 gap-1 h-full">
-                    {/* 九宫格图片 */}
-                    {Array.from({ length: 9 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="relative aspect-square overflow-hidden rounded-md group cursor-pointer"
-                      >
-                        <Image
-                          src={
-                            index % 2 === 0
-                              ? "/Snipaste_2025-08-23_22-52-13.png"
-                              : "/Snipaste_2025-08-23_22-52-25.png"
-                          }
-                          alt={`${project.name} 预览 ${index + 1}`}
-                          fill
-                          className="object-cover transition-all duration-300 group-hover:scale-110"
-                          sizes="120px"
-                        />
-                        {/* 悬停遮罩 */}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <div className="text-white text-xs font-medium">
-                            查看
-                          </div>
-                        </div>
-
-                        {/* 第一张图片添加主要标签 */}
-                        {index === 0 && (
-                          <div className="absolute top-1 left-1">
-                            <div className="bg-primary/90 text-primary-foreground px-1 py-0.5 rounded-sm text-xs font-medium">
-                              主页
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 其他图片的功能标签 */}
-                        {index > 0 && (
-                          <div className="absolute bottom-1 left-1">
-                            <div className="bg-white/90 dark:bg-black/90 text-foreground px-1 py-0.5 rounded-sm text-xs">
-                              {index === 1
-                                ? "登录"
-                                : index === 2
-                                  ? "仪表板"
-                                  : index === 3
-                                    ? "用户"
-                                    : index === 4
-                                      ? "设置"
-                                      : index === 5
-                                        ? "图表"
-                                        : index === 6
-                                          ? "列表"
-                                          : index === 7
-                                            ? "详情"
-                                            : "移动"}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <FeatureGallery 
+              images={project.images || []}
+              variant="grid"
+              className={isStackedLayout ? 'w-[410px] mx-auto' : 'w-full'}
+            />
           </div>
         </div>
       </section>
@@ -425,7 +379,7 @@ export default function ProjectContent({ project }: ProjectContentProps) {
       {/* 特色功能介绍 */}
       <section id="features" className="space-y-4">
         <h2 className="text-2xl font-bold text-foreground">特色功能介绍</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {(
             project.features || [
               {
@@ -447,14 +401,27 @@ export default function ProjectContent({ project }: ProjectContentProps) {
           ).map((feature, index) => (
             <Card key={index} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
-                <div className="space-y-3">
-                  <div className="text-2xl">{feature.icon}</div>
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {feature.title}
-                  </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">{feature.icon}</div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {feature.title}
+                    </h3>
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {feature.description}
                   </p>
+                  
+                  {/* 功能图片展示 */}
+                  {feature.images && feature.images.length > 0 && (
+                    <div className="mt-4">
+                      <FeatureGallery 
+                        images={feature.images}
+                        previewUrl={project.previewUrl}
+                        variant="compact"
+                      />
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
