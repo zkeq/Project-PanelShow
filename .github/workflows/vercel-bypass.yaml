@@ -1,0 +1,74 @@
+name: Vercel Bypass for Non-Zkeq Commits
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  check-author-and-bypass:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit author
+        id: get-author
+        run: |
+          COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')
+          echo "commit_author=$COMMIT_AUTHOR" >> $GITHUB_OUTPUT
+          echo "Commit author: $COMMIT_AUTHOR"
+
+      - name: Check if author is not Zkeq
+        id: check-author
+        run: |
+          if [ "${{ steps.get-author.outputs.commit_author }}" != "Zkeq" ]; then
+            echo "need_bypass=true" >> $GITHUB_OUTPUT
+            echo "Author is not Zkeq, bypass needed"
+          else
+            echo "need_bypass=false" >> $GITHUB_OUTPUT
+            echo "Author is Zkeq, no bypass needed"
+          fi
+
+      - name: Configure git for Zkeq
+        if: steps.check-author.outputs.need_bypass == 'true'
+        run: |
+          git config --global user.name "Zkeq"
+          git config --global user.email "admin@icodeq.com"
+
+      - name: Create bypass commit
+        if: steps.check-author.outputs.need_bypass == 'true'
+        run: |
+          # 创建一个空的变更来触发 Vercel 部署
+          echo "# Vercel deployment trigger - $(date)" > .vercel-trigger
+          git add .vercel-trigger
+          git commit -m "🚀 Trigger Vercel deployment
+
+          Original commit by: ${{ steps.get-author.outputs.commit_author }}
+          Bypass commit to trigger Vercel deployment for non-Zkeq commits.
+          
+          Timestamp: $(date)"
+
+      - name: Clean up trigger file
+        if: steps.check-author.outputs.need_bypass == 'true'
+        run: |
+          # 删除触发文件，保持仓库整洁
+          git rm .vercel-trigger
+          git commit -m "🧹 Clean up Vercel trigger file"
+
+      - name: Push cleanup commit
+        if: steps.check-author.outputs.need_bypass == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.check-author.outputs.need_bypass }}" == "true" ]; then
+            echo "✅ Vercel bypass completed for commit by ${{ steps.get-author.outputs.commit_author }}"
+          else
+            echo "ℹ️ No bypass needed - commit is by Zkeq"
+          fi
