@@ -74,7 +74,7 @@ export default function ProjectHero({ project, username }: ProjectHeroProps) {
   }
 
   return (
-    <div className="w-full py-8 mb-12">
+    <div className="w-full max-w-[1100px] py-8 mb-12">
       {/* 背景装饰 */}
       <div className="absolute inset-x-0 top-0 bg-gradient-to-r from-slate-50/50 via-transparent to-slate-100/50 dark:from-slate-900/20 dark:via-transparent dark:to-slate-800/20 h-full -z-10" />
       
