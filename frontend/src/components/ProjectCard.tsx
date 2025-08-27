@@ -142,7 +142,7 @@ export default function ProjectCard({
       className="block transition-transform hover:scale-[1.02]"
     >
       <Card
-        className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border hover:shadow-lg hover:border-primary/50 transition-all duration-300 cursor-pointer`}
+        className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border hover:shadow-lg hover:border-border/80 transition-all duration-300 cursor-pointer`}
       >
         {/* 亮色模式背景 */}
         <div
