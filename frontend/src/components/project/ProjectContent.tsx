@@ -331,7 +331,7 @@ export default function ProjectContent({ project }: ProjectContentProps) {
           <div className={`${isStackedLayout ? 'w-full' : 'flex-shrink-0 w-[410px]'}`}>
             <Card className="overflow-hidden">
               <CardContent className="p-2">
-                <div className={`w-full ${isStackedLayout ? 'aspect-[3/2]' : 'aspect-square'}`}>
+                <div className={`${isStackedLayout ? 'w-[410px] mx-auto' : 'w-full'} aspect-square`}>
                   <div className="grid grid-cols-3 gap-1 h-full">
                     {/* 九宫格图片 */}
                     {Array.from({ length: 9 }).map((_, index) => (
@@ -348,7 +348,7 @@ export default function ProjectContent({ project }: ProjectContentProps) {
                           alt={`${project.name} 预览 ${index + 1}`}
                           fill
                           className="object-cover transition-all duration-300 group-hover:scale-110"
-                          sizes={isStackedLayout ? "200px" : "120px"}
+                          sizes="120px"
                         />
                         {/* 悬停遮罩 */}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
