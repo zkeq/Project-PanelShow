@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Calendar, Users, Eye, Clock } from 'lucide-react'
+import { Calendar, Users, Eye, Clock, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
 
 interface ProjectSidebarProps {
@@ -44,6 +44,13 @@ export default function ProjectSidebar({ project, activeSection, onSectionChange
 
   const timelineYears = project.timeline ? Object.keys(project.timeline).sort((a, b) => parseInt(b) - parseInt(a)) : []
 
+  const handlePreview = () => {
+    // 这里可以根据项目ID或配置跳转到实际的预览地址
+    // 目前使用示例URL，实际项目中应该从项目数据中获取
+    const previewUrl = 'https://example.com' // 可以从 project 数据中获取实际的预览URL
+    window.open(previewUrl, '_blank')
+  }
+
   return (
     <div className="fixed left-0 top-14 w-80 h-[calc(100vh-3.5rem)] bg-background border-r border-border overflow-y-auto">
       <div className="p-6 space-y-6">
@@ -70,6 +77,19 @@ export default function ProjectSidebar({ project, activeSection, onSectionChange
               </Badge>
             )}
           </div>
+        </div>
+
+        <Separator />
+
+        {/* 在线预览按钮 */}
+        <div className="space-y-2">
+          <Button 
+            onClick={handlePreview}
+            className="w-full justify-center bg-primary hover:bg-primary/90 text-primary-foreground h-10"
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            在线预览
+          </Button>
         </div>
 
         <Separator />
