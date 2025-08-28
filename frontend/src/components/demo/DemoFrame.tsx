@@ -29,7 +29,7 @@ export default function DemoFrame({
           relative bg-white rounded-lg shadow-2xl overflow-hidden border
           ${
             viewMode === "desktop"
-              ? "w-[1200px] h-[800px] max-w-[95vw] max-h-[70vh]"
+              ? "w-[1440px] h-[900px] max-w-[95vw] max-h-[70vh]"
               : "w-[375px] h-[667px] max-w-[90vw] max-h-[70vh]"
           }
           transition-all duration-500 ease-in-out
@@ -89,7 +89,7 @@ export default function DemoFrame({
       {/* Device Label */}
       <div className="text-center mt-4">
         <Badge variant="outline" className="text-xs">
-          {viewMode === "desktop" ? "PC端 (1200×800)" : "移动端 (375×667)"}
+          {viewMode === "desktop" ? "PC端 (1440×900)" : "移动端 (375×667)"}
         </Badge>
       </div>
     </div>

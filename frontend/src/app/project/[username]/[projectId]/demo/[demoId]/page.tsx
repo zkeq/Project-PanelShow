@@ -110,7 +110,7 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
       />
 
       {/* Demo Content */}
-      <div className="relative z-10 container mx-auto px-4 py-6">
+      <div className="relative z-10 mx-auto px-4 py-6 max-w-[1440px]">
         <div className="flex flex-col items-center">
           {/* Project Info */}
           <ProjectInfo project={project} />

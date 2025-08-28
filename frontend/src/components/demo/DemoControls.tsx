@@ -26,7 +26,7 @@ export default function DemoControls({
 }: DemoControlsProps) {
   return (
     <div className="sticky top-14 z-40 border-b bg-background/80 backdrop-blur-sm">
-      <div className="container mx-auto px-4 py-4">
+      <div className="mx-auto px-4 py-4 max-w-[1440px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href={`/project/${username}/${projectId}`}>
