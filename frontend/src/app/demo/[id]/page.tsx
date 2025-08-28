@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,9 +11,9 @@ import { projects } from "./projects-data"
 import HeaderNavigation from '@/components/layout/HeaderNavigation'
 import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
 interface DemoPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default function DemoPage({ params }: DemoPageProps) {
@@ -21,8 +21,9 @@ export default function DemoPage({ params }: DemoPageProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(false)
 
-  const username = params.username as string
-  const project = projects.find((p) => p.id === Number.parseInt(params.id))
+  const { id } = use(params)
+  const username = "demo" // Default username for demo pages
+  const project = projects.find((p) => p.id === Number.parseInt(id))
 
   useEffect(() => {
     setIsLoading(true)
@@ -34,7 +35,7 @@ export default function DemoPage({ params }: DemoPageProps) {
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [params.id, viewMode])
+  }, [id, viewMode])
 
   if (!project) {
     return (

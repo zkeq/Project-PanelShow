@@ -9,7 +9,8 @@
       "Bash(npm run lint)",
       "Bash(npm run dev:*)",
       "Bash(git commit:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
