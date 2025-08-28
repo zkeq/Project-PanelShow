@@ -24,7 +24,8 @@ jobs:
       - name: Check if author is not Zkeq
         id: check-author
         run: |
-          if [ "${{ steps.get-author.outputs.commit_author }}" != "Zkeq" ]; then
+          AUTHOR_LOWER=$(echo "${{ steps.get-author.outputs.commit_author }}" | tr '[:upper:]' '[:lower:]')
+          if [ "$AUTHOR_LOWER" != "zkeq" ]; then
             echo "need_bypass=true" >> $GITHUB_OUTPUT
             echo "Author is not Zkeq, bypass needed"
           else
