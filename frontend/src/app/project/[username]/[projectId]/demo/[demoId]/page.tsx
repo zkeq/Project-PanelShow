@@ -91,9 +91,28 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
 
   return (
     <div className="min-h-screen bg-background relative">
-      {/* Fixed Background Decorations */}
-      <div className="fixed inset-0 z-0">
+      {/* Fixed Background Decorations with Enhanced Light Halos */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
         <BackgroundDecorations />
+        {/* Additional floating light effects for demo pages */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 right-20 w-60 h-60 bg-gradient-radial from-blue-400/15 via-purple-400/8 to-transparent rounded-full blur-3xl animate-pulse" 
+               style={{ 
+                 background: 'radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(168, 85, 247, 0.06) 50%, transparent 100%)',
+                 animation: 'float 8s ease-in-out infinite' 
+               }} />
+          <div className="absolute bottom-40 left-20 w-80 h-80 bg-gradient-radial from-purple-400/15 via-cyan-400/8 to-transparent rounded-full blur-3xl animate-pulse delay-1000" 
+               style={{ 
+                 background: 'radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(34, 211, 238, 0.06) 50%, transparent 100%)',
+                 animation: 'float 10s ease-in-out infinite reverse' 
+               }} />
+          <div className="absolute top-1/3 right-1/4 w-40 h-40 bg-gradient-radial from-cyan-400/12 via-transparent to-transparent rounded-full blur-2xl animate-pulse" 
+               style={{ 
+                 background: 'conic-gradient(from 45deg at 50% 50%, transparent 0deg, rgba(34, 211, 238, 0.08) 90deg, transparent 180deg, rgba(168, 85, 247, 0.08) 270deg, transparent 360deg)',
+                 animation: 'float 12s ease-in-out infinite',
+                 animationDelay: '2s' 
+               }} />
+        </div>
       </div>
       
       {/* Header Navigation */}
