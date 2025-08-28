@@ -29,8 +29,8 @@ export default function DemoFrame({
           relative bg-white rounded-lg shadow-2xl overflow-hidden border
           ${
             viewMode === "desktop"
-              ? "w-[1440px] h-[900px] max-w-[95vw] max-h-[70vh]"
-              : "w-[390px] h-[844px] max-w-[90vw] max-h-[70vh]"
+              ? "w-[1440px] h-[900px] max-w-[95vw] max-h-[82vh]"
+              : "w-[390px] h-[844px] max-w-[90vw] max-h-[82vh]"
           }
           transition-all duration-500 ease-in-out
         `}
