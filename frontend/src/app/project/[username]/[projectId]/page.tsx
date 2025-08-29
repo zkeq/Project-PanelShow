@@ -278,15 +278,17 @@ export default function ProjectDetailPage() {
 
       {/* 主体内容区 */}
       <div className="flex">
-        {/* 左侧固定侧边栏 */}
-        <ProjectSidebar
-          project={projectData}
-          activeSection={activeSection}
-          onSectionChange={handleSectionChange}
-        />
+        {/* 左侧固定侧边栏 - 仅桌面端显示 */}
+        <div className="hidden lg:block">
+          <ProjectSidebar
+            project={projectData}
+            activeSection={activeSection}
+            onSectionChange={handleSectionChange}
+          />
+        </div>
 
         {/* 右侧内容区 */}
-        <main className="flex-1 min-w-0 relative min-h-[calc(100vh-3.5rem)] ml-80">
+        <main className="flex-1 min-w-0 relative min-h-[calc(100vh-3.5rem)] lg:ml-80">
           {/* 背景装饰 */}
           <BackgroundDecorations />
 
@@ -295,7 +297,15 @@ export default function ProjectDetailPage() {
               {/* 项目Hero区段作为内容的一部分 */}
               <ProjectHero project={projectData} username={username} />
               
-              <ProjectContent project={projectData} username={username} />
+              <ProjectContent 
+                project={projectData} 
+                username={username}
+                // 传递移动端导航所需的数据
+                mobileNavigation={{
+                  activeSection,
+                  onSectionChange: handleSectionChange
+                }}
+              />
             </div>
           </div>
         </main>

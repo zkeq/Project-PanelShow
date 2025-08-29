@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import Markdown from "@/components/Markdown";
 import FeatureGallery from "@/components/project/FeatureGallery";
 import DevelopmentTimelineSection from "@/components/project/DevelopmentTimelineSection";
+import MobileProjectNavigation from "@/components/project/MobileProjectNavigation";
 import { useState, useEffect } from "react";
 import {
   Users,
@@ -18,6 +19,11 @@ import {
   GitBranch,
   BarChart3,
 } from "lucide-react";
+
+interface MobileNavigationData {
+  activeSection: string
+  onSectionChange: (section: string) => void
+}
 
 interface ProjectContentProps {
   project: {
@@ -69,9 +75,10 @@ interface ProjectContentProps {
     };
   };
   username?: string;
+  mobileNavigation?: MobileNavigationData;
 }
 
-export default function ProjectContent({ project, username }: ProjectContentProps) {
+export default function ProjectContent({ project, username, mobileNavigation }: ProjectContentProps) {
   const [isStackedLayout, setIsStackedLayout] = useState(false);
   
   useEffect(() => {
@@ -240,6 +247,20 @@ export default function ProjectContent({ project, username }: ProjectContentProp
 
   return (
     <div className="space-y-8">
+      {/* 移动端导航 */}
+      {mobileNavigation && (
+        <div className="lg:hidden">
+          <MobileProjectNavigation
+            project={{
+              name: project.name,
+              status: project.status
+            }}
+            activeSection={mobileNavigation.activeSection}
+            onSectionChange={mobileNavigation.onSectionChange}
+          />
+        </div>
+      )}
+
       {/* 项目概览面板 */}
       <section id="overview" className="space-y-6">
         <div className="flex items-center gap-3">
