@@ -78,26 +78,6 @@ interface ProjectContentProps {
 }
 
 export default function ProjectContent({ project, username, mobileNavigation }: ProjectContentProps) {
-  // 移除 JavaScript 布局计算，改用纯 CSS 响应式布局
-  // const [isStackedLayout, setIsStackedLayout] = useState(false);
-  
-  // useEffect(() => {
-  //   const checkWindowSize = () => {
-  //     // 基于窗口宽度来决定布局，更简单稳定
-  //     // 当窗口宽度小于1200px时使用垂直布局
-  //     setIsStackedLayout(window.innerWidth < 1400);
-  //   };
-
-  //   // 初始检查
-  //   checkWindowSize();
-
-  //   // 监听窗口大小变化
-  //   window.addEventListener('resize', checkWindowSize);
-    
-  //   return () => {
-  //     window.removeEventListener('resize', checkWindowSize);
-  //   };
-  // }, []);
   const projectStats = [
     // 第一行
     {
@@ -275,9 +255,9 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
           </div>
         </div>
 
-        <div className="space-y-2 xl:flex xl:gap-2 xl:items-start xl:space-y-0">
+        <div className="space-y-4 lg:space-y-2 lg:flex lg:gap-4 lg:items-start">
           {/* 左侧信息面板 - 弹性区域 */}
-          <div className="w-full xl:flex-1 xl:min-w-0">
+          <div className="w-full lg:flex-1 lg:min-w-0">
             {/* 项目统计信息 - 响应式布局 */}
             <Card className="lg:h-[460px] flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between">
@@ -293,8 +273,8 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 lg:flex lg:items-center py-6">
-                <div className="grid grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+              <CardContent className="flex-1 lg:flex lg:items-center py-4 lg:py-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 w-full">
                   {projectStats.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
@@ -321,7 +301,7 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
           </div>
 
           {/* 项目图集 - 响应式布局 */}
-          <div className="w-full xl:flex-shrink-0 xl:w-[410px]">
+          <div className="w-full lg:flex-shrink-0 lg:w-[380px]">
             <FeatureGallery 
               images={project.images || []}
               variant="carousel"
