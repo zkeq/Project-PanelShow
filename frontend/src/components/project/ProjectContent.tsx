@@ -259,7 +259,7 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
           {/* 左侧信息面板 - 弹性区域 */}
           <div className="w-full lg:flex-1 lg:min-w-0">
             {/* 项目统计信息 - 响应式布局 */}
-            <Card className="lg:h-[460px] flex flex-col">
+            <Card className="gap-2 lg:h-[460px] flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">项目信息</CardTitle>
                 <div className="flex gap-2">
