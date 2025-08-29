@@ -75,54 +75,76 @@ export default function MobileNavigation({
   }
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex flex-col space-y-3">
+    <div className="relative overflow-hidden rounded-xl bg-card border border-border/50 shadow-lg">
+      {/* 简洁装饰元素 */}
+      <div className="absolute inset-0">
+        <div className="absolute -top-8 -right-8 w-24 h-24 bg-muted/20 rounded-full" />
+        <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-muted/10 rounded-full" />
+      </div>
+      
+      {/* 主要内容 */}
+      <div className="relative z-10 p-4">
+        <div className="flex flex-col space-y-4">
           {/* 标签页切换 */}
-          <div className="flex bg-muted rounded-lg p-1">
+          <div className="flex bg-muted/50 rounded-lg p-1">
             <button
               onClick={() => {
                 onTabChange('projects')
                 onSectionChange('all-projects')
               }}
-              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+              className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === 'projects' 
-                  ? 'bg-background text-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-background text-foreground shadow-md border border-border/30' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
               }`}
             >
-              项目
+              <span className="flex items-center justify-center space-x-2">
+                <Layers className="w-4 h-4" />
+                <span>项目</span>
+              </span>
             </button>
             <button
               onClick={() => {
                 onTabChange('timeline')
                 onSectionChange('all-timeline')
               }}
-              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+              className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === 'timeline' 
-                  ? 'bg-background text-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-background text-foreground shadow-md border border-border/30' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
               }`}
             >
-              时间线
+              <span className="flex items-center justify-center space-x-2">
+                <Calendar className="w-4 h-4" />
+                <span>时间线</span>
+              </span>
             </button>
           </div>
 
           {/* 分类选择下拉菜单 */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="w-full justify-between">
-                {getCurrentSectionLabel()}
-                <ChevronDown className="ml-2 h-4 w-4" />
+              <Button 
+                variant="outline" 
+                className="w-full justify-between h-11 bg-background/80 border-border/60 shadow-sm hover:shadow-md transition-all duration-200 hover:bg-muted/30"
+              >
+                <span className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span className="font-medium">{getCurrentSectionLabel()}</span>
+                </span>
+                <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-full min-w-[200px]" align="start">
+            <DropdownMenuContent className="w-full min-w-[280px] bg-card border-border/60 shadow-xl" align="start">
               {activeTab === 'projects' ? (
                 <>
-                  <DropdownMenuLabel>项目分类</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-sm font-semibold text-foreground flex items-center space-x-2">
+                    <Layers className="w-4 h-4 text-primary" />
+                    <span>项目分类</span>
+                  </DropdownMenuLabel>
                   <DropdownMenuItem 
                     onClick={() => onSectionChange('all-projects')}
-                    className={activeSection === 'all-projects' ? 'bg-primary/10' : ''}
+                    className={`transition-colors ${activeSection === 'all-projects' ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                   >
                     <Layers className="mr-2 h-4 w-4" />
                     所有项目
@@ -132,14 +154,14 @@ export default function MobileNavigation({
                   
                   {techStackStructure.map((category) => (
                     <div key={category.id}>
-                      <DropdownMenuLabel className="text-xs px-2 py-1">
+                      <DropdownMenuLabel className="text-xs px-3 py-2 text-muted-foreground font-medium uppercase tracking-wide">
                         {category.label}
                       </DropdownMenuLabel>
                       {category.children?.map((child) => (
                         <DropdownMenuItem 
                           key={child.id}
                           onClick={() => onSectionChange(child.id)}
-                          className={`ml-4 ${activeSection === child.id ? 'bg-primary/10' : ''}`}
+                          className={`ml-4 transition-colors ${activeSection === child.id ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                         >
                           <Code2 className="mr-2 h-3 w-3" />
                           {child.label}
@@ -152,7 +174,7 @@ export default function MobileNavigation({
                   
                   <DropdownMenuItem 
                     onClick={() => onSectionChange('experience')}
-                    className={activeSection === 'experience' ? 'bg-primary/10' : ''}
+                    className={`transition-colors ${activeSection === 'experience' ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                   >
                     <Briefcase className="mr-2 h-4 w-4" />
                     工作经历
@@ -160,7 +182,7 @@ export default function MobileNavigation({
                   
                   <DropdownMenuItem 
                     onClick={() => onSectionChange('about')}
-                    className={activeSection === 'about' ? 'bg-primary/10' : ''}
+                    className={`transition-colors ${activeSection === 'about' ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                   >
                     <User className="mr-2 h-4 w-4" />
                     关于我
@@ -168,10 +190,13 @@ export default function MobileNavigation({
                 </>
               ) : (
                 <>
-                  <DropdownMenuLabel>时间线筛选</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-sm font-semibold text-foreground flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <span>时间线筛选</span>
+                  </DropdownMenuLabel>
                   <DropdownMenuItem 
                     onClick={() => onSectionChange('all-timeline')}
-                    className={activeSection === 'all-timeline' ? 'bg-primary/10' : ''}
+                    className={`transition-colors ${activeSection === 'all-timeline' ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                   >
                     <Layers className="mr-2 h-4 w-4" />
                     全部动态
@@ -186,7 +211,7 @@ export default function MobileNavigation({
                       
                       return (
                         <div key={year}>
-                          <DropdownMenuLabel className="text-xs px-2 py-1 flex items-center">
+                          <DropdownMenuLabel className="text-xs px-3 py-2 text-muted-foreground font-medium uppercase tracking-wide flex items-center">
                             <Calendar className="mr-1 h-3 w-3" />
                             {year}年
                           </DropdownMenuLabel>
@@ -200,11 +225,11 @@ export default function MobileNavigation({
                                 <DropdownMenuItem
                                   key={month}
                                   onClick={() => onSectionChange(sectionId)}
-                                  className={`ml-4 ${activeSection === sectionId ? 'bg-primary/10' : ''}`}
+                                  className={`ml-4 transition-colors ${activeSection === sectionId ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                                 >
                                   <span className="mr-2 text-xs">📅</span>
                                   <span className="flex-1">{getMonthName(month)}</span>
-                                  <span className="text-xs text-muted-foreground ml-2">
+                                  <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full ml-2 font-medium">
                                     {monthItems.length}
                                   </span>
                                 </DropdownMenuItem>
@@ -218,7 +243,7 @@ export default function MobileNavigation({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
