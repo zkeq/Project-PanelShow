@@ -8,6 +8,7 @@ import CategoryProjectsContent from '@/components/project/CategoryProjectsConten
 import TimelineContent from '@/components/timeline/TimelineContent'
 import ExperienceContent from '@/components/experience/ExperienceContent'
 import AboutContent from '@/components/about/AboutContent'
+import MobileNavigation from '@/components/layout/MobileNavigation'
 
 interface Project {
   id: string
@@ -23,6 +24,24 @@ interface Project {
   updatedAt: string
 }
 
+interface MobileNavigationData {
+  techStackStructure: Array<{
+    id: string
+    label: string
+    children?: Array<{
+      id: string
+      label: string
+    }>
+  }>
+  expandedCategories: string[]
+  expandedYears: string[]
+  timelineStructure: { [key: string]: { [key: string]: unknown[] } }
+  onTabChange: (tab: 'projects' | 'timeline') => void
+  onSectionChange: (section: string) => void
+  onCategoryToggle: (categoryId: string) => void
+  onYearToggle: (year: string) => void
+}
+
 interface ContentRendererProps {
   activeTab: 'projects' | 'timeline'
   activeSection: string
@@ -32,6 +51,7 @@ interface ContentRendererProps {
   expandedProjects: string[]
   onToggleExpand: (projectId: string) => void
   getMonthName: (month: string) => string
+  mobileNavigation?: MobileNavigationData
 }
 
 export default function ContentRenderer({
@@ -42,7 +62,8 @@ export default function ContentRenderer({
   timelineItems,
   expandedProjects,
   onToggleExpand,
-  getMonthName
+  getMonthName,
+  mobileNavigation
 }: ContentRendererProps) {
 
   // 技术栈结构
@@ -113,11 +134,25 @@ export default function ContentRenderer({
     }
     
     return (
-      <TimelineContent
-        timelineItems={sortedTimeline}
-        title={getTimelineTitle()}
-        description={getTimelineDescription()}
-      />
+      <div className="space-y-6">
+        {/* 移动端导航 */}
+        {mobileNavigation && (
+          <div className="lg:hidden">
+            <MobileNavigation
+              activeTab={activeTab}
+              activeSection={activeSection}
+              {...mobileNavigation}
+              getMonthName={getMonthName}
+            />
+          </div>
+        )}
+
+        <TimelineContent
+          timelineItems={sortedTimeline}
+          title={getTimelineTitle()}
+          description={getTimelineDescription()}
+        />
+      </div>
     )
   }
 
@@ -125,12 +160,26 @@ export default function ContentRenderer({
   // 所有项目页面 - 按时间倒序排列
   if (activeSection === 'all-projects') {
     return (
-      <AllProjectsContent
-        projects={projects}
-        expandedProjects={expandedProjects}
-        onToggleExpand={onToggleExpand}
-        userProfile={userProfile}
-      />
+      <div className="space-y-6">
+        {/* 移动端导航 */}
+        {mobileNavigation && (
+          <div className="lg:hidden">
+            <MobileNavigation
+              activeTab={activeTab}
+              activeSection={activeSection}
+              {...mobileNavigation}
+              getMonthName={getMonthName}
+            />
+          </div>
+        )}
+
+        <AllProjectsContent
+          projects={projects}
+          expandedProjects={expandedProjects}
+          onToggleExpand={onToggleExpand}
+          userProfile={userProfile}
+        />
+      </div>
     )
   }
 
@@ -143,33 +192,89 @@ export default function ContentRenderer({
       .find(child => child.id === activeSection)?.label
 
     return (
-      <CategoryProjectsContent
-        projects={filteredProjects}
-        expandedProjects={expandedProjects}
-        onToggleExpand={onToggleExpand}
-        categoryLabel={categoryLabel || '未知'}
-      />
+      <div className="space-y-6">
+        {/* 移动端导航 */}
+        {mobileNavigation && (
+          <div className="lg:hidden">
+            <MobileNavigation
+              activeTab={activeTab}
+              activeSection={activeSection}
+              {...mobileNavigation}
+              getMonthName={getMonthName}
+            />
+          </div>
+        )}
+
+        <CategoryProjectsContent
+          projects={filteredProjects}
+          expandedProjects={expandedProjects}
+          onToggleExpand={onToggleExpand}
+          categoryLabel={categoryLabel || '未知'}
+        />
+      </div>
     )
   }
 
   // 工作经历页面
   if (activeSection === 'experience') {
-    return <ExperienceContent />
+    return (
+      <div className="space-y-6">
+        {/* 移动端导航 */}
+        {mobileNavigation && (
+          <div className="lg:hidden">
+            <MobileNavigation
+              activeTab={activeTab}
+              activeSection={activeSection}
+              {...mobileNavigation}
+              getMonthName={getMonthName}
+            />
+          </div>
+        )}
+
+        <ExperienceContent />
+      </div>
+    )
   }
 
   // 关于我页面
   if (activeSection === 'about') {
     return (
-      <AboutContent 
-        username={username}
-        github="zkeq"
-      />
+      <div className="space-y-6">
+        {/* 移动端导航 */}
+        {mobileNavigation && (
+          <div className="lg:hidden">
+            <MobileNavigation
+              activeTab={activeTab}
+              activeSection={activeSection}
+              {...mobileNavigation}
+              getMonthName={getMonthName}
+            />
+          </div>
+        )}
+
+        <AboutContent 
+          username={username}
+          github="zkeq"
+        />
+      </div>
     )
   }
 
   // 默认显示概览
   return (
     <div className="space-y-6">
+      {/* 移动端导航 */}
+      {mobileNavigation && (
+        <div className="lg:hidden">
+          <MobileNavigation
+            activeTab={activeTab}
+            activeSection={activeSection}
+            {...mobileNavigation}
+            getMonthName={getMonthName}
+          />
+        </div>
+      )}
+
       <div>
         <h1 className="text-3xl font-bold mb-2">欢迎来到 {username} 的作品集</h1>
         <p className="text-muted-foreground">

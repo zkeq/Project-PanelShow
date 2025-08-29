@@ -284,24 +284,26 @@ export default function UserProjectPage() {
 
       {/* 主体内容区 */}
       <div className="flex">
-        {/* 左侧目录栏 */}
-        <SidebarNavigation
-          activeTab={activeTab}
-          activeSection={activeSection}
-          sidebarCollapsed={sidebarCollapsed}
-          expandedCategories={expandedCategories}
-          expandedYears={expandedYears}
-          timelineStructure={timelineStructure}
-          onTabChange={handleTabChange}
-          onSectionChange={handleSectionChange}
-          onSidebarToggle={handleSidebarToggle}
-          onCategoryToggle={handleCategoryToggle}
-          onYearToggle={handleYearToggle}
-          getMonthName={getMonthName}
-        />
+        {/* 左侧目录栏 - 桌面端显示 */}
+        <div className="hidden lg:block">
+          <SidebarNavigation
+            activeTab={activeTab}
+            activeSection={activeSection}
+            sidebarCollapsed={sidebarCollapsed}
+            expandedCategories={expandedCategories}
+            expandedYears={expandedYears}
+            timelineStructure={timelineStructure}
+            onTabChange={handleTabChange}
+            onSectionChange={handleSectionChange}
+            onSidebarToggle={handleSidebarToggle}
+            onCategoryToggle={handleCategoryToggle}
+            onYearToggle={handleYearToggle}
+            getMonthName={getMonthName}
+          />
+        </div>
 
         {/* 右侧内容区 */}
-        <main className={`flex-1 min-w-0 relative min-h-[calc(100vh-3.5rem)] ${sidebarCollapsed ? 'ml-16' : 'ml-56'}`}>
+        <main className={`flex-1 min-w-0 relative min-h-[calc(100vh-3.5rem)] ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-56'}`}>
           {/* 背景装饰 */}
           <BackgroundDecorations />
 
@@ -316,6 +318,34 @@ export default function UserProjectPage() {
                 expandedProjects={expandedProjects}
                 onToggleExpand={toggleProjectExpansion}
                 getMonthName={getMonthName}
+                // 移动端需要的导航控制
+                mobileNavigation={{
+                  techStackStructure: [
+                    {
+                      id: 'backend',
+                      label: '技术栈 - 后端',
+                      children: [
+                        { id: 'backend-python', label: 'Python' },
+                        { id: 'backend-go', label: 'Go' }
+                      ]
+                    },
+                    {
+                      id: 'frontend',
+                      label: '技术栈 - 前端',
+                      children: [
+                        { id: 'frontend-vue', label: 'Vue' },
+                        { id: 'frontend-nextjs', label: 'Next.js' }
+                      ]
+                    }
+                  ],
+                  expandedCategories,
+                  expandedYears,
+                  timelineStructure,
+                  onTabChange: handleTabChange,
+                  onSectionChange: handleSectionChange,
+                  onCategoryToggle: handleCategoryToggle,
+                  onYearToggle: handleYearToggle
+                }}
               />
             </div>
           </div>
