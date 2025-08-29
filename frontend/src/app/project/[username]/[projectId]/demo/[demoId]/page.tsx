@@ -22,13 +22,30 @@ interface DemoPageProps {
 }
 
 export default function ProjectDemoPage({ params }: DemoPageProps) {
-  const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop")
+  // 检测屏幕尺寸，移动端默认显示移动端视图
+  const [viewMode, setViewMode] = useState<"desktop" | "mobile">("mobile")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(false)
   
   // Unwrap params using React.use()
   const { username, projectId, demoId } = use(params)
   const project = projects.find((p: Project) => p.id === Number.parseInt(demoId))
+
+  // 根据屏幕尺寸设置默认视图模式
+  useEffect(() => {
+    const updateViewMode = () => {
+      const isMobile = window.innerWidth < 768
+      setViewMode(isMobile ? "mobile" : "desktop")
+    }
+    
+    // 初始设置
+    updateViewMode()
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', updateViewMode)
+    
+    return () => window.removeEventListener('resize', updateViewMode)
+  }, [])
 
   useEffect(() => {
     setIsLoading(true)

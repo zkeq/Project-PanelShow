@@ -44,8 +44,8 @@ export default function DemoControls({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+            {/* View Mode Toggle - 在移动端隐藏 */}
+            <div className="hidden md:flex items-center gap-1 p-1 bg-muted rounded-lg">
               <Button
                 variant={viewMode === "desktop" ? "default" : "ghost"}
                 size="sm"
