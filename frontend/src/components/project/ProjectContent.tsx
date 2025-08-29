@@ -7,7 +7,6 @@ import Markdown from "@/components/Markdown";
 import FeatureGallery from "@/components/project/FeatureGallery";
 import DevelopmentTimelineSection from "@/components/project/DevelopmentTimelineSection";
 import MobileProjectNavigation from "@/components/project/MobileProjectNavigation";
-import { useState, useEffect } from "react";
 import {
   Users,
   Eye,
@@ -79,25 +78,26 @@ interface ProjectContentProps {
 }
 
 export default function ProjectContent({ project, username, mobileNavigation }: ProjectContentProps) {
-  const [isStackedLayout, setIsStackedLayout] = useState(false);
+  // 移除 JavaScript 布局计算，改用纯 CSS 响应式布局
+  // const [isStackedLayout, setIsStackedLayout] = useState(false);
   
-  useEffect(() => {
-    const checkWindowSize = () => {
-      // 基于窗口宽度来决定布局，更简单稳定
-      // 当窗口宽度小于1200px时使用垂直布局
-      setIsStackedLayout(window.innerWidth < 1400);
-    };
+  // useEffect(() => {
+  //   const checkWindowSize = () => {
+  //     // 基于窗口宽度来决定布局，更简单稳定
+  //     // 当窗口宽度小于1200px时使用垂直布局
+  //     setIsStackedLayout(window.innerWidth < 1400);
+  //   };
 
-    // 初始检查
-    checkWindowSize();
+  //   // 初始检查
+  //   checkWindowSize();
 
-    // 监听窗口大小变化
-    window.addEventListener('resize', checkWindowSize);
+  //   // 监听窗口大小变化
+  //   window.addEventListener('resize', checkWindowSize);
     
-    return () => {
-      window.removeEventListener('resize', checkWindowSize);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener('resize', checkWindowSize);
+  //   };
+  // }, []);
   const projectStats = [
     // 第一行
     {
@@ -275,11 +275,11 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
           </div>
         </div>
 
-        <div className={`${isStackedLayout ? 'space-y-6' : 'flex gap-6 items-start'}`}>
+        <div className="space-y-2 xl:flex xl:gap-2 xl:items-start xl:space-y-0">
           {/* 左侧信息面板 - 弹性区域 */}
-          <div className={`${isStackedLayout ? 'w-full' : 'flex-1 min-w-0'}`}>
-            {/* 项目统计信息 - 5×4布局 */}
-            <Card className="h-[460px] flex flex-col">
+          <div className="w-full xl:flex-1 xl:min-w-0">
+            {/* 项目统计信息 - 响应式布局 */}
+            <Card className="lg:h-[460px] flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">项目信息</CardTitle>
                 <div className="flex gap-2">
@@ -293,8 +293,8 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 flex items-center">
-                <div className="grid grid-cols-5 gap-4 w-full">
+              <CardContent className="flex-1 lg:flex lg:items-center py-6">
+                <div className="grid grid-cols-4 lg:grid-cols-5 gap-4 w-full">
                   {projectStats.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
@@ -321,7 +321,7 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
           </div>
 
           {/* 项目图集 - 响应式布局 */}
-          <div className={`${isStackedLayout ? 'w-full' : 'flex-shrink-0 w-[410px]'}`}>
+          <div className="w-full xl:flex-shrink-0 xl:w-[410px]">
             <FeatureGallery 
               images={project.images || []}
               variant="carousel"
