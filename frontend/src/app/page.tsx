@@ -1,19 +1,77 @@
+'use client'
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, Code2, Database, Globe, Monitor, Rocket, Shield, Star, Users, Zap } from "lucide-react";
+import { ArrowRight, Code2, Database, Globe, Monitor, Rocket, Shield, Star, Users, Zap, Menu, X } from "lucide-react";
 import { ThemeSwitch } from "@/components/theme-switch";
+import { useState } from "react";
+
+function MobileMenu() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="md:hidden"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+      </Button>
+      
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur border-b md:hidden">
+          <nav className="container py-4 space-y-4">
+            <a 
+              href="#features" 
+              className="block text-sm font-medium text-foreground/60 hover:text-foreground/80 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              特性
+            </a>
+            <a 
+              href="#architecture" 
+              className="block text-sm font-medium text-foreground/60 hover:text-foreground/80 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              架构
+            </a>
+            <a 
+              href="#progress" 
+              className="block text-sm font-medium text-foreground/60 hover:text-foreground/80 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              进度
+            </a>
+            <a 
+              href="#docs" 
+              className="block text-sm font-medium text-foreground/60 hover:text-foreground/80 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              文档
+            </a>
+          </nav>
+        </div>
+      )}
+    </>
+  );
+}
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container flex h-16 items-center justify-between relative">
           <div className="flex items-center space-x-2">
-            <Monitor className="h-6 w-6" />
-            <span className="font-bold text-xl">Project-PanelShow</span>
+            <Monitor className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="font-bold text-lg sm:text-xl">
+              <span className="sm:hidden">PPS</span>
+              <span className="hidden sm:inline">Project-PanelShow</span>
+            </span>
           </div>
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
             <a href="#features" className="transition-colors hover:text-foreground/80 text-foreground/60">
@@ -29,14 +87,15 @@ export default function Home() {
               文档
             </a>
           </nav>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 sm:space-x-2">
             <ThemeSwitch />
             <Button variant="ghost" size="sm">
               GitHub
             </Button>
-            <Button size="sm">
+            <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-4">
               开始体验
             </Button>
+            <MobileMenu />
           </div>
         </div>
       </header>
