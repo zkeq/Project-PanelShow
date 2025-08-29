@@ -22,7 +22,7 @@ export default function HeaderNavigation({
           </div>
           <div className="flex items-center space-x-2 min-w-0">
             <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{username}</h1>
-            <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap hidden xs:inline">的作品集</span>
+            <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap hidden sm:inline">的作品集</span>
           </div>
         </div>
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
