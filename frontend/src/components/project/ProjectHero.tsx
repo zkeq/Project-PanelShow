@@ -129,7 +129,7 @@ export default function ProjectHero({ project, username }: ProjectHeroProps) {
         </div>
 
         {/* 统计数据 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div className="grid grid-cols-3 gap-4 sm:gap-8">
           <div>
             <div className="text-2xl font-bold text-foreground">
               {project.monthlyPV}
