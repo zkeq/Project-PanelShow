@@ -4,7 +4,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Calendar, Users, Eye, Clock, ExternalLink, BarChart3, FileText, Sparkles } from 'lucide-react'
+import { 
+  Calendar, Users, Eye, Clock, ExternalLink, BarChart3, FileText, Sparkles,
+  Code, Building2, TrendingUp, Zap, User, Handshake, Rocket, Database,
+  Palette, Puzzle, CheckCircle, TestTube, Link2, Globe, BookOpen, Settings,
+  Shield, Smartphone, Package, type LucideIcon
+} from 'lucide-react'
 import Image from 'next/image'
 
 interface ProjectSidebarProps {
@@ -20,6 +25,13 @@ interface ProjectSidebarProps {
     componentLibrary?: string
     status: 'active' | 'archived' | 'maintained'
     previewImage?: string
+    displayData?: Array<{
+      key: string
+      label: string
+      value: string
+      icon?: string
+      type?: string
+    }>
     timeline?: {
       [year: string]: {
         [month: string]: Array<{
@@ -35,6 +47,16 @@ interface ProjectSidebarProps {
 }
 
 export default function ProjectSidebar({ project, activeSection, onSectionChange }: ProjectSidebarProps) {
+  // 图标映射函数
+  const getIcon = (iconName: string): LucideIcon => {
+    const iconMap: Record<string, LucideIcon> = {
+      Code, Building2, TrendingUp, Clock, Zap, User, Handshake, Rocket, Database,
+      Calendar, BarChart3, Palette, Puzzle, CheckCircle, TestTube, Link2, Globe,
+      BookOpen, Users, Settings, Shield, Smartphone, Eye, Package, ExternalLink,
+    };
+    return iconMap[iconName] || Code;
+  };
+
   const navigationItems = [
     { id: 'overview', label: '项目概览', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'description', label: '项目说明', icon: <FileText className="w-4 h-4" /> },
@@ -93,6 +115,30 @@ export default function ProjectSidebar({ project, activeSection, onSectionChange
         </div>
 
         <Separator />
+
+        {/* 项目统计信息 */}
+        {project.displayData && project.displayData.length > 0 && (
+          <>
+            <div className="space-y-3">
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">项目信息</h2>
+              <div className="grid grid-cols-2 gap-2">
+                {project.displayData.slice(0, 8).map((item) => {
+                  const IconComponent = getIcon(item.icon || 'Code');
+                  return (
+                    <div key={item.key} className="bg-muted/30 rounded-lg p-3 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <IconComponent className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground font-medium">{item.label}</span>
+                      </div>
+                      <p className="text-xs font-semibold text-foreground leading-tight">{item.value}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <Separator />
+          </>
+        )}
 
         {/* 导航菜单 */}
         <div className="space-y-2">

@@ -430,34 +430,6 @@ const mockProjectDetails: Record<string, ProjectDetail> = {
         type: 'text'
       },
       {
-        key: 'repositoryUrl',
-        label: '代码仓库',
-        value: 'https://github.com/zkeq/ecommerce',
-        icon: 'Link2',
-        type: 'link'
-      },
-      {
-        key: 'liveUrl',
-        label: '在线预览',
-        value: 'https://ecommerce.demo.com',
-        icon: 'Globe',
-        type: 'link'
-      },
-      {
-        key: 'apiDocUrl',
-        label: 'API 文档',
-        value: 'https://docs.ecommerce.demo.com',
-        icon: 'BookOpen',
-        type: 'link'
-      },
-      {
-        key: 'designUrl',
-        label: '设计稿',
-        value: 'https://figma.com/ecommerce-design',
-        icon: 'Palette',
-        type: 'link'
-      },
-      {
         key: 'teamSize',
         label: '团队规模',
         value: '5人',
@@ -491,6 +463,34 @@ const mockProjectDetails: Record<string, ProjectDetail> = {
         value: '2024-08-20',
         icon: 'Calendar',
         type: 'text'
+      },
+      {
+        key: 'buildTool',
+        label: '构建工具',
+        value: 'Webpack 5',
+        icon: 'Settings',
+        type: 'badge'
+      },
+      {
+        key: 'linting',
+        label: '代码检查',
+        value: 'ESLint + Prettier',
+        icon: 'CheckCircle',
+        type: 'badge'
+      },
+      {
+        key: 'stateManagement',
+        label: '状态管理',
+        value: 'Pinia',
+        icon: 'Database',
+        type: 'badge'
+      },
+      {
+        key: 'packageManager',
+        label: '包管理器',
+        value: 'npm',
+        icon: 'Package',
+        type: 'badge'
       }
     ],
     images: [

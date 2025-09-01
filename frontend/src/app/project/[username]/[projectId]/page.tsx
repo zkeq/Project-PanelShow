@@ -96,7 +96,9 @@ export default function ProjectDetailPage() {
               uiLibrary: projectData.displayData.find(item => item.key === 'uiLibrary')?.value || '',
               componentLibrary: projectData.displayData.find(item => item.key === 'componentLibrary')?.value || '',
               // 修复状态类型兼容问题
-              status: projectData.status === 'completed' ? 'archived' as const : projectData.status as 'active' | 'maintained'
+              status: projectData.status === 'completed' ? 'archived' as const : projectData.status as 'active' | 'maintained',
+              // 添加displayData用于动态渲染
+              displayData: projectData.displayData
             }}
             activeSection={activeSection}
             onSectionChange={handleSectionChange}
@@ -127,7 +129,8 @@ export default function ProjectDetailPage() {
                   projectType: projectData.displayData.find(item => item.key === 'projectType')?.value || '',
                   monthlyPV: projectData.displayData.find(item => item.key === 'monthlyPV')?.value || '',
                   developmentPeriod: projectData.displayData.find(item => item.key === 'developmentPeriod')?.value || '',
-                  status: projectData.status === 'completed' ? 'archived' as const : projectData.status as 'active' | 'maintained'
+                  status: projectData.status === 'completed' ? 'archived' as const : projectData.status as 'active' | 'maintained',
+                  displayData: projectData.displayData
                 }} 
                 username={username}
                 // 传递移动端导航所需的数据

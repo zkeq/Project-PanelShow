@@ -17,6 +17,24 @@ import {
   ExternalLink,
   GitBranch,
   BarChart3,
+  Building2,
+  Zap,
+  Database,
+  Rocket,
+  CheckCircle,
+  TestTube,
+  Link2,
+  Globe,
+  BookOpen,
+  Settings,
+  Shield,
+  Smartphone,
+  Calendar,
+  TrendingUp,
+  User,
+  Handshake,
+  Puzzle,
+  type LucideIcon,
 } from "lucide-react";
 
 interface MobileNavigationData {
@@ -39,6 +57,13 @@ interface ProjectContentProps {
     previewImage?: string;
     previewUrl?: string;
     longDescription?: string;
+    displayData?: Array<{
+      key: string;
+      label: string;
+      value: string;
+      icon?: string;
+      type?: string;
+    }>;
     images?: Array<{
       src: string;
       alt: string;
@@ -77,153 +102,79 @@ interface ProjectContentProps {
   mobileNavigation?: MobileNavigationData;
 }
 
-export default function ProjectContent({ project, username, mobileNavigation }: ProjectContentProps) {
-  const projectStats = [
-    // 第一行
-    {
-      label: "技术栈",
-      value: project.techStack,
-      icon: Code,
-      color:
-        "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-800",
-    },
-    {
-      label: "类型",
-      value: project.projectType,
-      icon: Users,
-      color:
-        "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950/30 dark:border-green-800",
-    },
-    {
-      label: "月PV",
-      value: project.monthlyPV,
-      icon: BarChart3,
-      color:
-        "text-purple-600 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-950/30 dark:border-purple-800",
-    },
-    {
-      label: "开发时间",
-      value: project.developmentPeriod,
-      icon: Clock,
-      color:
-        "text-orange-600 bg-orange-50 border-orange-200 dark:text-orange-400 dark:bg-orange-950/30 dark:border-orange-800",
-    },
-    {
-      label: "样式",
-      value: project.uiLibrary || "Tailwind CSS",
-      icon: Palette,
-      color:
-        "text-cyan-600 bg-cyan-50 border-cyan-200 dark:text-cyan-400 dark:bg-cyan-950/30 dark:border-cyan-800",
-    },
-    // 第二行
-    {
-      label: "组件库",
-      value: project.componentLibrary || "shadcn/ui",
-      icon: Package,
-      color:
-        "text-indigo-600 bg-indigo-50 border-indigo-200 dark:text-indigo-400 dark:bg-indigo-950/30 dark:border-indigo-800",
-    },
-    {
-      label: "数据库",
-      value: "PostgreSQL",
-      icon: Package,
-      color:
-        "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800",
-    },
-    {
-      label: "部署",
-      value: "Vercel",
-      icon: Code,
-      color:
-        "text-violet-600 bg-violet-50 border-violet-200 dark:text-violet-400 dark:bg-violet-950/30 dark:border-violet-800",
-    },
-    {
-      label: "版本控制",
-      value: "Git",
-      icon: Code,
-      color:
-        "text-rose-600 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-950/30 dark:border-rose-800",
-    },
-    {
-      label: "测试框架",
-      value: "Jest",
-      icon: Code,
-      color:
-        "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800",
-    },
-    // 第三行
-    {
-      label: "状态管理",
-      value: "Zustand",
-      icon: Package,
-      color:
-        "text-teal-600 bg-teal-50 border-teal-200 dark:text-teal-400 dark:bg-teal-950/30 dark:border-teal-800",
-    },
-    {
-      label: "构建工具",
-      value: "Webpack",
-      icon: Code,
-      color:
-        "text-sky-600 bg-sky-50 border-sky-200 dark:text-sky-400 dark:bg-sky-950/30 dark:border-sky-800",
-    },
-    {
-      label: "代码规范",
-      value: "ESLint",
-      icon: Code,
-      color:
-        "text-pink-600 bg-pink-50 border-pink-200 dark:text-pink-400 dark:bg-pink-950/30 dark:border-pink-800",
-    },
-    {
-      label: "类型检查",
-      value: "TypeScript",
-      icon: Code,
-      color:
-        "text-lime-600 bg-lime-50 border-lime-200 dark:text-lime-400 dark:bg-lime-950/30 dark:border-lime-800",
-    },
-    {
-      label: "包管理",
-      value: "npm",
-      icon: Package,
-      color:
-        "text-stone-600 bg-stone-50 border-stone-200 dark:text-stone-400 dark:bg-stone-950/30 dark:border-stone-800",
-    },
-    // 第四行
-    {
-      label: "监控",
-      value: "Sentry",
-      icon: Eye,
-      color:
-        "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800",
-    },
-    {
-      label: "文档",
-      value: "Storybook",
-      icon: Package,
-      color:
-        "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-950/30 dark:border-yellow-800",
-    },
-    {
-      label: "协作",
-      value: "GitHub",
-      icon: Users,
-      color:
-        "text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-950/30 dark:border-gray-800",
-    },
-    {
-      label: "容器化",
-      value: "Docker",
-      icon: Package,
-      color:
-        "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-800",
-    },
-    {
-      label: "缓存",
-      value: "Redis",
-      icon: Package,
-      color:
-        "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800",
-    },
+// 图标映射函数
+const getIcon = (iconName: string): LucideIcon => {
+  const iconMap: Record<string, LucideIcon> = {
+    Code,
+    Building2,
+    TrendingUp,
+    Clock,
+    Zap,
+    User,
+    Handshake,
+    Rocket,
+    Database,
+    Calendar,
+    BarChart3,
+    Palette,
+    Puzzle,
+    CheckCircle,
+    TestTube,
+    Link2,
+    Globe,
+    BookOpen,
+    Users,
+    Settings,
+    Shield,
+    Smartphone,
+    Eye,
+    Package,
+    GitBranch,
+    ExternalLink,
+  };
+  return iconMap[iconName] || Code;
+};
+
+// 颜色映射函数
+const getColorTheme = (index: number): string => {
+  const colorThemes = [
+    "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-800",
+    "text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950/30 dark:border-green-800",
+    "text-purple-600 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-950/30 dark:border-purple-800",
+    "text-orange-600 bg-orange-50 border-orange-200 dark:text-orange-400 dark:bg-orange-950/30 dark:border-orange-800",
+    "text-cyan-600 bg-cyan-50 border-cyan-200 dark:text-cyan-400 dark:bg-cyan-950/30 dark:border-cyan-800",
+    "text-indigo-600 bg-indigo-50 border-indigo-200 dark:text-indigo-400 dark:bg-indigo-950/30 dark:border-indigo-800",
+    "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800",
+    "text-violet-600 bg-violet-50 border-violet-200 dark:text-violet-400 dark:bg-violet-950/30 dark:border-violet-800",
+    "text-rose-600 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-950/30 dark:border-rose-800",
+    "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/30 dark:border-amber-800",
+    "text-teal-600 bg-teal-50 border-teal-200 dark:text-teal-400 dark:bg-teal-950/30 dark:border-teal-800",
+    "text-sky-600 bg-sky-50 border-sky-200 dark:text-sky-400 dark:bg-sky-950/30 dark:border-sky-800",
+    "text-pink-600 bg-pink-50 border-pink-200 dark:text-pink-400 dark:bg-pink-950/30 dark:border-pink-800",
+    "text-lime-600 bg-lime-50 border-lime-200 dark:text-lime-400 dark:bg-lime-950/30 dark:border-lime-800",
+    "text-stone-600 bg-stone-50 border-stone-200 dark:text-stone-400 dark:bg-stone-950/30 dark:border-stone-800",
+    "text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/30 dark:border-red-800",
+    "text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-950/30 dark:border-yellow-800",
+    "text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-950/30 dark:border-gray-800",
   ];
+  return colorThemes[index % colorThemes.length];
+};
+
+export default function ProjectContent({ project, username, mobileNavigation }: ProjectContentProps) {
+  // 从displayData动态生成项目统计信息
+  const projectStats = (project.displayData || []).map((item, index) => {
+    const IconComponent = getIcon(item.icon || 'Code');
+    return {
+      label: item.label,
+      value: item.value,
+      icon: IconComponent,
+      color: getColorTheme(index),
+    };
+  });
+
+  // 调试信息
+  console.log('ProjectContent - project.displayData:', project.displayData);
+  console.log('ProjectContent - projectStats.length:', projectStats.length);
 
   return (
     <div className="space-y-8">
@@ -259,7 +210,7 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
           {/* 左侧信息面板 - 弹性区域 */}
           <div className="w-full lg:flex-1 lg:min-w-0">
             {/* 项目统计信息 - 响应式布局 */}
-            <Card className="gap-2 lg:h-[460px] flex flex-col">
+            <Card className="gap-2 flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">项目信息</CardTitle>
                 <div className="flex gap-2">
@@ -273,8 +224,8 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 lg:flex lg:items-center py-4 lg:py-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4 w-full">
+              <CardContent className="py-4 lg:py-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4 w-full">
                   {projectStats.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
