@@ -12,8 +12,14 @@ import {
   Briefcase,
   User,
   Github,
-  Globe
+  Globe,
+  BookOpen,
+  Linkedin,
+  Twitter,
+  Download,
+  Mail
 } from 'lucide-react'
+import { useGlobalStore } from '@/store/useGlobalStore'
 
 interface SidebarNavigationProps {
   activeTab: 'projects' | 'timeline'
@@ -44,6 +50,20 @@ export default function SidebarNavigation({
   onYearToggle,
   getMonthName
 }: SidebarNavigationProps) {
+  
+  // 获取快捷链接数据
+  const quickLinks = useGlobalStore(state => state.getQuickLinks())
+  
+  // 图标映射
+  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    Github,
+    Globe,
+    BookOpen,
+    Linkedin,
+    Twitter,
+    Download,
+    Mail
+  }
   
   // 技术栈结构
   const techStackStructure = [
@@ -304,20 +324,22 @@ export default function SidebarNavigation({
                 {/* 快速链接 */}
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground px-3 mb-2">快速链接</p>
-                  <a 
-                    href="#" 
-                    className="flex items-center space-x-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                  >
-                    <Github className="w-4 h-4" />
-                    <span>GitHub</span>
-                  </a>
-                  <a 
-                    href="#" 
-                    className="flex items-center space-x-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span>个人网站</span>
-                  </a>
+                  {quickLinks.map((link) => {
+                    const Icon = iconMap[link.icon] || Globe
+                    return (
+                      <a 
+                        key={link.id}
+                        href={link.url}
+                        target={link.url.startsWith('http') ? '_blank' : undefined}
+                        rel={link.url.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        className="flex items-center space-x-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+                        title={link.description}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{link.name}</span>
+                      </a>
+                    )
+                  })}
                 </div>
               </>
             )}

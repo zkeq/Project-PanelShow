@@ -150,6 +150,41 @@ export interface DemoProject {
   allowIframe?: boolean
 }
 
+// 工作经历类型
+export interface Experience {
+  id: string
+  title: string
+  company: string
+  location: string
+  period: string
+  responsibilities: string[]
+}
+
+// 个人资料类型
+export interface ProfileInfo {
+  username: string
+  name: string
+  title: string
+  email: string
+  github: string
+  website: string
+  bio: string
+  skills: {
+    frontend: string[]
+    backend: string[]
+  }
+  interests: string[]
+}
+
+// 快捷链接类型
+export interface QuickLink {
+  id: string
+  name: string
+  url: string
+  icon: string
+  description: string
+}
+
 // 用户信息类型
 export interface User {
   username: string
@@ -179,6 +214,15 @@ export interface GlobalState {
   // 演示项目数据
   demoProjects: DemoProject[]
   
+  // 个人资料数据
+  profileInfo: ProfileInfo
+  
+  // 工作经历数据
+  experiences: Experience[]
+  
+  // 快捷链接数据
+  quickLinks: QuickLink[]
+  
   // Actions
   getUserByUsername: (username: string) => User | undefined
   getTimelineItems: () => TimelineItem[]
@@ -188,4 +232,10 @@ export interface GlobalState {
   getProjectsByCategory: (category: string) => Project[]
   updateTimelineItem: (id: string, updates: Partial<TimelineItem>) => void
   likeTimelineItem: (id: string) => void
+  
+  // 新增个人资料相关 actions
+  getProfileInfo: () => ProfileInfo
+  getExperiences: () => Experience[]
+  getQuickLinks: () => QuickLink[]
+  getExperienceById: (id: string) => Experience | undefined
 }

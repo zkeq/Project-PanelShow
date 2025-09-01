@@ -3,9 +3,11 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Mail, Github, Globe } from 'lucide-react'
+import { useGlobalStore } from '@/store/useGlobalStore'
 
 interface AboutContentProps {
-  username: string
+  // 可选的个人信息属性覆盖
+  username?: string
   email?: string
   github?: string
   website?: string
@@ -17,18 +19,18 @@ interface AboutContentProps {
   interests?: string[]
 }
 
-export default function AboutContent({ 
-  username,
-  email = 'contact@example.com',
-  github,
-  website = 'personal-website.com',
-  bio = '我是一名充满热情的全栈开发工程师，拥有 5 年以上的软件开发经验。专注于构建高性能、可扩展的 Web 应用，热衷于学习新技术和分享知识。在职业生涯中，我参与了多个大型项目的开发，从前端界面到后端架构，从数据库设计到部署运维，积累了丰富的全栈开发经验。我相信技术的力量，也相信团队合作的重要性。',
-  skills = {
-    frontend: ['React / Vue.js', 'Next.js / Nuxt.js', 'TypeScript', 'Tailwind CSS'],
-    backend: ['Python / Go', 'Django / FastAPI', 'PostgreSQL / Redis', 'Docker / Kubernetes']
-  },
-  interests = ['编程', '开源', '摄影', '阅读', '旅行', '音乐']
-}: AboutContentProps) {
+export default function AboutContent(props: AboutContentProps) {
+  const profileData = useGlobalStore(state => state.getProfileInfo())
+  
+  const {
+    username = profileData.username,
+    email = profileData.email,
+    github = profileData.github,
+    website = profileData.website,
+    bio = profileData.bio,
+    skills = profileData.skills,
+    interests = profileData.interests
+  } = props
   return (
     <div className="space-y-6">
       <div>

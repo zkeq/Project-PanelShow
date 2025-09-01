@@ -12,7 +12,8 @@
       "Bash(npm run:*)",
       "Bash(mkdir:*)",
       "Bash(pkill:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

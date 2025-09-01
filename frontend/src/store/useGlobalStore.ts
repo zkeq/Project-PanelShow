@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { GlobalState, TimelineItem, Project, ProjectDetail, DemoProject, User } from '@/types/store'
+import { GlobalState, TimelineItem, Project, ProjectDetail, DemoProject, User, ProfileInfo, Experience, QuickLink } from '@/types/store'
 
 // Mock 用户数据
 const mockUsers: Record<string, User> = {
@@ -853,6 +853,121 @@ const mockDemoProjects: DemoProject[] = [
   }
 ]
 
+// Mock 个人资料数据
+const mockProfileInfo: ProfileInfo = {
+  username: "zkeq",
+  name: "张三",
+  title: "全栈开发工程师",
+  email: "contact@example.com",
+  github: "zkeq",
+  website: "personal-website.com",
+  bio: "我是一名充满热情的全栈开发工程师，拥有 5 年以上的软件开发经验。专注于构建高性能、可扩展的 Web 应用，热衷于学习新技术和分享知识。在职业生涯中，我参与了多个大型项目的开发，从前端界面到后端架构，从数据库设计到部署运维，积累了丰富的全栈开发经验。我相信技术的力量，也相信团队合作的重要性。",
+  skills: {
+    frontend: [
+      "React / Vue.js",
+      "Next.js / Nuxt.js", 
+      "TypeScript",
+      "Tailwind CSS"
+    ],
+    backend: [
+      "Python / Go",
+      "Django / FastAPI",
+      "PostgreSQL / Redis",
+      "Docker / Kubernetes"
+    ]
+  },
+  interests: ["编程", "开源", "摄影", "阅读", "旅行", "音乐"]
+}
+
+// Mock 工作经历数据
+const mockExperiences: Experience[] = [
+  {
+    id: '1',
+    title: '高级全栈开发工程师',
+    company: '科技创新公司',
+    location: '北京',
+    period: '2021 - 至今',
+    responsibilities: [
+      '负责核心业务系统的架构设计和技术选型',
+      '带领 5 人技术团队完成多个大型项目',
+      '优化系统性能，将响应时间提升 60%',
+      '建立完善的 CI/CD 流程和代码规范'
+    ]
+  },
+  {
+    id: '2',
+    title: '前端开发工程师',
+    company: '互联网科技公司',
+    location: '上海',
+    period: '2019 - 2021',
+    responsibilities: [
+      '参与公司主要产品的前端开发工作',
+      '负责移动端 H5 页面的开发和优化',
+      '搭建组件库和开发工具，提高团队效率',
+      '参与技术分享和新人培训工作'
+    ]
+  },
+  {
+    id: '3',
+    title: '初级开发工程师',
+    company: '软件开发公司',
+    location: '深圳',
+    period: '2018 - 2019',
+    responsibilities: [
+      '参与企业管理系统的开发和维护',
+      '学习现代前端框架和后端技术',
+      '配合产品和设计团队完成需求开发',
+      '积累了丰富的项目开发经验'
+    ]
+  }
+]
+
+// Mock 快捷链接数据
+const mockQuickLinks: QuickLink[] = [
+  {
+    id: '1',
+    name: 'GitHub',
+    url: 'https://github.com/zkeq',
+    icon: 'Github',
+    description: '我的开源项目和代码仓库'
+  },
+  {
+    id: '2',
+    name: '博客',
+    url: 'https://blog.example.com',
+    icon: 'BookOpen',
+    description: '技术文章和学习笔记'
+  },
+  {
+    id: '3',
+    name: 'LinkedIn',
+    url: 'https://linkedin.com/in/profile',
+    icon: 'Linkedin',
+    description: '职业经历和联系方式'
+  },
+  {
+    id: '4',
+    name: 'Twitter',
+    url: 'https://twitter.com/username',
+    icon: 'Twitter',
+    description: '技术动态和日常分享'
+  },
+  {
+    id: '5',
+    name: '简历下载',
+    url: '/resume.pdf',
+    icon: 'Download',
+    description: '下载完整版简历'
+  },
+  {
+    id: '6',
+    name: 'Email',
+    url: 'mailto:contact@example.com',
+    icon: 'Mail',
+    description: '通过邮件联系我'
+  }
+]
+
 // 创建全局状态管理
 export const useGlobalStore = create<GlobalState>((set, get) => ({
   // 初始数据
@@ -861,6 +976,9 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
   projects: mockProjects,
   projectDetails: mockProjectDetails,
   demoProjects: mockDemoProjects,
+  profileInfo: mockProfileInfo,
+  experiences: mockExperiences,
+  quickLinks: mockQuickLinks,
 
   // Actions
   getUserByUsername: (username: string) => {
@@ -895,6 +1013,23 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
         item.id === id ? { ...item, ...updates } : item
       )
     }))
+  },
+
+  // 个人资料相关 actions
+  getProfileInfo: () => {
+    return get().profileInfo
+  },
+
+  getExperiences: () => {
+    return get().experiences
+  },
+
+  getQuickLinks: () => {
+    return get().quickLinks
+  },
+
+  getExperienceById: (id: string) => {
+    return get().experiences.find(exp => exp.id === id)
   },
 
   likeTimelineItem: (id: string) => {
