@@ -1,20 +1,7 @@
 'use client'
 
 import ProjectGrid from '@/components/project/ProjectGrid'
-
-interface Project {
-  id: string
-  name: string
-  description: string
-  status: 'active' | 'maintained' | 'archived'
-  category: string
-  techStack: string
-  projectType: string
-  monthlyPV: string
-  developmentPeriod: string
-  previewImage: string
-  updatedAt: string
-}
+import { Project } from '@/types/store'
 
 interface CategoryProjectsContentProps {
   projects: Project[]

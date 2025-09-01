@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { projects, type Project } from "./projects-data"
+import { useGlobalStore } from '@/store/useGlobalStore'
 import HeaderNavigation from '@/components/layout/HeaderNavigation'
 import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
 import DemoControls from '@/components/demo/DemoControls'
@@ -29,7 +29,10 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
   
   // Unwrap params using React.use()
   const { username, projectId, demoId } = use(params)
-  const project = projects.find((p: Project) => p.id === Number.parseInt(demoId))
+  
+  // 从 Zustand store 获取演示项目数据
+  const { getDemoProject } = useGlobalStore()
+  const project = getDemoProject(Number.parseInt(demoId))
 
   // 根据屏幕尺寸设置默认视图模式
   useEffect(() => {

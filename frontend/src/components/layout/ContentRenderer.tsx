@@ -2,6 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { TimelineItem } from '@/types/timeline'
+import { Project } from '@/types/store'
 
 import AllProjectsContent from '@/components/project/AllProjectsContent'
 import CategoryProjectsContent from '@/components/project/CategoryProjectsContent'
@@ -9,20 +10,6 @@ import TimelineContent from '@/components/timeline/TimelineContent'
 import ExperienceContent from '@/components/experience/ExperienceContent'
 import AboutContent from '@/components/about/AboutContent'
 import MobileNavigation from '@/components/layout/MobileNavigation'
-
-interface Project {
-  id: string
-  name: string
-  description: string
-  status: 'active' | 'maintained' | 'archived'
-  category: string
-  techStack: string
-  projectType: string
-  monthlyPV: string
-  developmentPeriod: string
-  previewImage: string
-  updatedAt: string
-}
 
 interface MobileNavigationData {
   techStackStructure: Array<{

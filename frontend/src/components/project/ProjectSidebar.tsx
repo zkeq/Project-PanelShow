@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Calendar, Users, Eye, Clock, ExternalLink } from 'lucide-react'
+import { Calendar, Users, Eye, Clock, ExternalLink, BarChart3, FileText, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 
 interface ProjectSidebarProps {
@@ -36,10 +36,10 @@ interface ProjectSidebarProps {
 
 export default function ProjectSidebar({ project, activeSection, onSectionChange }: ProjectSidebarProps) {
   const navigationItems = [
-    { id: 'overview', label: '项目概览', icon: '📊' },
-    { id: 'description', label: '项目说明', icon: '📄' },
-    { id: 'features', label: '特色功能介绍', icon: '✨' },
-    { id: 'timeline', label: '开发周期介绍', icon: '⏱️' }
+    { id: 'overview', label: '项目概览', icon: <BarChart3 className="w-4 h-4" /> },
+    { id: 'description', label: '项目说明', icon: <FileText className="w-4 h-4" /> },
+    { id: 'features', label: '特色功能介绍', icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'timeline', label: '开发周期介绍', icon: <Clock className="w-4 h-4" /> }
   ]
 
   const timelineYears = project.timeline ? Object.keys(project.timeline).sort((a, b) => parseInt(b) - parseInt(a)) : []
@@ -109,7 +109,7 @@ export default function ProjectSidebar({ project, activeSection, onSectionChange
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50 border border-transparent'
                 }`}
               >
-                <span className="mr-3 text-base">{item.icon}</span>
+                <span className="mr-3">{item.icon}</span>
                 <span className="text-sm">{item.label}</span>
               </Button>
             ))}

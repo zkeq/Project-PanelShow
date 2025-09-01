@@ -10,7 +10,9 @@
       "Bash(npm run dev:*)",
       "Bash(git commit:*)",
       "Bash(npm run:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []

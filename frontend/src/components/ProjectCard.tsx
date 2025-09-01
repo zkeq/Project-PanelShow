@@ -10,27 +10,68 @@ import {
   ExternalLink,
   Calendar,
   BarChart3,
+  Code,
+  Building2,
+  TrendingUp,
+  Clock,
+  Zap,
+  User,
+  Handshake,
+  Rocket,
+  Database,
+  Palette,
+  Puzzle,
+  CheckCircle,
+  TestTube,
+  Link2,
+  Globe,
+  BookOpen,
+  Users,
+  Settings,
+  Shield,
+  Smartphone,
+  type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import NextLink from "next/link";
 import { useState } from "react";
 import Markdown from "@/components/Markdown";
+import { Project } from '@/types/store';
 
 interface ProjectCardProps {
-  project: {
-    id: string;
-    name: string;
-    description: string;
-    techStack?: string;
-    projectType?: string;
-    monthlyPV?: string;
-    developmentPeriod?: string;
-    previewImage?: string;
-    status?: "active" | "archived" | "maintained";
-  };
+  project: Project;
   expandedProjects?: string[];
   onToggleExpand?: (projectId: string) => void;
 }
+
+// 图标映射函数
+const getIcon = (iconName: string): LucideIcon => {
+  const iconMap: Record<string, LucideIcon> = {
+    Code,
+    Building2,
+    TrendingUp,
+    Clock,
+    Zap,
+    User,
+    Handshake,
+    Rocket,
+    Database,
+    Calendar,
+    BarChart3,
+    Palette,
+    Puzzle,
+    CheckCircle,
+    TestTube,
+    Link2,
+    Globe,
+    BookOpen,
+    Users,
+    Settings,
+    Shield,
+    Smartphone,
+  };
+  return iconMap[iconName] || Code;
+};
 
 export default function ProjectCard({
   project,
@@ -137,7 +178,7 @@ export default function ProjectCard({
   ];
 
   return (
-    <Link
+    <NextLink
       href={`/project/zkeq/${project.id}`}
       className="block transition-transform hover:scale-[1.02]"
     >
@@ -191,6 +232,15 @@ export default function ProjectCard({
                 维护中
               </Badge>
             )}
+            {project.status === "completed" && (
+              <Badge
+                variant="secondary"
+                className="absolute top-3 right-3 bg-gray-500/90 text-white border-0 shadow-sm backdrop-blur-sm"
+              >
+                <div className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />
+                已完成
+              </Badge>
+            )}
 
             {/* 悬浮操作按钮 */}
             <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -218,7 +268,7 @@ export default function ProjectCard({
                   技术栈
                 </p>
                 <p className="font-semibold text-xs text-foreground">
-                  {project.techStack || "Vue + Python"}
+                  {project.attributes.find(attr => attr.key === 'techStack')?.value || "Vue + Python"}
                 </p>
               </div>
               <div className="text-center space-y-1">
@@ -231,7 +281,7 @@ export default function ProjectCard({
                   项目类型
                 </p>
                 <p className="font-semibold text-xs text-foreground">
-                  {project.projectType || "个人项目"}
+                  {project.attributes.find(attr => attr.key === 'projectType')?.value || "个人项目"}
                 </p>
               </div>
               <div className="text-center space-y-1">
@@ -244,7 +294,7 @@ export default function ProjectCard({
                   月PV
                 </p>
                 <p className="font-semibold text-xs text-foreground">
-                  {project.monthlyPV || "10w"}
+                  {project.attributes.find(attr => attr.key === 'monthlyPV')?.value || "10w"}
                 </p>
               </div>
               <div className="text-center space-y-1">
@@ -257,7 +307,7 @@ export default function ProjectCard({
                   开发周期
                 </p>
                 <p className="font-semibold text-xs text-foreground">
-                  {project.developmentPeriod || "3个月"}
+                  {project.attributes.find(attr => attr.key === 'developmentPeriod')?.value || "3个月"}
                 </p>
               </div>
             </div>
@@ -318,6 +368,6 @@ export default function ProjectCard({
           </CardContent>
         </div>
       </Card>
-    </Link>
+    </NextLink>
   );
 }
