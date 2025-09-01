@@ -20,5 +20,8 @@ RUN echo "unset CI" >> ~/.zshrc
 
 RUN echo "export ANTHROPIC_BASE_URL=https://code.imyaichat.com" >> ~/.zshrc && \
     echo "export ANTHROPIC_AUTH_TOKEN=sk-YThp8qwJxpq6ZDERR1zqPuDqabq5Oix7StA8vAyONjS762DR" >> ~/.zshrc
+
+    RUN echo "# export ANTHROPIC_BASE_URL=https://anyrouter.top" >> ~/.zshrc && \
+    echo "# export ANTHROPIC_AUTH_TOKEN=sk-WZKfnd94Zi1zUKlVbFRZToUq5q9WBDAn4EszA0alzCcnqfv1" >> ~/.zshrc
 # 以及按需安装其他软件
 # RUN apt-get update && apt-get install -y wget unzip openssh-server yarn htop
