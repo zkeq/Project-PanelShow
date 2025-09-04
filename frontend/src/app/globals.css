@@ -3,6 +3,59 @@
 @import "github-markdown-css/github-markdown-light.css";
 @custom-variant dark (&:is(.dark *));
 
+/* Custom animations for admin welcome page */
+@keyframes slow-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+  50% {
+    transform: translateY(-10px);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+}
+
+@keyframes grid-fade {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-slow-spin {
+  animation: slow-spin 20s linear infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+.animate-grid-fade {
+  animation: grid-fade 4s ease-in-out infinite;
+}
+
+/* Grid background pattern */
+.bg-grid-gray-100\/40 {
+  background-image: radial-gradient(circle at 1px 1px, rgb(243 244 246 / 0.4) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+.dark .bg-grid-slate-800\/20 {
+  background-image: radial-gradient(circle at 1px 1px, rgb(30 41 59 / 0.2) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

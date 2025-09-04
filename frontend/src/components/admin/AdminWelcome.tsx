@@ -42,12 +42,35 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
 
   return (
     <div className={cn(
-      "min-h-screen flex items-center justify-center p-4 bg-muted/30",
+      "min-h-screen flex items-center justify-center p-4 relative overflow-hidden",
+      "bg-gradient-to-br from-gray-50 via-white to-gray-100/50",
+      "dark:from-background dark:via-background dark:to-muted/50",
       className
     )}>
-      <Card className="w-full max-w-md shadow-sm">
+      {/* 背景装饰网格 */}
+      <div className="absolute inset-0 bg-grid-gray-100/40 dark:bg-grid-slate-800/20 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] pointer-events-none" />
+      
+      {/* 动态背景元素 */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* 主要光晕 - 使用更淡的灰色 */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-muted/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-muted/15 rounded-full blur-3xl animate-pulse delay-700" />
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-muted/10 rounded-full blur-2xl animate-pulse delay-1000" />
+        
+        {/* 几何装饰 - 使用border色调 */}
+        <div className="absolute top-20 right-20 w-32 h-32 border border-border/50 rounded-lg rotate-12 animate-slow-spin" />
+        <div className="absolute bottom-20 left-20 w-24 h-24 border border-border/60 rounded-full animate-bounce-slow" />
+        <div className="absolute top-1/2 left-10 w-16 h-16 bg-muted/30 rounded-lg rotate-45" />
+        
+        {/* 额外的浮动装饰 */}
+        <div className="absolute top-1/3 right-1/2 w-20 h-20 bg-muted/15 rounded-full blur-xl animate-pulse delay-500" />
+        <div className="absolute bottom-1/3 left-1/2 w-28 h-28 bg-muted/20 rounded-full blur-2xl animate-pulse delay-1500" />
+      </div>
+
+      {/* 主内容 */}
+      <Card className="w-full max-w-md shadow-xl backdrop-blur-sm bg-card/90 border relative z-10">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+          <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center shadow-lg">
             <Settings className="w-6 h-6 text-primary-foreground" />
           </div>
           <div className="space-y-2">
