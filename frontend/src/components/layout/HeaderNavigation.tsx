@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Settings } from 'lucide-react'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { useRouter } from 'next/navigation'
 
 interface HeaderNavigationProps {
   username: string
@@ -13,6 +14,12 @@ export default function HeaderNavigation({
   username, 
   showManageButton = true 
 }: HeaderNavigationProps) {
+  const router = useRouter()
+
+  const handleManageClick = () => {
+    router.push('/admin')
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6 mx-auto">
@@ -28,7 +35,12 @@ export default function HeaderNavigation({
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
           <ThemeSwitch />
           {showManageButton && (
-            <Button variant="outline" size="sm" className="h-8">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8"
+              onClick={handleManageClick}
+            >
               <Settings className="w-3 h-3 sm:mr-1.5" />
               <span className="hidden sm:inline">管理</span>
             </Button>

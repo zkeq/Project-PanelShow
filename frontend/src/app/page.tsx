@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Code2, Database, Globe, Monitor, Rocket, Shield, Star, Users, Zap, Menu, X } from "lucide-react";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -61,6 +62,12 @@ function MobileMenu() {
 }
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleStartExperience = () => {
+    router.push('/admin');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
@@ -92,7 +99,7 @@ export default function Home() {
             <Button variant="ghost" size="sm">
               GitHub
             </Button>
-            <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-4">
+            <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-4" onClick={handleStartExperience}>
               开始体验
             </Button>
             <MobileMenu />
@@ -159,7 +166,7 @@ export default function Home() {
               </div>
               
               <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-                <Button size="lg" className="px-8">
+                <Button size="lg" className="px-8" onClick={handleStartExperience}>
                   探索项目展示
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -662,7 +669,7 @@ export default function Home() {
                 立即体验革命性的项目展示平台，重新定义您的作品集展示方式
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
-                <Button size="lg" className="px-8">
+                <Button size="lg" className="px-8" onClick={handleStartExperience}>
                   <Star className="mr-2 h-4 w-4" />
                   立即体验
                 </Button>
