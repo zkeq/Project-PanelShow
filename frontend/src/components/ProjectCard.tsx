@@ -167,14 +167,14 @@ export default function ProjectCard({
   // 根据索引选择颜色主题，确保相邻项目颜色不重合
   const theme = colorThemes[index % colorThemes.length];
 
-  // 为暗色模式定义具体的背景颜色 - 带彩色渐变但遮盖点状图案
+  // 为暗色模式定义具体的背景颜色 - 更暗的渐变，与管理页面一致
   const darkBackgrounds = [
-    "linear-gradient(to bottom, rgba(59, 130, 246, 0.15), rgba(13, 13, 13, 0.9))", // blue - 更深
-    "linear-gradient(to bottom, rgba(168, 85, 247, 0.15), rgba(13, 13, 13, 0.9))", // purple - 更深
-    "linear-gradient(to bottom, rgba(34, 197, 94, 0.15), rgba(13, 13, 13, 0.9))", // emerald - 更深
-    "linear-gradient(to bottom, rgba(249, 115, 22, 0.15), rgba(13, 13, 13, 0.9))", // orange - 更深
-    "linear-gradient(to bottom, rgba(34, 211, 238, 0.15), rgba(13, 13, 13, 0.9))", // cyan - 更深
-    "linear-gradient(to bottom, rgba(99, 102, 241, 0.15), rgba(13, 13, 13, 0.9))", // indigo - 更深
+    "linear-gradient(to bottom, rgba(59, 130, 246, 0.08), rgba(13, 13, 13, 0.95))", // blue - 更暗
+    "linear-gradient(to bottom, rgba(168, 85, 247, 0.08), rgba(13, 13, 13, 0.95))", // purple - 更暗
+    "linear-gradient(to bottom, rgba(34, 197, 94, 0.08), rgba(13, 13, 13, 0.95))", // emerald - 更暗
+    "linear-gradient(to bottom, rgba(249, 115, 22, 0.08), rgba(13, 13, 13, 0.95))", // orange - 更暗
+    "linear-gradient(to bottom, rgba(34, 211, 238, 0.08), rgba(13, 13, 13, 0.95))", // cyan - 更暗
+    "linear-gradient(to bottom, rgba(99, 102, 241, 0.08), rgba(13, 13, 13, 0.95))", // indigo - 更暗
   ];
 
   return (
