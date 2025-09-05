@@ -47,7 +47,7 @@
 
 /* Grid background pattern */
 .bg-grid-gray-100\/40 {
-  background-image: radial-gradient(circle at 1px 1px, rgb(243 244 246 / 0.4) 1px, transparent 0);
+  background-image: radial-gradient(circle at 1px 1px, rgb(100 116 139 / 0.40) 1px, transparent 0);
   background-size: 20px 20px;
 }
 
