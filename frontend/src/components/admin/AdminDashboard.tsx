@@ -140,8 +140,8 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
         <div className="relative z-10 container mx-auto p-6 space-y-6 pt-6">
         {/* 统计卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-card/90 backdrop-blur-sm border relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-50/50 to-white dark:from-blue-950/20 dark:to-background" />
+          <Card className="bg-card/30 backdrop-blur-sm border border-white/20 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-blue-50/40 to-white/20 dark:from-blue-950/20 dark:to-background/20" />
             <CardContent className="relative z-10 p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -155,8 +155,8 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
             </CardContent>
           </Card>
 
-          <Card className="bg-card/90 backdrop-blur-sm border relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/50 to-white dark:from-emerald-950/20 dark:to-background" />
+          <Card className="bg-card/30 backdrop-blur-sm border border-white/20 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/40 to-white/20 dark:from-emerald-950/20 dark:to-background/20" />
             <CardContent className="relative z-10 p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -170,8 +170,8 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
             </CardContent>
           </Card>
 
-          <Card className="bg-card/90 backdrop-blur-sm border relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-purple-50/50 to-white dark:from-purple-950/20 dark:to-background" />
+          <Card className="bg-card/30 backdrop-blur-sm border border-white/20 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-50/40 to-white/20 dark:from-purple-950/20 dark:to-background/20" />
             <CardContent className="relative z-10 p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -185,8 +185,8 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
             </CardContent>
           </Card>
 
-          <Card className="bg-card/90 backdrop-blur-sm border relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-orange-50/50 to-white dark:from-orange-950/20 dark:to-background" />
+          <Card className="bg-card/30 backdrop-blur-sm border border-white/20 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-orange-50/40 to-white/20 dark:from-orange-950/20 dark:to-background/20" />
             <CardContent className="relative z-10 p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -202,7 +202,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
         </div>
 
         {/* 搜索和快速操作 */}
-        <Card className="bg-card/90 backdrop-blur-sm border">
+        <Card className="bg-card/30 backdrop-blur-sm border border-white/20">
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
               <div className="flex-1 flex items-center gap-3">
@@ -237,7 +237,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
         </Card>
 
         {/* 主要内容区域 */}
-        <Card className="bg-card/90 backdrop-blur-sm border">
+        <Card className="bg-card/30 backdrop-blur-sm border border-white/20">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <CardHeader>
               <TabsList className="grid grid-cols-2 w-full max-w-md">
