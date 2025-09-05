@@ -196,7 +196,7 @@ export function AdminProjectCard({
     >
       {/* 半透明彩色背景 */}
       <div
-        className={`absolute inset-0 rounded-xl ${theme.bg} opacity-50`}
+        className={`absolute inset-0 rounded-xl ${theme.bg}`}
       />
 
       {/* 内容层 */}
