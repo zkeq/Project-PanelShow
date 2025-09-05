@@ -71,7 +71,9 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
         logo: 'https://avatars.githubusercontent.com/u/62864752',
         description: '这是一个新的项目动态，请编辑动态信息。',
         techStack: ['React', 'TypeScript'],
-        previewImages: ['/Snipaste_2025-08-23_22-52-13.png']
+        readme: '## 项目更新\n\n这是一个新的项目动态。',
+        previewImages: ['/Snipaste_2025-08-23_22-52-13.png'],
+        repositoryUrl: 'https://github.com/example/project'
       },
       updateType: 'new' as const,
       changelog: '新增功能或项目更新'
