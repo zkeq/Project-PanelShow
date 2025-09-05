@@ -192,11 +192,11 @@ export function AdminProjectCard({
 
   return (
     <Card
-      className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border border-white/20 bg-card/30 backdrop-blur-sm hover:shadow-lg hover:border-border/80 transition-all duration-300`}
+      className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border border-border/20 bg-card/30 backdrop-blur-sm hover:shadow-lg hover:border-border/50 transition-all duration-300`}
     >
       {/* 半透明彩色背景 */}
       <div
-        className={`absolute inset-0 rounded-xl ${theme.bg}`}
+        className={`absolute inset-0 rounded-xl ${theme.bg} opacity-50`}
       />
 
       {/* 内容层 */}
