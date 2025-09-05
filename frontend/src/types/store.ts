@@ -238,4 +238,15 @@ export interface GlobalState {
   getExperiences: () => Experience[]
   getQuickLinks: () => QuickLink[]
   getExperienceById: (id: string) => Experience | undefined
+
+  // 项目 CRUD 操作
+  createProject: (project: Omit<Project, 'id' | 'updatedAt'>) => Project
+  updateProject: (id: string, updates: Partial<Project>) => void
+  deleteProject: (id: string) => void
+  getProjectById: (id: string) => Project | undefined
+
+  // 动态 CRUD 操作  
+  createTimelineItem: (item: Omit<TimelineItem, 'id' | 'publishedAt' | 'likes' | 'comments' | 'isLiked'>) => TimelineItem
+  deleteTimelineItem: (id: string) => void
+  getTimelineItemById: (id: string) => TimelineItem | undefined
 }

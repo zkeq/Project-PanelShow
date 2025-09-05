@@ -1044,5 +1044,70 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
           : item
       )
     }))
+  },
+
+  // 项目 CRUD 操作
+  createProject: (project: Omit<Project, 'id' | 'updatedAt'>) => {
+    const newProject: Project = {
+      ...project,
+      id: Date.now().toString(),
+      updatedAt: new Date().toISOString().split('T')[0]
+    }
+    set((state) => ({
+      projects: [...state.projects, newProject]
+    }))
+    return newProject
+  },
+
+  updateProject: (id: string, updates: Partial<Project>) => {
+    set((state) => ({
+      projects: state.projects.map(project =>
+        project.id === id 
+          ? { ...project, ...updates, updatedAt: new Date().toISOString().split('T')[0] }
+          : project
+      )
+    }))
+  },
+
+  deleteProject: (id: string) => {
+    set((state) => ({
+      projects: state.projects.filter(project => project.id !== id),
+      // 同时删除相关的项目详情
+      projectDetails: Object.fromEntries(
+        Object.entries(state.projectDetails).filter(([key]) => !key.endsWith(`-${id}`))
+      )
+    }))
+  },
+
+  // 动态 CRUD 操作
+  createTimelineItem: (item: Omit<TimelineItem, 'id' | 'publishedAt' | 'likes' | 'comments' | 'isLiked'>) => {
+    const newItem: TimelineItem = {
+      ...item,
+      id: `timeline-${Date.now()}`,
+      publishedAt: new Date().toISOString(),
+      likes: 0,
+      comments: 0,
+      isLiked: false
+    }
+    set((state) => ({
+      timelineItems: [newItem, ...state.timelineItems]
+    }))
+    return newItem
+  },
+
+  deleteTimelineItem: (id: string) => {
+    set((state) => ({
+      timelineItems: state.timelineItems.filter(item => item.id !== id)
+    }))
+  },
+
+  // 获取项目通过ID
+  getProjectById: (id: string) => {
+    return get().projects.find(project => project.id === id)
+  },
+
+  // 获取动态通过ID
+  getTimelineItemById: (id: string) => {
+    return get().timelineItems.find(item => item.id === id)
   }
 }))
