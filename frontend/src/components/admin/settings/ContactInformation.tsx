@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -12,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, X, Mail, Heart, Link2 } from "lucide-react";
 
 export function ContactInformation() {
   const [hobbies, setHobbies] = useState(["编程", "摄影", "旅行", "阅读"]);
@@ -59,130 +60,166 @@ export function ContactInformation() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-8">联系方式</h1>
-      <div className="bg-gradient-to-br from-background to-muted/20 border border-border/50 rounded-2xl shadow-lg shadow-black/5 p-8 backdrop-blur-sm">
-        <div className="space-y-8">
-          {/* Basic Contact */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-medium">基本联系方式</h2>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="email">邮箱</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  defaultValue="alex.chen@example.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="github">GitHub</Label>
-                <Input id="github" defaultValue="https://github.com/alexchen" />
-              </div>
+    <div className="space-y-8">
+      {/* 基本联系方式 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            基本联系方式
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">邮箱</Label>
+              <Input
+                id="email"
+                type="email"
+                defaultValue="alex.chen@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">电话</Label>
+              <Input id="phone" defaultValue="+86 138 0013 8000" />
             </div>
           </div>
-
-          {/* Hobbies */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-medium">兴趣爱好</h2>
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {hobbies.map((hobby) => (
-                  <Badge
-                    key={hobby}
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    {hobby}
-                    <button
-                      onClick={() => removeHobby(hobby)}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="添加新的兴趣爱好..."
-                  value={newHobby}
-                  onChange={(e) => setNewHobby(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && addHobby()}
-                  className="max-w-xs"
-                />
-                <Button onClick={addHobby} size="sm">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="wechat">微信号</Label>
+              <Input id="wechat" defaultValue="alexchen2024" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="location">所在城市</Label>
+              <Input id="location" defaultValue="北京，中国" />
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Social Links */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-medium">社交链接</h2>
-            {socialLinks.map((link, index) => (
-              <div
-                key={link.id}
-                className="group relative bg-card/80 backdrop-blur-sm border border-border/60 rounded-xl p-7 shadow-md shadow-black/5 hover:shadow-lg hover:shadow-black/10 transition-all duration-300 hover:border-border"
+      {/* 兴趣爱好 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5" />
+            兴趣爱好
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {hobbies.map((hobby) => (
+              <Badge
+                key={hobby}
+                variant="secondary"
+                className="flex items-center gap-1"
               >
-                <div className="absolute left-0 top-6 bottom-6 w-1 bg-gradient-to-b from-white-500 to-black-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="flex items-start justify-between mb-6">
-                  <h3 className="font-medium">链接 #{index + 1}</h3>
-                  {socialLinks.length > 1 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeSocialLink(link.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-4 space-y-4">
-                  <div className="space-y-2">
-                    <Label>平台名称</Label>
-                    <Input
-                      defaultValue={link.name}
-                      placeholder="例如：GitHub"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>图标类型</Label>
-                    <Select defaultValue={link.icon}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="github">GitHub</SelectItem>
-                        <SelectItem value="linkedin">LinkedIn</SelectItem>
-                        <SelectItem value="twitter">Twitter</SelectItem>
-                        <SelectItem value="instagram">Instagram</SelectItem>
-                        <SelectItem value="link">通用链接</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>网址</Label>
-                  <Input defaultValue={link.url} placeholder="https://..." />
-                </div>
-              </div>
+                {hobby}
+                <button
+                  onClick={() => removeHobby(hobby)}
+                  className="ml-1 hover:text-destructive"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
             ))}
-            <Button
-              onClick={addSocialLink}
-              variant="outline"
-              className="w-full bg-muted/20 hover:bg-muted/40 border-dashed"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              添加社交链接
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="添加新的兴趣爱好..."
+              value={newHobby}
+              onChange={(e) => setNewHobby(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && addHobby()}
+              className="max-w-xs"
+            />
+            <Button onClick={addHobby} size="sm">
+              <Plus className="h-4 w-4" />
             </Button>
           </div>
-          <div className="pt-6 border-t border-border">
-            <Button>保存更改</Button>
-          </div>
-        </div>
+        </CardContent>
+      </Card>
+
+      {/* 社交链接 */}
+      {socialLinks.map((link, index) => (
+        <Card key={link.id}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Link2 className="h-5 w-5" />
+                社交链接 #{index + 1}
+              </CardTitle>
+              {socialLinks.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeSocialLink(link.id)}
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  删除
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor={`name-${link.id}`}>平台名称</Label>
+                <Input
+                  id={`name-${link.id}`}
+                  defaultValue={link.name}
+                  placeholder="例如：GitHub"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={`icon-${link.id}`}>图标类型</Label>
+                <Select defaultValue={link.icon}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="github">GitHub</SelectItem>
+                    <SelectItem value="linkedin">LinkedIn</SelectItem>
+                    <SelectItem value="twitter">Twitter</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                    <SelectItem value="link">通用链接</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`url-${link.id}`}>网址</Label>
+              <Input
+                id={`url-${link.id}`}
+                defaultValue={link.url}
+                placeholder="https://..."
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* 添加社交链接按钮 */}
+      <Card>
+        <CardContent className="pt-6">
+          <Button
+            onClick={addSocialLink}
+            variant="outline"
+            className="w-full border-dashed"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            添加社交链接
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* 操作按钮 */}
+      <div className="flex justify-end gap-4">
+        <Button type="button" variant="outline">
+          重置更改
+        </Button>
+        <Button>
+          保存更改
+        </Button>
       </div>
     </div>
   );
