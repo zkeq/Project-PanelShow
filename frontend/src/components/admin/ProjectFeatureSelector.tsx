@@ -117,7 +117,6 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
       {/* 已选择的特性 */}
       {features.length > 0 && (
         <div className="space-y-2">
-          <Label>已选择的特性</Label>
           <div className="flex flex-wrap gap-2">
             {features.map((feature) => {
               const IconComponent = getIconComponent(feature.icon);
@@ -159,7 +158,6 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
       {/* 可选择的特性 */}
       {unselectedFeatures.length > 0 && (
         <div className="space-y-2">
-          <Label>选择特性</Label>
           <div className="flex flex-wrap gap-2">
             {unselectedFeatures.map((feature) => {
               const IconComponent = getIconComponent(feature.icon);
