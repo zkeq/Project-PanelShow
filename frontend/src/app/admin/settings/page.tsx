@@ -2,9 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, User, Briefcase, Phone, Settings, PanelLeft } from "lucide-react"
+import { ArrowLeft, User, Briefcase, Phone, Settings } from "lucide-react"
 import Link from "next/link"
 import { BasicInformation } from "@/components/admin/settings/BasicInformation"
 import { WorkExperience } from "@/components/admin/settings/WorkExperience"
@@ -23,7 +21,6 @@ const sidebarSections = [
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("basic-info")
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const renderContent = () => {
     switch (activeSection) {
@@ -39,12 +36,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex">
       {/* Sidebar */}
-      <div
-          className={`${sidebarCollapsed ? "w-0" : "w-80"} bg-card border-r border-border h-full transition-all duration-300 ease-in-out relative shadow-sm flex-shrink-0`}
-        >
-          <div className="p-6 h-full overflow-y-auto">
+      <div className="w-80 bg-card border-r border-border fixed left-0 top-16 h-[calc(100vh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out shadow-sm z-10">
+          <div className="p-6">
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
@@ -114,9 +109,9 @@ export default function SettingsPage() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 relative overflow-y-auto">
+        <div className="flex-1 ml-80 relative">
           {/* Content Area */}
-          <div className="container mx-auto py-8 px-4 max-w-6xl space-y-8 relative z-0">
+          <div className="py-8 px-12 space-y-8 relative z-0 max-w-7xl mx-auto w-full">
             {renderContent()}
           </div>
         </div>
