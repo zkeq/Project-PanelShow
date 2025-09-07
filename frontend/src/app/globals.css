@@ -49,10 +49,37 @@
 }
 
 /* Grid background pattern */
+.bg-grid-dots {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgb(100 116 139 / 0.4) 1px,
+    transparent 0
+  );
+  background-size: 20px 20px;
+}
+
+.dark .bg-grid-dots {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgb(30 41 59 / 0.2) 1px,
+    transparent 0
+  );
+  background-size: 20px 20px;
+}
+
 .bg-grid-gray-100\/40 {
   background-image: radial-gradient(
     circle at 1px 1px,
     rgb(100 116 139 / 0.4) 1px,
+    transparent 0
+  );
+  background-size: 20px 20px;
+}
+
+.bg-grid-slate-800\/20 {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgb(30 41 59 / 0.2) 1px,
     transparent 0
   );
   background-size: 20px 20px;

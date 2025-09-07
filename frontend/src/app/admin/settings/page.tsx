@@ -39,13 +39,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex">
-        {/* Sidebar */}
-        <div
-          className={`${sidebarCollapsed ? "w-0" : "w-80"} bg-card border-r border-border min-h-screen transition-all duration-300 ease-in-out relative overflow-hidden shadow-sm`}
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar */}
+      <div
+          className={`${sidebarCollapsed ? "w-0" : "w-80"} bg-card border-r border-border h-full transition-all duration-300 ease-in-out relative shadow-sm flex-shrink-0`}
         >
-          <div className="p-6">
+          <div className="p-6 h-full overflow-y-auto">
             {/* Header */}
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-4">
@@ -115,29 +114,14 @@ export default function SettingsPage() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 relative">
-          {/* Collapse Button */}
-          <div className="absolute top-6 left-6 z-10">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="h-10 w-10 p-0 shadow-sm bg-background/95 backdrop-blur-sm border-2 hover:bg-muted hover:border-primary/20"
-            >
-              <PanelLeft className="h-4 w-4" />
-            </Button>
-          </div>
-
+        <div className="flex-1 relative overflow-y-auto">
           {/* Content Area */}
-          <div className="p-8 pt-20">
-            <div className="max-w-4xl mx-auto">
-              {renderContent()}
-            </div>
+          <div className="container mx-auto py-8 px-4 max-w-6xl space-y-8 relative z-0">
+            {renderContent()}
           </div>
         </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
 
 
