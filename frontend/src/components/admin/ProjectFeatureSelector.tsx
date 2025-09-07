@@ -184,7 +184,7 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
       {/* 添加自定义特性 */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogTrigger asChild>
-          <Button type="button" variant="dashed" className="w-full">
+          <Button type="button" variant="outline" className="w-full border-dashed border-2 hover:bg-muted/50">
             <Plus className="h-4 w-4 mr-2" />
             添加自定义特性
           </Button>

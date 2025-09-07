@@ -140,34 +140,51 @@ function SortableScreenshotItem({ screenshot, onUpdate, onRemove }: SortableScre
             {/* 预览区域 */}
             <div className="w-48 space-y-2">
               <Label>预览</Label>
-              <div className="w-full h-32 border-2 border-dashed border-border rounded-lg flex items-center justify-center bg-muted/30 relative overflow-hidden">
-                {screenshot.url ? (
-                  <>
-                    {imageLoading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
-                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
+              <div className="w-full border-2 border-dashed border-border rounded-lg bg-muted/30 relative overflow-hidden">
+                {/* 图片预览 */}
+                <div className="w-full h-32 flex items-center justify-center relative overflow-hidden">
+                  {screenshot.url ? (
+                    <>
+                      {imageLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+                          <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
+                        </div>
+                      )}
+                      {imageError ? (
+                        <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                          <AlertCircle className="h-6 w-6" />
+                          <span className="text-xs text-center">加载失败</span>
+                        </div>
+                      ) : (
+                        <img
+                          src={screenshot.url}
+                          alt={screenshot.name || '预览图片'}
+                          className="w-full h-full object-cover"
+                          onLoad={handleImageLoad}
+                          onError={handleImageError}
+                          style={{ display: imageLoading ? 'none' : 'block' }}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <ImageIcon className="h-6 w-6" />
+                      <span className="text-xs text-center">输入图片地址</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* 底部信息展示 */}
+                {screenshot.url && !imageError && (
+                  <div className="px-3 py-2 bg-background/90 backdrop-blur-sm border-t border-border">
+                    <div className="text-xs font-medium text-foreground truncate" title={screenshot.name || '未命名'}>
+                      {screenshot.name || '未命名'}
+                    </div>
+                    {screenshot.description && (
+                      <div className="text-xs text-muted-foreground mt-1 line-clamp-2" title={screenshot.description}>
+                        {screenshot.description}
                       </div>
                     )}
-                    {imageError ? (
-                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                        <AlertCircle className="h-6 w-6" />
-                        <span className="text-xs text-center">加载失败</span>
-                      </div>
-                    ) : (
-                      <img
-                        src={screenshot.url}
-                        alt={screenshot.name || '预览图片'}
-                        className="w-full h-full object-cover"
-                        onLoad={handleImageLoad}
-                        onError={handleImageError}
-                        style={{ display: imageLoading ? 'none' : 'block' }}
-                      />
-                    )}
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                    <ImageIcon className="h-6 w-6" />
-                    <span className="text-xs text-center">输入图片地址</span>
                   </div>
                 )}
               </div>
