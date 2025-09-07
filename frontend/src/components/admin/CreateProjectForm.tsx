@@ -8,14 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft } from 'lucide-react';
 import { DynamicTags } from './DynamicTags';
 import { ProjectStatusSelector } from './ProjectStatusSelector';
 import { ProjectTypeSelector } from './ProjectTypeSelector';
 import { ProjectFeatureSelector } from './ProjectFeatureSelector';
 import { MarkdownEditor } from './MarkdownEditor';
 import { ScreenshotManager } from './ScreenshotManager';
-import Link from 'next/link';
 
 interface ProjectFormData {
   name: string;
@@ -142,17 +140,7 @@ export function CreateProjectForm() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl">
-      <div className="mb-6">
-        <Link href="/admin">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            返回管理中心
-          </Button>
-        </Link>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="container mx-auto py-8 px-4 max-w-6xl space-y-8 relative z-10">
         {/* 作品信息 */}
         <Card>
           <CardHeader>
@@ -301,6 +289,5 @@ export function CreateProjectForm() {
           </Button>
         </div>
       </form>
-    </div>
   );
 }

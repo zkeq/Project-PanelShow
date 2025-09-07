@@ -8,14 +8,27 @@ import {
   Moon
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { usePathname } from 'next/navigation';
+
+const getPageTitle = (pathname: string): string => {
+  if (pathname === '/admin') return '管理控制台';
+  if (pathname === '/admin/welcome') return '欢迎页面';
+  if (pathname === '/admin/projects/create') return '新建作品集';
+  if (pathname === '/admin/settings') return '系统设置';
+  if (pathname === '/admin/dynamic') return '动态管理';
+  if (pathname.startsWith('/admin/projects')) return '项目管理';
+  return '管理控制台';
+};
 
 interface AdminHeaderProps {
   title?: string;
 }
 
 export function AdminHeader({ 
-  title = "管理控制台"
+  title
 }: AdminHeaderProps) {
+  const pathname = usePathname();
+  const displayTitle = title || getPageTitle(pathname);
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
@@ -30,7 +43,7 @@ export function AdminHeader({
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Settings className="w-4 h-4 text-primary-foreground" />
           </div>
-          <h1 className="text-lg font-semibold text-foreground">{title}</h1>
+          <h1 className="text-lg font-semibold text-foreground">{displayTitle}</h1>
         </div>
 
         {/* 右侧 - 账号邮箱、主题切换和设置 */}
