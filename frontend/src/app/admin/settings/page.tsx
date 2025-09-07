@@ -49,7 +49,7 @@ export default function SettingsPage() {
        <div className="flex">
          {/* Sidebar */}
         <div
-          className={`${sidebarCollapsed ? "w-0" : "w-64"} bg-muted/30 border-r border-border min-h-screen transition-all duration-300 ease-in-out relative overflow-hidden`}
+          className={`${sidebarCollapsed ? "w-0" : "w-64"} bg-card border-r border-border min-h-screen transition-all duration-300 ease-in-out relative overflow-hidden`}
         >
   
 
