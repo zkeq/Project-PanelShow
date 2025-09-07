@@ -8,7 +8,7 @@ import {
   Moon
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const getPageTitle = (pathname: string): string => {
   if (pathname === '/admin') return '管理控制台';
@@ -27,12 +27,17 @@ interface AdminHeaderProps {
 export function AdminHeader({ 
   title
 }: AdminHeaderProps) {
+  const router = useRouter();
   const pathname = usePathname();
   const displayTitle = title || getPageTitle(pathname);
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleSettings = () => {
+    router.push('/admin/settings');
   };
 
   return (
@@ -69,7 +74,7 @@ export function AdminHeader({
           </Button>
 
           {/* 设置按钮 */}
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleSettings}>
             <Settings className="w-4 h-4 mr-2" />
             设置
           </Button>

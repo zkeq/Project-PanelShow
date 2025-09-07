@@ -19,12 +19,14 @@ import { ProjectManagementList } from './ProjectManagementList';
 import { TimelineManagementList } from './TimelineManagementList';
 import { SearchAndFilter } from './SearchAndFilter';
 import { AdminHeader } from './AdminHeader';
+import { useRouter } from 'next/navigation';
 
 interface AdminDashboardProps {
   className?: string;
 }
 
 export function AdminDashboard({ className }: AdminDashboardProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('projects');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -33,29 +35,9 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
   // 获取数据
   const { projects, timelineItems, createProject, createTimelineItem } = useGlobalStore();
 
-  // 新建项目处理
+  // 新建项目处理 - 跳转到真实管理页面
   const handleCreateProject = () => {
-    const newProject = {
-      name: '新项目',
-      description: '这是一个新创建的项目，请编辑项目信息。',
-      status: 'active' as const,
-      category: 'frontend',
-      previewImage: '/Snipaste_2025-08-23_22-52-13.png',
-      attributes: [
-        { key: 'techStack', label: '技术栈', value: 'React', icon: 'Code' },
-        { key: 'projectType', label: '项目类型', value: '个人', icon: 'User' },
-        { key: 'monthlyPV', label: '月访问量', value: '1k', icon: 'TrendingUp' },
-        { key: 'developmentPeriod', label: '开发周期', value: '1个月', icon: 'Clock' }
-      ],
-      themeColor: {
-        primary: 'from-blue-600 to-purple-600',
-        secondary: 'from-blue-50 to-purple-50',
-        background: 'bg-gradient-to-r from-blue-50/50 to-purple-50/50',
-        text: 'text-blue-700',
-        border: 'border-blue-200'
-      }
-    };
-    createProject(newProject);
+    router.push('/admin/projects/create');
   };
 
   // 新建动态处理
