@@ -3,8 +3,9 @@
 import { Editor } from "@bytemd/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit3 } from "lucide-react";
+import type { BytemdPlugin } from 'bytemd';
 
-const plugins = [];
+const plugins: BytemdPlugin[] = [];
 
 interface ContentEditorProps {
   content: string;

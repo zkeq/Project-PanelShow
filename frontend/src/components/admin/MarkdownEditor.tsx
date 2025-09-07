@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
+import type { EditorProps } from '@bytemd/react';
+import type { BytemdPlugin } from 'bytemd';
 import 'bytemd/dist/index.css';
 import 'github-markdown-css/github-markdown-light.css';
 import 'github-markdown-css/github-markdown-dark.css';
@@ -12,9 +14,12 @@ interface MarkdownEditorProps {
   placeholder?: string;
 }
 
+// ByteMD 编辑器组件类型
+type ByteMDEditor = React.ComponentType<EditorProps>;
+
 export function MarkdownEditor({ value, onChange, placeholder = "输入项目详细介绍..." }: MarkdownEditorProps) {
-  const [Editor, setEditor] = useState<any>(null);
-  const [plugins, setPlugins] = useState<any[]>([]);
+  const [Editor, setEditor] = useState<ByteMDEditor | null>(null);
+  const [plugins, setPlugins] = useState<BytemdPlugin[]>([]);
   const { theme, resolvedTheme } = useTheme();
 
   useEffect(() => {
