@@ -21,7 +21,7 @@ export function ImageUpload({ images, setImages }: ImageUploadProps) {
   };
 
   return (
-    <Card className="border-0 shadow-lg shadow-slate-200/50">
+    <Card className="border-0">
       <CardHeader className="pb-6">
         <CardTitle className="flex items-center gap-3 text-2xl">
           <div className="p-2 rounded-lg">
