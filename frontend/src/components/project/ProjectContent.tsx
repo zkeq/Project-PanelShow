@@ -32,6 +32,8 @@ import {
   User,
   Handshake,
   Puzzle,
+  Code,
+  Package,
   type LucideIcon,
 } from "lucide-react";
 
