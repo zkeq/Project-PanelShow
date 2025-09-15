@@ -14,6 +14,7 @@ import { ProjectTypeSelector } from './ProjectTypeSelector';
 import { ProjectFeatureSelector } from './ProjectFeatureSelector';
 import { MarkdownEditor } from './MarkdownEditor';
 import { ScreenshotManager } from './ScreenshotManager';
+import { ProjectInfoManager, type ProjectInfo } from './ProjectInfoManager';
 
 interface ProjectFormData {
   name: string;
@@ -45,6 +46,8 @@ interface ProjectFormData {
     description: string;
     url: string;
   }>;
+  projectInfos: ProjectInfo[];
+  projectIntroduction: string;
 }
 
 export function CreateProjectForm() {
@@ -59,7 +62,9 @@ export function CreateProjectForm() {
     sourceUrl: '',
     isOpenSource: false,
     readme: '',
-    screenshots: []
+    screenshots: [],
+    projectInfos: [],
+    projectIntroduction: ''
   });
 
   const handleSaveDraft = () => {
@@ -140,7 +145,8 @@ export function CreateProjectForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="container mx-auto py-8 px-4 max-w-6xl space-y-8 relative z-10">
+    <div className="container mx-auto py-8 px-4 max-w-6xl space-y-8 relative z-10">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {/* 作品信息 */}
         <Card>
           <CardHeader>
@@ -240,8 +246,8 @@ export function CreateProjectForm() {
               <Switch
                 id="isOpenSource"
                 checked={formData.isOpenSource}
-                onCheckedChange={(checked) => setFormData(prev => ({ 
-                  ...prev, 
+                onCheckedChange={(checked) => setFormData(prev => ({
+                  ...prev,
                   isOpenSource: checked,
                   sourceUrl: checked ? prev.sourceUrl : ''
                 }))}
@@ -250,44 +256,59 @@ export function CreateProjectForm() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Markdown 编辑器 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>项目详情</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <MarkdownEditor
-                value={formData.readme}
-                onChange={(readme) => setFormData(prev => ({ ...prev, readme }))}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 作品截图展示 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>作品截图展示</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScreenshotManager
-              screenshots={formData.screenshots}
-              onChange={(screenshots) => setFormData(prev => ({ ...prev, screenshots }))}
-            />
-          </CardContent>
-        </Card>
-
-        {/* 提交按钮 */}
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={handleSaveDraft}>
-            保存草稿
-          </Button>
-          <Button type="submit">
-            创建作品集
-          </Button>
-        </div>
       </form>
+
+      {/* 作品截图展示 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>作品截图展示</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScreenshotManager
+            screenshots={formData.screenshots}
+            onChange={(screenshots) => setFormData(prev => ({ ...prev, screenshots }))}
+          />
+        </CardContent>
+      </Card>
+
+      {/* 项目概览 - 信息展示区域 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>项目概览 - 信息展示区域</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ProjectInfoManager
+            projectInfos={formData.projectInfos}
+            onChange={(infos) => setFormData(prev => ({ ...prev, projectInfos: infos }))}
+          />
+        </CardContent>
+      </Card>
+
+      {/* 项目介绍 Markdown 编辑器 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>项目介绍</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <MarkdownEditor
+              value={formData.projectIntroduction}
+              onChange={(projectIntroduction) => setFormData(prev => ({ ...prev, projectIntroduction }))}
+              placeholder="输入项目介绍..."
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 提交按钮 */}
+      <div className="flex justify-end gap-4">
+        <Button type="button" variant="outline" onClick={handleSaveDraft}>
+          保存草稿
+        </Button>
+        <Button onClick={handleSubmit}>
+          创建作品集
+        </Button>
+      </div>
+    </div>
   );
 }

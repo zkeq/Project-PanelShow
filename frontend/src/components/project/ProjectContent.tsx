@@ -7,13 +7,11 @@ import Markdown from "@/components/Markdown";
 import FeatureGallery from "@/components/project/FeatureGallery";
 import DevelopmentTimelineSection from "@/components/project/DevelopmentTimelineSection";
 import MobileProjectNavigation from "@/components/project/MobileProjectNavigation";
+import { Icon } from "@iconify/react";
 import {
   Users,
   Eye,
   Clock,
-  Code,
-  Palette,
-  Package,
   ExternalLink,
   GitBranch,
   BarChart3,
@@ -102,10 +100,15 @@ interface ProjectContentProps {
   mobileNavigation?: MobileNavigationData;
 }
 
-// 图标映射函数
-const getIcon = (iconName: string): LucideIcon => {
+// 图标渲染函数 - 支持 Iconify 和 Lucide 图标
+const renderIcon = (iconName: string, className: string = "w-4 h-4") => {
+  // 如果是 Iconify 格式的图标（包含冒号），使用 Iconify
+  if (iconName.includes(':')) {
+    return <Icon icon={iconName} className={className} />;
+  }
+
+  // 否则尝试使用 Lucide 图标（向后兼容）
   const iconMap: Record<string, LucideIcon> = {
-    Code,
     Building2,
     TrendingUp,
     Clock,
@@ -116,7 +119,6 @@ const getIcon = (iconName: string): LucideIcon => {
     Database,
     Calendar,
     BarChart3,
-    Palette,
     Puzzle,
     CheckCircle,
     TestTube,
@@ -128,11 +130,17 @@ const getIcon = (iconName: string): LucideIcon => {
     Shield,
     Smartphone,
     Eye,
-    Package,
     GitBranch,
     ExternalLink,
   };
-  return iconMap[iconName] || Code;
+
+  const LucideIcon = iconMap[iconName];
+  if (LucideIcon) {
+    return <LucideIcon className={className} />;
+  }
+
+  // 默认使用 Iconify 的代码图标
+  return <Icon icon="lucide:code" className={className} />;
 };
 
 // 颜色映射函数
@@ -163,11 +171,10 @@ const getColorTheme = (index: number): string => {
 export default function ProjectContent({ project, username, mobileNavigation }: ProjectContentProps) {
   // 从displayData动态生成项目统计信息
   const projectStats = (project.displayData || []).map((item, index) => {
-    const IconComponent = getIcon(item.icon || 'Code');
     return {
       label: item.label,
       value: item.value,
-      icon: IconComponent,
+      iconName: item.icon || 'lucide:code',
       color: getColorTheme(index),
     };
   });
@@ -227,13 +234,12 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
               <CardContent className="py-4 lg:py-6">
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4 w-full">
                   {projectStats.map((stat, index) => {
-                    const Icon = stat.icon;
                     return (
                       <div key={index} className="space-y-2">
                         <div
                           className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border ${stat.color}`}
                         >
-                          <Icon className="w-4 h-4" />
+                          {renderIcon(stat.iconName)}
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground font-medium">
