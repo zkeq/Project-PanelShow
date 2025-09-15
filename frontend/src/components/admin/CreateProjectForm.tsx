@@ -38,6 +38,8 @@ interface ProjectFormData {
   }>;
   previewUrl: string;
   sourceUrl: string;
+  leftSidebarMarkdown: string;
+  rightSidebarMarkdown: string;
   isOpenSource: boolean;
   readme: string;
   screenshots: Array<{
@@ -60,6 +62,8 @@ export function CreateProjectForm() {
     features: [],
     previewUrl: '',
     sourceUrl: '',
+    leftSidebarMarkdown: '',
+    rightSidebarMarkdown: '',
     isOpenSource: false,
     readme: '',
     screenshots: [],
@@ -237,6 +241,32 @@ export function CreateProjectForm() {
                   onChange={(e) => setFormData(prev => ({ ...prev, sourceUrl: e.target.value }))}
                   placeholder="https://github.com/username/repo"
                   disabled={!formData.isOpenSource}
+                />
+              </div>
+            </div>
+
+            {/* 侧边栏 Markdown 内容 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="leftSidebarMarkdown">展示信息左侧栏 Markdown</Label>
+                <Textarea
+                  id="leftSidebarMarkdown"
+                  value={formData.leftSidebarMarkdown}
+                  onChange={(e) => setFormData(prev => ({ ...prev, leftSidebarMarkdown: e.target.value }))}
+                  placeholder="输入左侧栏展示的 Markdown 内容..."
+                  rows={4}
+                  className="font-mono text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rightSidebarMarkdown">展示信息右侧栏 Markdown</Label>
+                <Textarea
+                  id="rightSidebarMarkdown"
+                  value={formData.rightSidebarMarkdown}
+                  onChange={(e) => setFormData(prev => ({ ...prev, rightSidebarMarkdown: e.target.value }))}
+                  placeholder="输入右侧栏展示的 Markdown 内容..."
+                  rows={4}
+                  className="font-mono text-sm"
                 />
               </div>
             </div>
