@@ -5,8 +5,8 @@ import { useTheme } from 'next-themes';
 import type { EditorProps } from '@bytemd/react';
 import type { BytemdPlugin } from 'bytemd';
 import 'bytemd/dist/index.css';
-import 'github-markdown-css/github-markdown-light.css';
-import 'github-markdown-css/github-markdown-dark.css';
+// import 'github-markdown-css/github-markdown-light.css';
+// import 'github-markdown-css/github-markdown-dark.css';
 
 interface MarkdownEditorProps {
   value: string;
