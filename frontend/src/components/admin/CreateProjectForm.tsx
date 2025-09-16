@@ -16,7 +16,26 @@ import { MarkdownEditor } from './MarkdownEditor';
 import { ScreenshotManager } from './ScreenshotManager';
 import { ProjectInfoManager, type ProjectInfo } from './ProjectInfoManager';
 import { FeatureHighlightManager, type FeatureHighlight } from './FeatureHighlightManager';
-import { Monitor, Smartphone, Github } from 'lucide-react';
+import {
+  Monitor,
+  Smartphone,
+  Github,
+  FileText,
+  Type,
+  Tags,
+  Activity,
+  Package,
+  Star,
+  Link,
+  Code,
+  FileCode,
+  FolderOpen,
+  Image,
+  Layers,
+  Sparkles,
+  Save,
+  Send
+} from 'lucide-react';
 
 interface ProjectFormData {
   name: string;
@@ -160,12 +179,18 @@ export function CreateProjectForm() {
         {/* 作品信息 */}
         <Card>
           <CardHeader>
-            <CardTitle>作品信息</CardTitle>
+            <CardTitle>
+              <FolderOpen className="inline h-5 w-5 mr-2" />
+              作品信息
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* 项目名称 */}
             <div className="space-y-2">
-              <Label htmlFor="name">项目名称 *</Label>
+              <Label htmlFor="name">
+                <Type className="inline h-4 w-4 mr-1" />
+                项目名称 *
+              </Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -177,7 +202,10 @@ export function CreateProjectForm() {
 
             {/* 项目简介 */}
             <div className="space-y-2">
-              <Label htmlFor="description">项目简介 *</Label>
+              <Label htmlFor="description">
+                <FileText className="inline h-4 w-4 mr-1" />
+                项目简介 *
+              </Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -190,7 +218,10 @@ export function CreateProjectForm() {
 
             {/* 项目标签 */}
             <div className="space-y-2">
-              <Label>项目标签</Label>
+              <Label>
+                <Tags className="inline h-4 w-4 mr-1" />
+                项目标签
+              </Label>
               <DynamicTags
                 tags={formData.tags}
                 onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
@@ -199,7 +230,10 @@ export function CreateProjectForm() {
 
             {/* 项目状态 */}
             <div className="space-y-2">
-              <Label>项目状态</Label>
+              <Label>
+                <Activity className="inline h-4 w-4 mr-1" />
+                项目状态
+              </Label>
               <ProjectStatusSelector
                 value={formData.status}
                 onChange={(status) => setFormData(prev => ({ ...prev, status }))}
@@ -208,7 +242,10 @@ export function CreateProjectForm() {
 
             {/* 项目类型 */}
             <div className="space-y-2">
-              <Label>项目类型</Label>
+              <Label>
+                <Package className="inline h-4 w-4 mr-1" />
+                项目类型
+              </Label>
               <ProjectTypeSelector
                 value={formData.type}
                 onChange={(type) => setFormData(prev => ({ ...prev, type }))}
@@ -217,7 +254,10 @@ export function CreateProjectForm() {
 
             {/* 项目特性 */}
             <div className="space-y-2">
-              <Label>项目特性</Label>
+              <Label>
+                <Star className="inline h-4 w-4 mr-1" />
+                项目特性
+              </Label>
               <ProjectFeatureSelector
                 features={formData.features}
                 onChange={(features) => setFormData(prev => ({ ...prev, features }))}
@@ -276,7 +316,10 @@ export function CreateProjectForm() {
             {/* 侧边栏 Markdown 内容 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="leftSidebarMarkdown">展示信息左侧栏 Markdown</Label>
+                <Label htmlFor="leftSidebarMarkdown">
+                  <Code className="inline h-4 w-4 mr-1" />
+                  展示信息左侧栏 Markdown
+                </Label>
                 <Textarea
                   id="leftSidebarMarkdown"
                   value={formData.leftSidebarMarkdown}
@@ -287,7 +330,10 @@ export function CreateProjectForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="rightSidebarMarkdown">展示信息右侧栏 Markdown</Label>
+                <Label htmlFor="rightSidebarMarkdown">
+                  <FileCode className="inline h-4 w-4 mr-1" />
+                  展示信息右侧栏 Markdown
+                </Label>
                 <Textarea
                   id="rightSidebarMarkdown"
                   value={formData.rightSidebarMarkdown}
@@ -310,7 +356,10 @@ export function CreateProjectForm() {
                   sourceUrl: checked ? prev.sourceUrl : ''
                 }))}
               />
-              <Label htmlFor="isOpenSource">项目开源</Label>
+              <Label htmlFor="isOpenSource">
+                <Github className="inline h-4 w-4 mr-1" />
+                项目开源
+              </Label>
             </div>
           </CardContent>
         </Card>
@@ -319,7 +368,10 @@ export function CreateProjectForm() {
       {/* 作品截图展示 */}
       <Card>
         <CardHeader>
-          <CardTitle>作品截图展示</CardTitle>
+          <CardTitle>
+            <Image className="inline h-5 w-5 mr-2" />
+            作品截图展示
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ScreenshotManager
@@ -332,7 +384,10 @@ export function CreateProjectForm() {
       {/* 项目概览 - 信息展示区域 */}
       <Card>
         <CardHeader>
-          <CardTitle>项目概览 - 信息展示区域</CardTitle>
+          <CardTitle>
+            <Layers className="inline h-5 w-5 mr-2" />
+            项目概览 - 信息展示区域
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ProjectInfoManager
@@ -345,7 +400,10 @@ export function CreateProjectForm() {
       {/* 项目介绍 Markdown 编辑器 */}
       <Card>
         <CardHeader>
-          <CardTitle>项目介绍</CardTitle>
+          <CardTitle>
+            <FileText className="inline h-5 w-5 mr-2" />
+            项目介绍
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -361,7 +419,10 @@ export function CreateProjectForm() {
       {/* 特色功能介绍 */}
       <Card>
         <CardHeader>
-          <CardTitle>特色功能介绍</CardTitle>
+          <CardTitle>
+            <Sparkles className="inline h-5 w-5 mr-2" />
+            特色功能介绍
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <FeatureHighlightManager
@@ -374,9 +435,11 @@ export function CreateProjectForm() {
       {/* 提交按钮 */}
       <div className="flex justify-end gap-4">
         <Button type="button" variant="outline" onClick={handleSaveDraft}>
+          <Save className="w-4 h-4 mr-2" />
           保存草稿
         </Button>
         <Button onClick={handleSubmit}>
+          <Send className="w-4 h-4 mr-2" />
           创建作品集
         </Button>
       </div>
