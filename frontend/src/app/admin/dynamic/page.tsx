@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,82 +6,56 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { DynamicTags } from '@/components/admin/DynamicTags';
 import { MarkdownEditor } from '@/components/admin/MarkdownEditor';
 import { ImageUpload } from '@/components/admin/dynamic/ImageUpload';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Calendar,
+  FolderOpen,
+  FileText,
+  Type,
+  Tags,
+  Image,
+  Code,
+  ExternalLink,
+  Monitor,
+  Save,
+  Send,
+  Globe,
+  FileCode
+} from 'lucide-react';
 
 interface DynamicFormData {
-  // 基础信息
-  title: string;
-  summary: string;
-  content: string;
-  author: string;
-  status: 'draft' | 'published' | 'archived';
-  
-  // 内容分类
-  category: string;
-  subcategory: string;
-  tags: string[];
-  
-  // 时间管理
-  publishTime: string;
-  createdTime: string;
-  updatedTime: string;
-  
-  // 媒体内容
-  coverImage: File | null;
-  images: File[];
-  
-  // 发布设置
-  isPinned: boolean;
-  isFeatured: boolean;
-  allowComments: boolean;
-  isPublic: boolean;
-  
-  // 相关链接
-  sourceUrl: string;
+  // 动态基本信息
+  publishDate: string;
+  projectBelong: string;
+  dynamicDescription: string;
+  dynamicType: string;
+  dynamicTags: string[];
+  dynamicDetails: string;
+  dynamicImages: File[];
+  codeUrl: string;
   demoUrl: string;
-  downloadUrl: string;
+  demoUrlDescriptionLeft: string;
+  demoUrlDescriptionRight: string;
 }
 
 export default function CreateDynamicPage() {
   const [formData, setFormData] = useState<DynamicFormData>({
-    // 基础信息
-    title: '',
-    summary: '',
-    content: '',
-    author: '',
-    status: 'draft',
-    
-    // 内容分类
-    category: '',
-    subcategory: '',
-    tags: [],
-    
-    // 时间管理
-    publishTime: new Date().toISOString().slice(0, 16),
-    createdTime: new Date().toISOString(),
-    updatedTime: new Date().toISOString(),
-    
-    // 媒体内容
-    coverImage: null,
-    images: [],
-    
-    // 发布设置
-    isPinned: false,
-    isFeatured: false,
-    allowComments: true,
-    isPublic: true,
-    
-    // 相关链接
-    sourceUrl: '',
+    publishDate: new Date().toISOString().slice(0, 10),
+    projectBelong: '',
+    dynamicDescription: '',
+    dynamicType: '',
+    dynamicTags: [],
+    dynamicDetails: '',
+    dynamicImages: [],
+    codeUrl: '',
     demoUrl: '',
-    downloadUrl: ''
+    demoUrlDescriptionLeft: '',
+    demoUrlDescriptionRight: ''
   });
 
-  const [isSubmitting] = useState(false);
 
   // 在组件挂载时尝试恢复草稿
   useEffect(() => {
@@ -110,12 +84,12 @@ export default function CreateDynamicPage() {
     alert('草稿已保存到本地');
   };
 
-  // 图片上传适配器
-  const handleImageUpload = useCallback((images: File[] | ((prev: File[]) => File[])) => {
+  // 动态图片上传适配器
+  const handleDynamicImageUpload = useCallback((images: File[] | ((prev: File[]) => File[])) => {
     if (typeof images === 'function') {
-      setFormData(prev => ({ ...prev, images: images(prev.images) }));
+      setFormData(prev => ({ ...prev, dynamicImages: images(prev.dynamicImages) }));
     } else {
-      setFormData(prev => ({ ...prev, images }));
+      setFormData(prev => ({ ...prev, dynamicImages: images }));
     }
   }, []);
 
@@ -125,34 +99,19 @@ export default function CreateDynamicPage() {
     
     const errors: string[] = [];
     
-    // 基础信息验证
-    if (!formData.title.trim()) {
-      errors.push('动态标题不能为空');
-    }
-    
-    if (!formData.summary.trim()) {
-      errors.push('摘要描述不能为空');
-    }
-    
-    if (!formData.author.trim()) {
-      errors.push('作者姓名不能为空');
-    }
-    
-    // 内容分类验证
-    if (!formData.category) {
-      errors.push('请选择主分类');
-    }
-    
     // 内容验证
-    if (!formData.content.trim()) {
-      errors.push('动态内容不能为空');
+    if (!formData.dynamicDescription.trim()) {
+      errors.push('动态描述不能为空');
+    }
+    
+    if (!formData.dynamicDetails.trim()) {
+      errors.push('动态详细信息不能为空');
     }
     
     // URL格式验证
     const urlFields = [
-      { field: 'sourceUrl', name: '原文链接' },
-      { field: 'demoUrl', name: '演示链接' },
-      { field: 'downloadUrl', name: '下载链接' }
+      { field: 'codeUrl', name: '代码地址' },
+      { field: 'demoUrl', name: '演示地址' }
     ];
     
     urlFields.forEach(({ field, name }) => {
@@ -166,17 +125,10 @@ export default function CreateDynamicPage() {
       }
     });
     
-        
     if (errors.length > 0) {
       alert(`请修正以下问题：\n${errors.join('\n')}`);
       return;
     }
-    
-    // 更新更新时间
-    setFormData(prev => ({
-      ...prev,
-      updatedTime: new Date().toISOString()
-    }));
     
     console.log('提交表单数据:', formData);
     alert('动态创建成功！（这是演示版本）');
@@ -184,254 +136,156 @@ export default function CreateDynamicPage() {
 
   return (
     <form onSubmit={handleSubmit} className="container mx-auto py-8 px-4 max-w-6xl space-y-8 relative z-10">
-      {/* 基础信息 */}
+      {/* 动态基本信息 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-            基础信息
+          <CardTitle>
+            <FolderOpen className="inline h-5 w-5 mr-2" />
+            动态基本信息
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 左侧 */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">动态标题 *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="输入动态标题"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="summary">摘要描述 *</Label>
-                <Textarea
-                  id="summary"
-                  value={formData.summary}
-                  onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
-                  placeholder="简要描述动态内容（用于列表展示和SEO）"
-                  rows={3}
-                  required
-                />
-              </div>
-            </div>
-            
-            {/* 右侧 */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="author">作者 *</Label>
-                <Input
-                  id="author"
-                  value={formData.author}
-                  onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
-                  placeholder="输入作者姓名"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="status">状态</Label>
-                <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as 'draft' | 'published' | 'archived' }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">📝 草稿</SelectItem>
-                    <SelectItem value="published">📢 已发布</SelectItem>
-                    <SelectItem value="archived">📦 已归档</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 内容分类 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-            内容分类
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">主分类 *</Label>
-              <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="选择主分类" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="design">🎨 设计作品</SelectItem>
-                  <SelectItem value="development">💻 开发项目</SelectItem>
-                  <SelectItem value="photography">📸 摄影作品</SelectItem>
-                  <SelectItem value="writing">✍️ 文字创作</SelectItem>
-                  <SelectItem value="video">🎬 视频制作</SelectItem>
-                  <SelectItem value="other">🔧 其他</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="subcategory">子分类</Label>
+              <Label htmlFor="publishDate">
+                <Calendar className="inline h-4 w-4 mr-1" />
+                发布日期
+              </Label>
               <Input
-                id="subcategory"
-                value={formData.subcategory}
-                onChange={(e) => setFormData(prev => ({ ...prev, subcategory: e.target.value }))}
-                placeholder="输入子分类（可选）"
+                id="publishDate"
+                type="date"
+                value={formData.publishDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, publishDate: e.target.value }))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="projectBelong">
+                <FolderOpen className="inline h-4 w-4 mr-1" />
+                项目归属
+              </Label>
+              <Input
+                id="projectBelong"
+                value={formData.projectBelong}
+                onChange={(e) => setFormData(prev => ({ ...prev, projectBelong: e.target.value }))}
+                placeholder="输入项目归属"
               />
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label>标签</Label>
+            <Label htmlFor="dynamicType">
+              <Type className="inline h-4 w-4 mr-1" />
+              动态类型
+            </Label>
+            <Select value={formData.dynamicType} onValueChange={(value) => setFormData(prev => ({ ...prev, dynamicType: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="选择动态类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="update">🔄 项目更新</SelectItem>
+                <SelectItem value="release">🚀 版本发布</SelectItem>
+                <SelectItem value="feature">✨ 新功能</SelectItem>
+                <SelectItem value="bugfix">🐛 问题修复</SelectItem>
+                <SelectItem value="announcement">📢 公告</SelectItem>
+                <SelectItem value="other">📝 其他</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="dynamicDescription">
+              <FileText className="inline h-4 w-4 mr-1" />
+              动态描述 *
+            </Label>
+            <Textarea
+              id="dynamicDescription"
+              value={formData.dynamicDescription}
+              onChange={(e) => setFormData(prev => ({ ...prev, dynamicDescription: e.target.value }))}
+              placeholder="简要描述动态内容"
+              rows={3}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>
+              <Tags className="inline h-4 w-4 mr-1" />
+              动态标签
+            </Label>
             <DynamicTags
-              tags={formData.tags}
-              onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
-              placeholder="输入标签后按回车或点击添加"
+              tags={formData.dynamicTags}
+              onChange={(tags) => setFormData(prev => ({ ...prev, dynamicTags: tags }))}
+              placeholder="输入动态标签"
             />
           </div>
         </CardContent>
       </Card>
 
-      {/* 时间管理 */}
+      {/* 动态详细信息 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-            时间管理
+          <CardTitle>
+            <FileText className="inline h-5 w-5 mr-2" />
+            动态详细信息 *
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="publishTime">发布时间</Label>
-              <Input
-                id="publishTime"
-                type="datetime-local"
-                value={formData.publishTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, publishTime: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>创建时间</Label>
-              <Input
-                value={new Date(formData.createdTime).toLocaleString()}
-                disabled
-                className="bg-muted"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>更新时间</Label>
-              <Input
-                value={new Date(formData.updatedTime).toLocaleString()}
-                disabled
-                className="bg-muted"
-              />
-            </div>
+        <CardContent>
+          <div className="space-y-2">
+            <MarkdownEditor
+              value={formData.dynamicDetails}
+              onChange={(dynamicDetails) => setFormData(prev => ({ ...prev, dynamicDetails }))}
+              placeholder="输入动态详细信息..."
+            />
           </div>
         </CardContent>
       </Card>
 
-      
-      {/* 媒体内容 */}
+      {/* 动态图片 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
-            媒体内容
+          <CardTitle>
+            <Image className="inline h-5 w-5 mr-2" />
+            动态图片
           </CardTitle>
         </CardHeader>
         <CardContent>
           <ImageUpload
-            images={formData.images}
-            setImages={handleImageUpload}
+            images={formData.dynamicImages}
+            setImages={handleDynamicImageUpload}
           />
-        </CardContent>
-      </Card>
-
-      {/* 发布设置 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-cyan-500 rounded-full"></span>
-            发布设置
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isPinned"
-                  checked={formData.isPinned}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPinned: checked }))}
-                />
-                <Label htmlFor="isPinned">置顶显示</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isFeatured"
-                  checked={formData.isFeatured}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isFeatured: checked }))}
-                />
-                <Label htmlFor="isFeatured">推荐内容</Label>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="allowComments"
-                  checked={formData.allowComments}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allowComments: checked }))}
-                />
-                <Label htmlFor="allowComments">允许评论</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="isPublic"
-                  checked={formData.isPublic}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPublic: checked }))}
-                />
-                <Label htmlFor="isPublic">公开显示</Label>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
       {/* 相关链接 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
+          <CardTitle>
+            <ExternalLink className="inline h-5 w-5 mr-2" />
             相关链接
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="sourceUrl">原文链接</Label>
+              <Label htmlFor="codeUrl">
+                <Code className="inline h-4 w-4 mr-1" />
+                代码地址
+              </Label>
               <Input
-                id="sourceUrl"
+                id="codeUrl"
                 type="url"
-                value={formData.sourceUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, sourceUrl: e.target.value }))}
-                placeholder="https://example.com"
+                value={formData.codeUrl}
+                onChange={(e) => setFormData(prev => ({ ...prev, codeUrl: e.target.value }))}
+                placeholder="https://github.com/username/repo"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="demoUrl">演示链接</Label>
+              <Label htmlFor="demoUrl">
+                <Monitor className="inline h-4 w-4 mr-1" />
+                演示地址
+              </Label>
               <Input
                 id="demoUrl"
                 type="url"
@@ -440,53 +294,53 @@ export default function CreateDynamicPage() {
                 placeholder="https://demo.example.com"
               />
             </div>
-            
+          </div>
+          
+          {/* 演示地址介绍左右两栏 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="downloadUrl">下载链接</Label>
-              <Input
-                id="downloadUrl"
-                type="url"
-                value={formData.downloadUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, downloadUrl: e.target.value }))}
-                placeholder="https://download.example.com"
+              <Label htmlFor="demoUrlDescriptionLeft">
+                <Code className="inline h-4 w-4 mr-1" />
+                演示地址介绍左侧栏 Markdown
+              </Label>
+              <Textarea
+                id="demoUrlDescriptionLeft"
+                value={formData.demoUrlDescriptionLeft}
+                onChange={(e) => setFormData(prev => ({ ...prev, demoUrlDescriptionLeft: e.target.value }))}
+                placeholder="输入左侧栏演示介绍的 Markdown 内容..."
+                rows={6}
+                className="font-mono text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="demoUrlDescriptionRight">
+                <FileCode className="inline h-4 w-4 mr-1" />
+                演示地址介绍右侧栏 Markdown
+              </Label>
+              <Textarea
+                id="demoUrlDescriptionRight"
+                value={formData.demoUrlDescriptionRight}
+                onChange={(e) => setFormData(prev => ({ ...prev, demoUrlDescriptionRight: e.target.value }))}
+                placeholder="输入右侧栏演示介绍的 Markdown 内容..."
+                rows={6}
+                className="font-mono text-sm"
               />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 动态内容 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-            动态内容
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <MarkdownEditor
-              value={formData.content}
-              onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-              placeholder="使用 Markdown 编写您的动态内容..."
-            />
-          </div>
-        </CardContent>
-      </Card>
 
       {/* 提交按钮 */}
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-muted-foreground">
-          创建时间：{new Date(formData.createdTime).toLocaleString()}
-        </div>
-        <div className="flex gap-4">
-          <Button type="button" variant="outline" onClick={handleSaveDraft}>
-            保存草稿
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? '发布中...' : '发布动态'}
-          </Button>
-        </div>
+      <div className="flex justify-end gap-4">
+        <Button type="button" variant="outline" onClick={handleSaveDraft}>
+          <Save className="w-4 h-4 mr-2" />
+          保存草稿
+        </Button>
+        <Button type="submit">
+          <Send className="w-4 h-4 mr-2" />
+          发布动态
+        </Button>
       </div>
     </form>
   );

@@ -22,14 +22,6 @@ export function ImageUpload({ images, setImages }: ImageUploadProps) {
 
   return (
     <Card className="border-0">
-      <CardHeader className="pb-6">
-        <CardTitle className="flex items-center gap-3 text-2xl">
-          <div className="p-2 rounded-lg">
-            <Upload className="h-5 w-5" />
-          </div>
-          动态图片
-        </CardTitle>
-      </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[0, 1, 2].map((index) => (
