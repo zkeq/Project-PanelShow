@@ -15,6 +15,8 @@ import { ProjectFeatureSelector } from './ProjectFeatureSelector';
 import { MarkdownEditor } from './MarkdownEditor';
 import { ScreenshotManager } from './ScreenshotManager';
 import { ProjectInfoManager, type ProjectInfo } from './ProjectInfoManager';
+import { FeatureHighlightManager, type FeatureHighlight } from './FeatureHighlightManager';
+import { Monitor, Smartphone, Github } from 'lucide-react';
 
 interface ProjectFormData {
   name: string;
@@ -37,6 +39,7 @@ interface ProjectFormData {
     icon: string;
   }>;
   previewUrl: string;
+  mobilePreviewUrl: string;
   sourceUrl: string;
   leftSidebarMarkdown: string;
   rightSidebarMarkdown: string;
@@ -50,6 +53,7 @@ interface ProjectFormData {
   }>;
   projectInfos: ProjectInfo[];
   projectIntroduction: string;
+  featureHighlights: FeatureHighlight[];
 }
 
 export function CreateProjectForm() {
@@ -61,6 +65,7 @@ export function CreateProjectForm() {
     type: null,
     features: [],
     previewUrl: '',
+    mobilePreviewUrl: '',
     sourceUrl: '',
     leftSidebarMarkdown: '',
     rightSidebarMarkdown: '',
@@ -68,7 +73,8 @@ export function CreateProjectForm() {
     readme: '',
     screenshots: [],
     projectInfos: [],
-    projectIntroduction: ''
+    projectIntroduction: '',
+    featureHighlights: []
   });
 
   const handleSaveDraft = () => {
@@ -223,7 +229,10 @@ export function CreateProjectForm() {
             {/* URL 信息 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="previewUrl">项目预览地址</Label>
+                <Label htmlFor="previewUrl">
+                  <Monitor className="inline h-4 w-4 mr-1" />
+                  项目预览地址
+                </Label>
                 <Input
                   id="previewUrl"
                   type="url"
@@ -233,7 +242,26 @@ export function CreateProjectForm() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sourceUrl">项目源码地址</Label>
+                <Label htmlFor="mobilePreviewUrl">
+                  <Smartphone className="inline h-4 w-4 mr-1" />
+                  移动端预览地址 (可选)
+                </Label>
+                <Input
+                  id="mobilePreviewUrl"
+                  type="url"
+                  value={formData.mobilePreviewUrl}
+                  onChange={(e) => setFormData(prev => ({ ...prev, mobilePreviewUrl: e.target.value }))}
+                  placeholder="https://m.example.com"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="sourceUrl">
+                  <Github className="inline h-4 w-4 mr-1" />
+                  项目源码地址
+                </Label>
                 <Input
                   id="sourceUrl"
                   type="url"
@@ -327,6 +355,19 @@ export function CreateProjectForm() {
               placeholder="输入项目介绍..."
             />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 特色功能介绍 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>特色功能介绍</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FeatureHighlightManager
+            features={formData.featureHighlights}
+            onChange={(features) => setFormData(prev => ({ ...prev, featureHighlights: features }))}
+          />
         </CardContent>
       </Card>
 
