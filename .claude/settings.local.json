@@ -15,7 +15,9 @@
       "Bash(lsof:*)",
       "Bash(find:*)",
       "Bash(curl:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(python:*)",
+      "Bash(pip install:*)"
     ],
     "deny": [],
     "ask": []
