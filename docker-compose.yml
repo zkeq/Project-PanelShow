@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # TinyAuth 认证服务
+  tinyauth:
+    image: ghcr.io/steveiliop56/tinyauth:v3
+    container_name: tinyauth_server
+    ports:
+      - "3002:3000"
+    environment:
+      - SECRET=hJbG8sjm8CQVul5S7JmBH3N8iOVcOPDW
+      - APP_URL=http://localhost:3002
+      - USERS=admin:$$2a$$10$$UdLYoJ5lgPsC0RKqYH/jMua7zIn0g9kPqWmhYayJYLaZQ/FTmH2/u  # admin:password
+      # GitHub OAuth 配置
+      - GITHUB_CLIENT_ID=Iv23limIJjAfoyycBZvr
+      - GITHUB_CLIENT_SECRET=b8919e68186a2375b90a6831f3fbb2a9f4ee601e
+      - GITHUB_SCOPE=user:email,read:user
+    volumes:
+      - tinyauth_data:/app/data
+    networks:
+      - portfolio_network
+    restart: unless-stopped
+
+  # Redis (为 TinyAuth 提供缓存支持)
+  redis:
+    image: redis:7-alpine
+    container_name: portfolio_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - portfolio_network
+    restart: unless-stopped
+
+  # 后端 API 服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: portfolio_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - TINYAUTH_URL=http://tinyauth_server:3000
+      - TINYAUTH_SECRET=hJbG8sjm8CQVul5S7JmBH3N8iOVcOPDW
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3002
+      - DATA_DIR=/app/data
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/static:/app/static
+    depends_on:
+      - tinyauth
+      - redis
+    networks:
+      - portfolio_network
+    restart: unless-stopped
+
+  # 前端服务 (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: portfolio_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_AUTH_URL=http://localhost:3002
+    depends_on:
+      - backend
+    networks:
+      - portfolio_network
+    restart: unless-stopped
+
+volumes:
+  tinyauth_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  portfolio_network:
+    driver: bridge

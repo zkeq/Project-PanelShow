@@ -1,23 +1,30 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Path, Depends, Request
 from typing import List, Optional
 from app.models import (
     TimelineItem, BaseResponse, ListResponse, 
     CreateTimelineRequest
 )
-from app.services import TimelineService
-from app.utils import DataNotFoundError, DataValidationError
+from app.services import TimelineService, UserService
+from app.utils import DataNotFoundError, DataValidationError, UserNotFoundError
+from app.auth import require_auth, TokenData
 
 router = APIRouter()
 
-@router.get("/", response_model=ListResponse)
-async def get_timeline_items(
+@router.get("/{username}/", response_model=ListResponse)
+async def get_user_timeline_items(
+    username: str = Path(..., description="用户名"),
     limit: Optional[int] = Query(None, description="返回数量限制"),
     offset: Optional[int] = Query(0, description="偏移量"),
     update_type: Optional[str] = Query(None, description="更新类型过滤")
 ):
-    """获取时间线列表"""
+    """获取指定用户的时间线列表"""
     try:
-        items = TimelineService.get_all_timeline_items()
+        # 检查用户是否为公开用户
+        public_users = UserService.get_public_users()
+        if username not in public_users:
+            raise HTTPException(status_code=404, detail="用户不存在或未公开")
+        
+        items = TimelineService.get_all_timeline_items(username)
         
         # 按更新类型过滤
         if update_type:
@@ -34,14 +41,24 @@ async def get_timeline_items(
             data=[item.dict() for item in items],
             total=total
         )
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取时间线失败: {str(e)}")
 
-@router.get("/{item_id}", response_model=BaseResponse)
-async def get_timeline_item(item_id: str):
-    """根据ID获取时间线项"""
+@router.get("/{username}/{item_id}", response_model=BaseResponse)
+async def get_user_timeline_item(
+    username: str = Path(..., description="用户名"),
+    item_id: str = Path(..., description="时间线项ID")
+):
+    """根据用户名和ID获取时间线项"""
     try:
-        item = TimelineService.get_timeline_item_by_id(item_id)
+        # 检查用户是否为公开用户
+        public_users = UserService.get_public_users()
+        if username not in public_users:
+            raise HTTPException(status_code=404, detail="用户不存在或未公开")
+        
+        item = TimelineService.get_timeline_item_by_id(username, item_id)
         if not item:
             raise HTTPException(status_code=404, detail="时间线项未找到")
         
@@ -50,36 +67,61 @@ async def get_timeline_item(item_id: str):
             message="获取时间线项成功",
             data=item.dict()
         )
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取时间线项失败: {str(e)}")
 
-@router.post("/", response_model=BaseResponse)
-async def create_timeline_item(request: CreateTimelineRequest):
-    """创建新的时间线项"""
+# 以下是需要认证的管理接口
+@router.post("/{username}/", response_model=BaseResponse)
+async def create_user_timeline_item(
+    request: Request,
+    timeline_request: CreateTimelineRequest,
+    username: str = Path(..., description="用户名"),
+    current_user: TokenData = Depends(require_auth)
+):
+    """为指定用户创建新的时间线项（需要认证）"""
     try:
-        item = TimelineService.create_timeline_item(request)
+        # 检查权限：管理员或用户自身
+        if current_user.role != "admin" and current_user.username != username:
+            raise HTTPException(status_code=403, detail="只能管理自己的数据")
+        
+        item = TimelineService.create_timeline_item(username, request)
         return BaseResponse(
             success=True,
             message="创建时间线项成功",
             data=item.dict()
         )
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except DataValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"创建时间线项失败: {str(e)}")
 
-@router.put("/{item_id}", response_model=BaseResponse)
-async def update_timeline_item(item_id: str, updates: dict):
-    """更新时间线项"""
+@router.put("/{username}/{item_id}", response_model=BaseResponse)
+async def update_user_timeline_item(
+    updates: dict,
+    username: str = Path(..., description="用户名"),
+    item_id: str = Path(..., description="时间线项ID"),
+    current_user: TokenData = Depends(require_auth)
+):
+    """更新指定用户的时间线项（需要认证）"""
     try:
+        # 检查权限：管理员或用户自身
+        if current_user.role != "admin" and current_user.username != username:
+            raise HTTPException(status_code=403, detail="只能管理自己的数据")
+        
+        # TODO: 添加认证检查
+        
         # 验证时间线项是否存在
-        existing_item = TimelineService.get_timeline_item_by_id(item_id)
+        existing_item = TimelineService.get_timeline_item_by_id(username, item_id)
         if not existing_item:
             raise HTTPException(status_code=404, detail="时间线项未找到")
         
-        item = TimelineService.update_timeline_item(item_id, updates)
+        item = TimelineService.update_timeline_item(username, item_id, updates)
         if not item:
             raise HTTPException(status_code=500, detail="更新时间线项失败")
         
@@ -88,21 +130,33 @@ async def update_timeline_item(item_id: str, updates: dict):
             message="更新时间线项成功",
             data=item.dict()
         )
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"更新时间线项失败: {str(e)}")
 
-@router.delete("/{item_id}", response_model=BaseResponse)
-async def delete_timeline_item(item_id: str):
-    """删除时间线项"""
+@router.delete("/{username}/{item_id}", response_model=BaseResponse)
+async def delete_user_timeline_item(
+    username: str = Path(..., description="用户名"),
+    item_id: str = Path(..., description="时间线项ID"),
+    current_user: TokenData = Depends(require_auth)
+):
+    """删除指定用户的时间线项（需要认证）"""
     try:
+        # 检查权限：管理员或用户自身
+        if current_user.role != "admin" and current_user.username != username:
+            raise HTTPException(status_code=403, detail="只能管理自己的数据")
+        
+        # TODO: 添加认证检查
+        
         # 验证时间线项是否存在
-        existing_item = TimelineService.get_timeline_item_by_id(item_id)
+        existing_item = TimelineService.get_timeline_item_by_id(username, item_id)
         if not existing_item:
             raise HTTPException(status_code=404, detail="时间线项未找到")
         
-        success = TimelineService.delete_timeline_item(item_id)
+        success = TimelineService.delete_timeline_item(username, item_id)
         if not success:
             raise HTTPException(status_code=500, detail="删除时间线项失败")
         
@@ -110,16 +164,26 @@ async def delete_timeline_item(item_id: str):
             success=True,
             message="删除时间线项成功"
         )
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"删除时间线项失败: {str(e)}")
 
-@router.post("/{item_id}/like", response_model=BaseResponse)
-async def like_timeline_item(item_id: str):
-    """点赞/取消点赞时间线项"""
+@router.post("/{username}/{item_id}/like", response_model=BaseResponse)
+async def like_user_timeline_item(
+    username: str = Path(..., description="用户名"),
+    item_id: str = Path(..., description="时间线项ID")
+):
+    """点赞/取消点赞指定用户的时间线项"""
     try:
-        item = TimelineService.like_timeline_item(item_id)
+        # 检查用户是否为公开用户
+        public_users = UserService.get_public_users()
+        if username not in public_users:
+            raise HTTPException(status_code=404, detail="用户不存在或未公开")
+        
+        item = TimelineService.like_timeline_item(username, item_id)
         if not item:
             raise HTTPException(status_code=404, detail="时间线项未找到")
         
@@ -129,16 +193,23 @@ async def like_timeline_item(item_id: str):
             message=f"{action}成功",
             data=item.dict()
         )
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"操作失败: {str(e)}")
 
-@router.get("/stats/summary", response_model=BaseResponse)
-async def get_timeline_stats():
-    """获取时间线统计信息"""
+@router.get("/{username}/stats/overview", response_model=BaseResponse)
+async def get_user_timeline_stats(username: str = Path(..., description="用户名")):
+    """获取指定用户的时间线统计信息"""
     try:
-        items = TimelineService.get_all_timeline_items()
+        # 检查用户是否为公开用户
+        public_users = UserService.get_public_users()
+        if username not in public_users:
+            raise HTTPException(status_code=404, detail="用户不存在或未公开")
+        
+        items = TimelineService.get_all_timeline_items(username)
         
         stats = {
             "total": len(items),
@@ -179,6 +250,8 @@ async def get_timeline_stats():
             message="获取时间线统计成功",
             data=stats
         )
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取时间线统计失败: {str(e)}")
 

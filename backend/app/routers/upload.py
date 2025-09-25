@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Path, Depends
 from typing import List, Optional
 import os
 import uuid
 from datetime import datetime
 from app.models import BaseResponse
-from app.utils import sanitize_filename, ensure_upload_dir
+from app.services import UserService
+from app.utils import sanitize_filename, ensure_upload_dir, ensure_user_data_dir, UserNotFoundError
+from app.auth import require_auth, TokenData
 
 router = APIRouter()
 
@@ -32,6 +34,20 @@ def validate_file(file: UploadFile) -> tuple[bool, str]:
     
     return True, ""
 
+def ensure_user_upload_dir(username: str, category: str = "general") -> str:
+    """为指定用户确保上传目录存在"""
+    # 确保用户数据目录存在
+    ensure_user_data_dir(username)
+    
+    # 创建用户上传目录
+    user_upload_dir = os.path.join("data", "users", username, "uploads")
+    os.makedirs(user_upload_dir, exist_ok=True)
+    
+    # 创建分类目录
+    category_dir = os.path.join(user_upload_dir, category)
+    os.makedirs(category_dir, exist_ok=True)
+    
+    return category_dir
 def generate_unique_filename(original_filename: str) -> str:
     """生成唯一的文件名"""
     sanitized_name = sanitize_filename(original_filename)
@@ -40,25 +56,33 @@ def generate_unique_filename(original_filename: str) -> str:
     unique_id = str(uuid.uuid4())[:8]
     return f"{name}_{timestamp}_{unique_id}{ext}"
 
-@router.post("/upload", response_model=BaseResponse)
-async def upload_file(
+@router.post("/{username}/upload", response_model=BaseResponse)
+async def upload_user_file(
     file: UploadFile = File(...),
     category: Optional[str] = Form(default="general"),
-    description: Optional[str] = Form(default="")
+    description: Optional[str] = Form(default=""),
+    username: str = Path(..., description="用户名"),
+    current_user: TokenData = Depends(require_auth)
 ):
-    """上传单个文件"""
+    """为指定用户上传单个文件（需要认证）"""
     try:
+        # 检查权限：管理员或用户自身
+        if current_user.role != "admin" and current_user.username != username:
+            raise HTTPException(status_code=403, detail="只能管理自己的数据")
+        
+        # TODO: 添加认证检查，确保当前用户有权为指定用户上传文件
+        
+        # 检查用户是否存在
+        if not UserService.user_exists(username):
+            raise HTTPException(status_code=404, detail="用户不存在")
+        
         # 验证文件
         is_valid, error_message = validate_file(file)
         if not is_valid:
             raise HTTPException(status_code=400, detail=error_message)
         
-        # 确保上传目录存在
-        upload_dir = ensure_upload_dir()
-        
-        # 创建分类目录
-        category_dir = os.path.join(upload_dir, category)
-        os.makedirs(category_dir, exist_ok=True)
+        # 确保用户上传目录存在
+        category_dir = ensure_user_upload_dir(username, category)
         
         # 生成唯一文件名
         unique_filename = generate_unique_filename(file.filename)
@@ -78,8 +102,8 @@ async def upload_file(
             f.write(content)
         
         # 生成访问URL
-        relative_path = os.path.join(category, unique_filename).replace('\\', '/')
-        file_url = f"/static/uploads/{relative_path}"
+        relative_path = os.path.join("users", username, "uploads", category, unique_filename).replace('\\', '/')
+        file_url = f"/static/{relative_path}"
         
         # 文件信息
         file_info = {
@@ -90,7 +114,8 @@ async def upload_file(
             "type": file.content_type,
             "category": category,
             "description": description,
-            "uploadTime": datetime.now().isoformat()
+            "uploadTime": datetime.now().isoformat(),
+            "username": username
         }
         
         return BaseResponse(
@@ -98,20 +123,33 @@ async def upload_file(
             message="文件上传成功",
             data=file_info
         )
-        
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"文件上传失败: {str(e)}")
 
-@router.post("/upload/multiple", response_model=BaseResponse)
-async def upload_multiple_files(
+@router.post("/{username}/upload/multiple", response_model=BaseResponse)
+async def upload_multiple_user_files(
     files: List[UploadFile] = File(...),
     category: Optional[str] = Form(default="general"),
-    description: Optional[str] = Form(default="")
+    description: Optional[str] = Form(default=""),
+    username: str = Path(..., description="用户名"),
+    current_user: TokenData = Depends(require_auth)
 ):
-    """上传多个文件"""
+    """为指定用户上传多个文件（需要认证）"""
     try:
+        # 检查权限：管理员或用户自身
+        if current_user.role != "admin" and current_user.username != username:
+            raise HTTPException(status_code=403, detail="只能管理自己的数据")
+        
+        # TODO: 添加认证检查
+        
+        # 检查用户是否存在
+        if not UserService.user_exists(username):
+            raise HTTPException(status_code=404, detail="用户不存在")
+        
         if len(files) > 10:  # 限制最多10个文件
             raise HTTPException(status_code=400, detail="一次最多只能上传10个文件")
         
@@ -129,10 +167,8 @@ async def upload_multiple_files(
                     })
                     continue
                 
-                # 确保上传目录存在
-                upload_dir = ensure_upload_dir()
-                category_dir = os.path.join(upload_dir, category)
-                os.makedirs(category_dir, exist_ok=True)
+                # 确保用户上传目录存在
+                category_dir = ensure_user_upload_dir(username, category)
                 
                 # 生成唯一文件名
                 unique_filename = generate_unique_filename(file.filename)
@@ -152,8 +188,8 @@ async def upload_multiple_files(
                     f.write(content)
                 
                 # 生成访问URL
-                relative_path = os.path.join(category, unique_filename).replace('\\', '/')
-                file_url = f"/static/uploads/{relative_path}"
+                relative_path = os.path.join("users", username, "uploads", category, unique_filename).replace('\\', '/')
+                file_url = f"/static/{relative_path}"
                 
                 upload_results.append({
                     "originalName": file.filename,
@@ -161,7 +197,8 @@ async def upload_multiple_files(
                     "url": file_url,
                     "size": len(content),
                     "type": file.content_type,
-                    "category": category
+                    "category": category,
+                    "username": username
                 })
                 
             except Exception as e:
@@ -187,18 +224,27 @@ async def upload_multiple_files(
             message=message,
             data=result_data
         )
-        
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"批量文件上传失败: {str(e)}")
 
-@router.get("/list/{category}", response_model=BaseResponse)
-async def list_files(category: str = "general"):
-    """列出指定分类的文件"""
+@router.get("/{username}/list/{category}", response_model=BaseResponse)
+async def list_user_files(
+    username: str = Path(..., description="用户名"),
+    category: str = Path(..., description="分类名")
+):
+    """列出指定用户指定分类的文件"""
     try:
-        upload_dir = ensure_upload_dir()
-        category_dir = os.path.join(upload_dir, category)
+        # 检查用户是否为公开用户
+        public_users = UserService.get_public_users()
+        if username not in public_users:
+            raise HTTPException(status_code=404, detail="用户不存在或未公开")
+        
+        user_upload_dir = os.path.join("data", "users", username, "uploads")
+        category_dir = os.path.join(user_upload_dir, category)
         
         if not os.path.exists(category_dir):
             return BaseResponse(
@@ -212,14 +258,15 @@ async def list_files(category: str = "general"):
             file_path = os.path.join(category_dir, filename)
             if os.path.isfile(file_path):
                 stat = os.stat(file_path)
-                file_url = f"/static/uploads/{category}/{filename}"
+                file_url = f"/static/users/{username}/uploads/{category}/{filename}"
                 
                 files.append({
                     "filename": filename,
                     "url": file_url,
                     "size": stat.st_size,
                     "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-                    "category": category
+                    "category": category,
+                    "username": username
                 })
         
         # 按修改时间倒序排序
@@ -230,16 +277,30 @@ async def list_files(category: str = "general"):
             message="获取文件列表成功",
             data=files
         )
-        
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取文件列表失败: {str(e)}")
 
-@router.delete("/{category}/{filename}", response_model=BaseResponse)
-async def delete_file(category: str, filename: str):
-    """删除指定文件"""
+@router.delete("/{username}/{category}/{filename}", response_model=BaseResponse)
+async def delete_user_file(
+    username: str = Path(..., description="用户名"),
+    category: str = Path(..., description="分类名"),
+    filename: str = Path(..., description="文件名"),
+    current_user: TokenData = Depends(require_auth)
+):
+    """删除指定用户的指定文件（需要认证）"""
     try:
-        upload_dir = ensure_upload_dir()
-        file_path = os.path.join(upload_dir, category, filename)
+        # 检查权限：管理员或用户自身
+        if current_user.role != "admin" and current_user.username != username:
+            raise HTTPException(status_code=403, detail="只能管理自己的数据")
+
+        # 检查用户是否存在
+        if not UserService.user_exists(username):
+            raise HTTPException(status_code=404, detail="用户不存在")
+        
+        user_upload_dir = os.path.join("data", "users", username, "uploads")
+        file_path = os.path.join(user_upload_dir, category, filename)
         
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="文件未找到")
@@ -250,7 +311,8 @@ async def delete_file(category: str, filename: str):
             success=True,
             message="文件删除成功"
         )
-        
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:

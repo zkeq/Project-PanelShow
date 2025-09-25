@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
-from app.routers import timeline, projects, profile, admin, upload
+from app.routers import timeline, projects, profile, admin, upload, users, auth
 
 app = FastAPI(
     title="Project Portfolio API",
@@ -26,6 +26,8 @@ app.include_router(projects.router, prefix="/api/projects", tags=["项目"])
 app.include_router(profile.router, prefix="/api/profile", tags=["个人资料"])
 app.include_router(admin.router, prefix="/api/admin", tags=["管理"])
 app.include_router(upload.router, prefix="/api/upload", tags=["文件上传"])
+app.include_router(users.router, prefix="/api/users", tags=["用户管理"])
+app.include_router(auth.router, tags=["认证"])
 
 # 静态文件服务
 if not os.path.exists("static"):

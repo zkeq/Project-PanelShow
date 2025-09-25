@@ -13,9 +13,20 @@ def get_data_path(filename: str) -> str:
     """获取数据文件路径"""
     return os.path.join(DATA_DIR, filename)
 
-def load_json_data(filename: str) -> Union[Dict, List]:
-    """加载JSON数据文件"""
-    file_path = get_data_path(filename)
+def load_json_data(filename: str, username: str = None) -> Union[Dict, List]:
+    """加载JSON数据文件
+    Args:
+        filename: 文件名
+        username: 用户名，如果提供则加载用户特定数据
+    """
+    if username:
+        # 用户特定数据文件
+        user_data_dir = os.path.join(DATA_DIR, 'users', username)
+        file_path = os.path.join(user_data_dir, filename)
+    else:
+        # 系统级数据文件
+        file_path = get_data_path(filename)
+    
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             return json.load(f)
@@ -30,12 +41,23 @@ def load_json_data(filename: str) -> Union[Dict, List]:
         print(f"JSON解码错误 {filename}: {e}")
         return {}
 
-def save_json_data(filename: str, data: Union[Dict, List]) -> bool:
-    """保存数据到JSON文件"""
-    file_path = get_data_path(filename)
-    
-    # 确保目录存在
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+def save_json_data(filename: str, data: Union[Dict, List], username: str = None) -> bool:
+    """保存数据到JSON文件
+    Args:
+        filename: 文件名
+        data: 要保存的数据
+        username: 用户名，如果提供则保存到用户特定目录
+    """
+    if username:
+        # 用户特定数据文件
+        user_data_dir = os.path.join(DATA_DIR, 'users', username)
+        os.makedirs(user_data_dir, exist_ok=True)
+        file_path = os.path.join(user_data_dir, filename)
+    else:
+        # 系统级数据文件
+        file_path = get_data_path(filename)
+        # 确保目录存在
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
     
     try:
         # 先写入临时文件，再重命名，确保原子操作
@@ -110,10 +132,106 @@ def ensure_upload_dir() -> str:
     os.makedirs(upload_dir, exist_ok=True)
     return upload_dir
 
+def ensure_user_data_dir(username: str) -> str:
+    """确保用户数据目录存在"""
+    user_data_dir = os.path.join(DATA_DIR, 'users', username)
+    os.makedirs(user_data_dir, exist_ok=True)
+    return user_data_dir
+
+def create_user_data_structure(username: str) -> bool:
+    """为新用户创建数据文件结构"""
+    try:
+        user_data_dir = ensure_user_data_dir(username)
+        
+        # 创建空的数据文件
+        empty_files = {
+            'projects.json': [],
+            'project_details.json': {},
+            'timeline.json': [],
+            'profile.json': {
+                'profile': {
+                    'username': username,
+                    'name': username,
+                    'title': '开发者',
+                    'email': f'{username}@example.com',
+                    'github': username,
+                    'website': f'https://{username}.dev',
+                    'bio': f'{username}的个人作品集',
+                    'skills': {
+                        'frontend': [],
+                        'backend': []
+                    },
+                    'interests': []
+                },
+                'users': {
+                    username: {
+                        'username': username,
+                        'name': username,
+                        'avatar': f'https://github.com/{username}.png',
+                        'bio': f'{username}的个人作品集',
+                        'location': '地球',
+                        'website': f'https://{username}.dev',
+                        'githubUrl': f'https://github.com/{username}',
+                        'twitterUrl': f'https://twitter.com/{username}'
+                    }
+                },
+                'experiences': [],
+                'quickLinks': []
+            }
+        }
+        
+        for filename, content in empty_files.items():
+            filepath = os.path.join(user_data_dir, filename)
+            if not os.path.exists(filepath):
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    json.dump(content, f, ensure_ascii=False, indent=2)
+        
+        return True
+    except Exception as e:
+        print(f"创建用户数据结构失败 {username}: {e}")
+        return False
+
+def rename_user_directory(old_username: str, new_username: str) -> bool:
+    """重命名用户目录（用于修改用户名）"""
+    try:
+        old_dir = os.path.join(DATA_DIR, 'users', old_username)
+        new_dir = os.path.join(DATA_DIR, 'users', new_username)
+        
+        if not os.path.exists(old_dir):
+            return False
+        
+        if os.path.exists(new_dir):
+            return False  # 新用户名已存在
+        
+        shutil.move(old_dir, new_dir)
+        return True
+    except Exception as e:
+        print(f"重命名用户目录失败 {old_username} -> {new_username}: {e}")
+        return False
+
+def delete_user_directory(username: str) -> bool:
+    """删除用户目录"""
+    try:
+        user_dir = os.path.join(DATA_DIR, 'users', username)
+        if os.path.exists(user_dir):
+            shutil.rmtree(user_dir)
+        return True
+    except Exception as e:
+        print(f"删除用户目录失败 {username}: {e}")
+        return False
+
 class DataValidationError(Exception):
     """数据验证错误"""
     pass
 
 class DataNotFoundError(Exception):
     """数据未找到错误"""
+    pass
+
+class UserNotFoundError(Exception):
+    """用户未找到错误"""
+    pass
+
+class UserAlreadyExistsError(Exception):
+    """用户已存在错误"""
     pass
