@@ -27,7 +27,7 @@ app.include_router(profile.router, prefix="/api/profile", tags=["个人资料"])
 app.include_router(admin.router, prefix="/api/admin", tags=["管理"])
 app.include_router(upload.router, prefix="/api/upload", tags=["文件上传"])
 app.include_router(users.router, prefix="/api/users", tags=["用户管理"])
-app.include_router(auth.router, tags=["认证"])
+app.include_router(auth.router, prefix="/api", tags=["认证"])
 
 # 静态文件服务
 if not os.path.exists("static"):

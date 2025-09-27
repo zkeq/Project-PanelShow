@@ -1,26 +1,20 @@
-from fastapi import APIRouter, HTTPException, Depends, Path
+from fastapi import APIRouter, HTTPException, Depends, Path, Request
 from typing import List, Dict, Any
 from app.models import BaseResponse, ListResponse
 from app.services import UserService
 from app.utils import UserNotFoundError, UserAlreadyExistsError
+from app.auth import require_admin
 
 router = APIRouter()
-
-# 注意：在实际项目中，这里应该添加 tinyauth 的认证装饰器
-def get_current_admin():
-    """获取当前管理员 - 预留给 tinyauth 集成"""
-    # TODO: 集成 tinyauth 认证并验证管理员权限
-    return {"username": "admin", "role": "admin"}
 
 @router.post("/", response_model=BaseResponse)
 async def create_user(
     user_data: dict,
-    current_admin: dict = Depends(get_current_admin)
+    request: Request,
+    current_admin = Depends(require_admin)
 ):
     """创建新用户（管理员权限）"""
     try:
-        # TODO: 添加管理员权限验证
-        
         user = UserService.create_user(user_data)
         return BaseResponse(
             success=True,
@@ -35,11 +29,12 @@ async def create_user(
         raise HTTPException(status_code=500, detail=f"创建用户失败: {str(e)}")
 
 @router.get("/", response_model=ListResponse)
-async def get_all_users(current_admin: dict = Depends(get_current_admin)):
+async def get_all_users(
+    request: Request,
+    current_admin = Depends(require_admin)
+):
     """获取所有用户列表（管理员权限）"""
     try:
-        # TODO: 添加管理员权限验证
-        
         users = UserService.get_all_users()
         return ListResponse(
             success=True,

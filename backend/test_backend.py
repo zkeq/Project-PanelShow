@@ -208,7 +208,7 @@ def main():
     print("• 用户名参数化的API路由")
     print("• 完整的数据服务层重构")
     print("\n🎯 待完成功能：")
-    print("• tinyauth 认证系统集成")
+    print("• 自定义认证系统集成")
     print("• 完善的权限验证机制")
 
 if __name__ == "__main__":

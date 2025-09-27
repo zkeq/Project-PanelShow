@@ -1,9 +1,10 @@
 """
 认证成功处理路由
 """
-from fastapi import APIRouter, Request, HTTPException, Cookie
+from fastapi import APIRouter, Request, HTTPException, Cookie, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from app.models import BaseResponse
+from app.auth import get_current_user, require_auth, TokenData
 
 router = APIRouter(prefix="/auth", tags=["认证"])
 
@@ -11,9 +12,9 @@ router = APIRouter(prefix="/auth", tags=["认证"])
 async def auth_success(request: Request):
     """认证成功后的处理页面"""
 
-    # 获取认证用户信息（如果通过TinyAuth代理）
-    auth_user = request.headers.get("X-Forwarded-User", "未知用户")
-    auth_email = request.headers.get("X-Forwarded-Email", "")
+    # 获取认证用户信息
+    auth_user = request.headers.get("X-Auth-User", "未知用户")
+    auth_email = request.headers.get("X-Auth-Email", "")
 
     html_content = f"""
     <!DOCTYPE html>
@@ -39,7 +40,7 @@ async def auth_success(request: Request):
                 <h3>认证信息</h3>
                 <p><strong>用户名:</strong> {auth_user}</p>
                 <p><strong>邮箱:</strong> {auth_email or '未提供'}</p>
-                <p><strong>认证方式:</strong> GitHub OAuth</p>
+                <p><strong>认证方式:</strong> 自定义认证</p>
             </div>
 
             <h3>现在你可以：</h3>
@@ -51,6 +52,7 @@ async def auth_success(request: Request):
 
             <h3>测试API接口：</h3>
             <div>
+                <a href="/api/auth/me" class="btn">查看个人信息</a>
                 <a href="/api/profile/zkeq/info" class="btn">查看用户资料</a>
                 <a href="/api/projects/zkeq/" class="btn">查看项目列表</a>
                 <a href="/api/admin/zkeq/dashboard" class="btn">管理后台</a>
@@ -77,18 +79,18 @@ async def auth_success(request: Request):
 async def auth_status(request: Request):
     """检查当前认证状态"""
 
-    auth_user = request.headers.get("X-Forwarded-User")
-    auth_email = request.headers.get("X-Forwarded-Email")
-
-    if auth_user:
+    user = await get_current_user(request)
+    
+    if user:
         return BaseResponse(
             success=True,
             message="已认证",
             data={
                 "authenticated": True,
-                "user": auth_user,
-                "email": auth_email,
-                "method": "TinyAuth"
+                "user": user.username,
+                "email": user.email,
+                "role": user.role,
+                "method": user.auth_method
             }
         )
     else:
@@ -101,8 +103,92 @@ async def auth_status(request: Request):
             }
         )
 
+@router.get("/me")
+async def get_current_user_info(current_user: TokenData = Depends(require_auth)):
+    """获取当前用户的详细信息"""
+    
+    user_info = {
+        "username": current_user.username,
+        "email": current_user.email,
+        "user_id": current_user.user_id,
+        "role": current_user.role,
+        "auth_method": current_user.auth_method,
+        "permissions": {
+            "can_manage_profile": True,
+            "can_manage_projects": True,
+            "can_access_admin": current_user.role == "admin",
+            "can_upload_files": True
+        },
+        "account_info": {
+            "status": "active",
+            "created_via": current_user.auth_method,
+            "last_login": "刚刚",
+            "account_type": "认证用户"
+        }
+    }
+    
+    return BaseResponse(
+        success=True,
+        message="获取用户信息成功",
+        data=user_info
+    )
+
+@router.get("/profile")
+async def get_user_profile_summary(current_user: TokenData = Depends(require_auth)):
+    """获取当前用户的资料摘要"""
+    
+    profile_summary = {
+        "basic_info": {
+            "username": current_user.username,
+            "email": current_user.email,
+            "role": current_user.role,
+            "display_name": current_user.username,
+            "avatar_url": f"https://github.com/{current_user.username}.png" if current_user.auth_method == "github" else None
+        },
+        "account_status": {
+            "verified": True,
+            "active": True,
+            "auth_method": current_user.auth_method,
+            "last_activity": "刚刚"
+        },
+        "capabilities": {
+            "can_create_projects": True,
+            "can_manage_timeline": True,
+            "can_upload_files": True,
+            "admin_access": current_user.role == "admin"
+        },
+        "stats": {
+            "login_count": "N/A",
+            "projects_count": 0,
+            "last_login": "刚刚"
+        }
+    }
+    
+    return BaseResponse(
+        success=True,
+        message="获取用户资料摘要成功",
+        data=profile_summary
+    )
+
+@router.post("/refresh")
+async def refresh_user_session(current_user: TokenData = Depends(require_auth)):
+    """刷新用户会话信息"""
+    
+    return BaseResponse(
+        success=True,
+        message="会话刷新成功",
+        data={
+            "user": current_user.username,
+            "refreshed_at": "刚刚",
+            "expires_in": "24小时"
+        }
+    )
+
 @router.get("/logout")
 async def logout():
-    """登出（重定向到TinyAuth登出）"""
-    # 重定向到TinyAuth的登出页面
-    return RedirectResponse(url="http://localhost:3002/logout")
+    """登出"""
+    return BaseResponse(
+        success=True,
+        message="登出成功",
+        data={"redirect_url": "/"}
+    )

@@ -393,17 +393,17 @@ function ProjectList() {
 }
 ```
 
-## tinyauth 集成
+## 认证集成
 
-后端API在管理路由中预留了认证接口，可以很容易地集成 tinyauth：
+后端API在管理路由中提供了认证接口，支持自定义认证系统：
 
 ```python
-# 在 app/routers/admin.py 中更新认证函数
-from tinyauth import auth_required
+# 在 app/routers/admin.py 中使用认证函数
+from app.auth import require_admin
 
-@auth_required
-def get_current_user():
-    # tinyauth 认证逻辑
+@router.get("/dashboard")
+async def get_dashboard(request: Request, current_user = Depends(require_admin)):
+    # 已通过认证的管理员用户
     pass
 
 # 所有管理接口都会自动应用认证

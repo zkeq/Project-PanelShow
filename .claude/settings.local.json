@@ -18,11 +18,13 @@
       "WebSearch",
       "Bash(python:*)",
       "Bash(pip install:*)",
-      "Bash(docker-compose up tinyauth --build)",
       "Bash(docker compose:*)",
       "Bash(openssl:*)",
       "Bash(chmod:*)",
-      "WebFetch(domain:tinyauth.app)"
+      "Bash(docker-compose:*)",
+      "Bash(netstat:*)",
+      "Bash(ss:*)",
+      "Bash(docker logs:*)"
     ],
     "deny": [],
     "ask": []
