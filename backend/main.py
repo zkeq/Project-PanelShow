@@ -109,8 +109,8 @@ async def bind_username(
 ):
     """绑定用户名"""
     # 检查用户是否存在
-    if not db.user_exists(username):
-        raise HTTPException(status_code=404, detail="用户不存在")
+    # if not db.user_exists(username):
+    #     raise HTTPException(status_code=404, detail="用户不存在")
 
     # 检查用户名是否已被绑定
     is_bound = auth.is_username_bound(username)
