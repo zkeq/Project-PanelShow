@@ -194,11 +194,39 @@ async def create_user(
 async def rename_user(
     username: str,
     new_username: str = Body(..., embed=True),
-    current_user: dict = Depends(auth.require_admin)
+    current_user: dict = Depends(auth.require_auth)
 ):
-    """重命名用户（管理员）"""
+    """重命名用户
+
+    - 普通用户：只能重命名自己绑定的用户名
+    - 管理员：可以重命名所有用户
+    """
+    # 检查权限
+    if current_user["auth_type"] == "admin":
+        # 管理员可以重命名任何用户
+        pass
+    else:
+        # 普通用户只能重命名自己绑定的用户名
+        bound_username = current_user.get("bound_username")
+        if not bound_username:
+            raise HTTPException(status_code=400, detail="请先绑定用户名")
+        if bound_username != username:
+            raise HTTPException(status_code=403, detail="只能重命名自己绑定的用户名")
+
     try:
         db.rename_user(username, new_username)
+
+        # 更新绑定关系
+        if current_user["auth_type"] == "admin":
+            # 更新管理员绑定
+            admin_binding = auth.get_admin_binding()
+            if admin_binding == username:
+                auth.save_admin_binding(new_username)
+        else:
+            # 更新GitHub用户绑定
+            github_id = current_user["github_id"]
+            auth.save_user_binding(github_id, new_username)
+
         return {"message": f"用户已重命名: {username} -> {new_username}"}
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="用户不存在")
