@@ -255,12 +255,19 @@ async def get_projects(username: str):
 
 @app.get("/api/projects/{username}/{project_id}")
 async def get_project(username: str, project_id: str):
-    """获取项目详情"""
+    """获取项目详情（包含关联的时间线）"""
     projects = db.read_json(username, "projects.json")
     project = next((p for p in projects if p.get("id") == project_id), None)
 
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
+
+    # 获取该项目相关的时间线
+    timeline = db.read_json(username, "timeline.json")
+    project_timeline = [t for t in timeline if t.get("project_id") == project_id]
+
+    # 将时间线添加到项目数据中
+    project["timeline_items"] = project_timeline
 
     return {"success": True, "data": project}
 

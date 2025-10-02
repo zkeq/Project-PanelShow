@@ -353,19 +353,42 @@ Authorization: Bearer <token>
 
 **接口**: `GET /api/projects/{username}/{project_id}`
 
-**描述**: 获取单个项目详情
+**描述**: 获取单个项目详情（自动包含关联的时间线）
 
 **响应**:
 ```json
 {
   "success": true,
   "data": {
-    "id": "1",
-    "name": "项目1",
-    "description": "..."
+    "id": "2981e968-dd6e-4789-b2eb-2c9e3eaede52",
+    "name": "测试项目",
+    "description": "用于测试时间线关联",
+    "timeline_items": [
+      {
+        "id": "0fdddebd-5b00-410e-8a84-65cd3b1fdccc",
+        "title": "项目启动",
+        "content": "开始开发测试项目",
+        "date": "2025-10-02",
+        "project_id": "2981e968-dd6e-4789-b2eb-2c9e3eaede52",
+        "likes": 0
+      },
+      {
+        "id": "63018db6-aa6c-4594-a1f6-d99ae681bb52",
+        "title": "完成第一阶段",
+        "content": "完成了基础功能开发",
+        "date": "2025-10-05",
+        "project_id": "2981e968-dd6e-4789-b2eb-2c9e3eaede52",
+        "likes": 0
+      }
+    ]
   }
 }
 ```
+
+**说明**:
+- 返回的项目数据会自动包含 `timeline_items` 字段
+- `timeline_items` 是一个数组，包含所有 `project_id` 与该项目ID匹配的时间线
+- 如果没有关联的时间线，`timeline_items` 将是空数组 `[]`
 
 ---
 
