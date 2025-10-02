@@ -24,7 +24,13 @@
       "Bash(docker-compose:*)",
       "Bash(netstat:*)",
       "Bash(ss:*)",
-      "Bash(docker logs:*)"
+      "Bash(docker logs:*)",
+      "Bash(xargs kill:*)",
+      "Bash(timeout:*)",
+      "Bash(tree:*)",
+      "Bash(grep -E \"(py|txt)$\")",
+      "Bash(/tmp/test_binding2.sh:*)",
+      "Bash(/tmp/test_check_username.sh:*)"
     ],
     "deny": [],
     "ask": []

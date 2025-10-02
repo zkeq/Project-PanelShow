@@ -1,0 +1,225 @@
+"""
+JWT认证系统 + GitHub OAuth + 用户名绑定
+"""
+import yaml
+import httpx
+from datetime import datetime, timedelta
+from typing import Optional
+from pathlib import Path
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+import db
+
+# 加载配置文件
+CONFIG_PATH = Path(__file__).parent / "config.yaml"
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+    config = yaml.safe_load(f)
+
+# JWT配置
+SECRET_KEY = config['jwt']['secret_key']
+ALGORITHM = config['jwt']['algorithm']
+ACCESS_TOKEN_EXPIRE_MINUTES = config['jwt']['access_token_expire_minutes']
+
+# GitHub OAuth 配置
+GITHUB_CLIENT_ID = config['github']['client_id']
+GITHUB_CLIENT_SECRET = config['github']['client_secret']
+GITHUB_REDIRECT_URI = config['github']['redirect_uri']
+
+# 密码加密
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# HTTP Bearer认证
+security = HTTPBearer()
+
+# 管理员账号（从配置文件读取）
+ADMIN_USERNAME = config['admin']['username']
+ADMIN_PASSWORD_HASH = pwd_context.hash(config['admin']['password'])
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """验证密码"""
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str) -> str:
+    """加密密码"""
+    return pwd_context.hash(password)
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    """创建JWT token"""
+    to_encode = data.copy()
+
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    return encoded_jwt
+
+
+def decode_token(token: str) -> dict:
+    """解码JWT token"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭证",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+def authenticate_admin(username: str, password: str):
+    """验证管理员（账号密码登录）"""
+    if username != ADMIN_USERNAME:
+        return False
+
+    if not verify_password(password, ADMIN_PASSWORD_HASH):
+        return False
+
+    return {"username": username, "role": "admin", "auth_type": "password"}
+
+
+async def github_get_access_token(code: str) -> str:
+    """通过 GitHub code 获取 access_token"""
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "https://github.com/login/oauth/access_token",
+            data={
+                "client_id": GITHUB_CLIENT_ID,
+                "client_secret": GITHUB_CLIENT_SECRET,
+                "code": code,
+                "redirect_uri": GITHUB_REDIRECT_URI,
+            },
+            headers={"Accept": "application/json"}
+        )
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail="GitHub 授权失败")
+
+        data = response.json()
+        access_token = data.get("access_token")
+
+        if not access_token:
+            raise HTTPException(status_code=400, detail="未获取到 access_token")
+
+        return access_token
+
+
+async def github_get_user_info(access_token: str) -> dict:
+    """通过 access_token 获取 GitHub 用户信息"""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            "https://api.github.com/user",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Accept": "application/json"
+            }
+        )
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail="获取 GitHub 用户信息失败")
+
+        return response.json()
+
+
+def save_user_binding(github_id: str, username: str):
+    """保存用户绑定关系（GitHub ID -> username）"""
+    bindings = db.read_json("_system", "user_bindings.json")
+    bindings[str(github_id)] = username
+    db.write_json("_system", "user_bindings.json", bindings)
+
+
+def get_user_binding(github_id: str) -> Optional[str]:
+    """获取用户绑定的用户名"""
+    bindings = db.read_json("_system", "user_bindings.json")
+    return bindings.get(str(github_id))
+
+
+def is_username_bound(username: str) -> bool:
+    """检查用户名是否已被绑定"""
+    # 检查GitHub用户绑定
+    user_bindings = db.read_json("_system", "user_bindings.json")
+    if username in user_bindings.values():
+        return True
+
+    # 检查管理员绑定
+    admin_binding = db.read_json("_system", "admin_binding.json")
+    if admin_binding.get("admin_username") == username:
+        return True
+
+    return False
+
+
+def save_admin_binding(username: str):
+    """保存管理员绑定的用户名"""
+    bindings = db.read_json("_system", "admin_binding.json")
+    bindings["admin_username"] = username
+    db.write_json("_system", "admin_binding.json", bindings)
+
+
+def get_admin_binding() -> Optional[str]:
+    """获取管理员绑定的用户名"""
+    bindings = db.read_json("_system", "admin_binding.json")
+    return bindings.get("admin_username")
+
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """获取当前登录用户"""
+    token = credentials.credentials
+    payload = decode_token(token)
+
+    auth_type = payload.get("auth_type")
+
+    if auth_type == "admin":
+        # 管理员登录
+        return {
+            "role": "admin",
+            "auth_type": "admin",
+            "bound_username": get_admin_binding()
+        }
+    elif auth_type == "github":
+        # GitHub 用户登录
+        github_id = payload.get("github_id")
+        github_username = payload.get("github_username")
+
+        if not github_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="无效的认证凭证"
+            )
+
+        return {
+            "role": "user",
+            "auth_type": "github",
+            "github_id": github_id,
+            "github_username": github_username,
+            "bound_username": get_user_binding(github_id)
+        }
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭证"
+        )
+
+
+def require_auth(current_user: dict = Depends(get_current_user)):
+    """需要认证"""
+    return current_user
+
+
+def require_admin(current_user: dict = Depends(get_current_user)):
+    """需要管理员权限"""
+    if current_user["role"] != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="需要管理员权限"
+        )
+    return current_user
