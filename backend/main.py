@@ -36,7 +36,7 @@ def check_bound_username(current_user: dict, username: str):
 
 # ==================== 认证接口 ====================
 
-@app.post("/api/auth/login")
+@app.post("/api/auth/login", tags=["认证系统"])
 async def admin_login(username: str = Body(...), password: str = Body(...)):
     """管理员账号密码登录"""
     user = auth.authenticate_admin(username, password)
@@ -59,7 +59,7 @@ async def admin_login(username: str = Body(...), password: str = Body(...)):
     }
 
 
-@app.get("/api/auth/github/login")
+@app.get("/api/auth/github/login", tags=["认证系统"])
 async def github_login():
     """GitHub OAuth 登录 - 返回授权URL"""
     github_auth_url = (
@@ -71,7 +71,7 @@ async def github_login():
     return {"auth_url": github_auth_url}
 
 
-@app.get("/api/auth/github/callback")
+@app.get("/api/auth/github/callback", tags=["认证系统"])
 async def github_callback(code: str):
     """GitHub OAuth 回调"""
     # 获取 access_token
@@ -102,7 +102,7 @@ async def github_callback(code: str):
     }
 
 
-@app.post("/api/auth/bind-username")
+@app.post("/api/auth/bind-username", tags=["认证系统"])
 async def bind_username(
     username: str = Body(..., embed=True),
     current_user: dict = Depends(auth.require_auth)
@@ -145,13 +145,13 @@ async def bind_username(
         raise HTTPException(status_code=400, detail="无效的认证类型")
 
 
-@app.get("/api/auth/me")
+@app.get("/api/auth/me", tags=["认证系统"])
 async def get_me(current_user: dict = Depends(auth.require_auth)):
     """获取当前用户信息（包含绑定的用户名）"""
     return current_user
 
 
-@app.get("/api/auth/check-username/{username}")
+@app.get("/api/auth/check-username/{username}", tags=["认证系统"])
 async def check_username(username: str):
     """检查用户名是否可用（无需认证）"""
     # 检查用户是否存在
@@ -177,7 +177,7 @@ async def check_username(username: str):
 
 # ==================== 用户管理 ====================
 
-@app.post("/api/users")
+@app.post("/api/users", tags=["用户管理"])
 async def create_user(
     username: str = Body(..., embed=True),
     current_user: dict = Depends(auth.require_admin)
@@ -190,7 +190,7 @@ async def create_user(
     return {"message": f"用户 {username} 创建成功"}
 
 
-@app.put("/api/users/{username}/rename")
+@app.put("/api/users/{username}/rename", tags=["用户管理"])
 async def rename_user(
     username: str,
     new_username: str = Body(..., embed=True),
@@ -206,7 +206,7 @@ async def rename_user(
         raise HTTPException(status_code=400, detail="新用户名已存在")
 
 
-@app.delete("/api/users/{username}")
+@app.delete("/api/users/{username}", tags=["用户管理"])
 async def delete_user(
     username: str,
     current_user: dict = Depends(auth.require_admin)
@@ -216,7 +216,7 @@ async def delete_user(
     return {"message": f"用户 {username} 已删除"}
 
 
-@app.get("/api/users")
+@app.get("/api/users", tags=["用户管理"])
 async def get_users():
     """获取所有用户列表"""
     users = db.get_all_users()
@@ -225,7 +225,7 @@ async def get_users():
 
 # ==================== 项目管理 ====================
 
-@app.post("/api/projects/{username}")
+@app.post("/api/projects/{username}", tags=["项目管理"])
 async def create_project(
     username: str,
     data: Dict[str, Any] = Body(...),
@@ -246,14 +246,14 @@ async def create_project(
     return {"message": "项目创建成功", "data": data}
 
 
-@app.get("/api/projects/{username}")
+@app.get("/api/projects/{username}", tags=["项目管理"])
 async def get_projects(username: str):
     """获取项目列表"""
     projects = db.read_json(username, "projects.json")
     return {"success": True, "data": projects, "total": len(projects)}
 
 
-@app.get("/api/projects/{username}/{project_id}")
+@app.get("/api/projects/{username}/{project_id}", tags=["项目管理"])
 async def get_project(username: str, project_id: str):
     """获取项目详情（包含关联的时间线）"""
     projects = db.read_json(username, "projects.json")
@@ -272,7 +272,7 @@ async def get_project(username: str, project_id: str):
     return {"success": True, "data": project}
 
 
-@app.put("/api/projects/{username}/{project_id}")
+@app.put("/api/projects/{username}/{project_id}", tags=["项目管理"])
 async def update_project(
     username: str,
     project_id: str,
@@ -297,7 +297,7 @@ async def update_project(
     return {"message": "项目更新成功", "data": data}
 
 
-@app.delete("/api/projects/{username}/{project_id}")
+@app.delete("/api/projects/{username}/{project_id}", tags=["项目管理"])
 async def delete_project(
     username: str,
     project_id: str,
@@ -316,7 +316,7 @@ async def delete_project(
 
 # ==================== 时间线管理 ====================
 
-@app.post("/api/timeline/{username}")
+@app.post("/api/timeline/{username}", tags=["时间线管理"])
 async def create_timeline(
     username: str,
     data: Dict[str, Any] = Body(...),
@@ -338,14 +338,14 @@ async def create_timeline(
     return {"message": "时间线创建成功", "data": data}
 
 
-@app.get("/api/timeline/{username}")
+@app.get("/api/timeline/{username}", tags=["时间线管理"])
 async def get_timeline(username: str):
     """获取时间线列表"""
     timeline = db.read_json(username, "timeline.json")
     return {"success": True, "data": timeline, "total": len(timeline)}
 
 
-@app.post("/api/timeline/{username}/{timeline_id}/like")
+@app.post("/api/timeline/{username}/{timeline_id}/like", tags=["时间线管理"])
 async def like_timeline(username: str, timeline_id: str):
     """点赞时间线（递增）"""
     timeline = db.read_json(username, "timeline.json")
@@ -361,7 +361,7 @@ async def like_timeline(username: str, timeline_id: str):
     return {"message": "点赞成功", "likes": item["likes"]}
 
 
-@app.delete("/api/timeline/{username}/{timeline_id}")
+@app.delete("/api/timeline/{username}/{timeline_id}", tags=["时间线管理"])
 async def delete_timeline(
     username: str,
     timeline_id: str,
@@ -380,7 +380,7 @@ async def delete_timeline(
 
 # ==================== 个人资料（分板块） ====================
 
-@app.get("/api/profile/{username}/{section}")
+@app.get("/api/profile/{username}/{section}", tags=["个人资料管理"])
 async def get_profile_section(username: str, section: str):
     """获取个人资料的某个板块
 
@@ -395,7 +395,7 @@ async def get_profile_section(username: str, section: str):
     return {"success": True, "data": section_data}
 
 
-@app.put("/api/profile/{username}/{section}")
+@app.put("/api/profile/{username}/{section}", tags=["个人资料管理"])
 async def update_profile_section(
     username: str,
     section: str,
@@ -424,7 +424,7 @@ async def update_profile_section(
 
 # ==================== 用户设置（按类型） ====================
 
-@app.get("/api/settings/{username}/{setting_type}")
+@app.get("/api/settings/{username}/{setting_type}", tags=["设置管理"])
 async def get_settings_by_type(
     username: str,
     setting_type: str,
@@ -443,7 +443,7 @@ async def get_settings_by_type(
     return {"success": True, "data": settings}
 
 
-@app.put("/api/settings/{username}/{setting_type}")
+@app.put("/api/settings/{username}/{setting_type}", tags=["设置管理"])
 async def update_settings_by_type(
     username: str,
     setting_type: str,
@@ -466,7 +466,7 @@ async def update_settings_by_type(
 
 # ==================== 根路径 ====================
 
-@app.get("/")
+@app.get("/", tags=["系统"])
 async def root():
     """API根路径"""
     return {
@@ -483,7 +483,7 @@ async def root():
     }
 
 
-@app.get("/health")
+@app.get("/health", tags=["系统"])
 async def health():
     """健康检查"""
     return {"status": "ok"}
