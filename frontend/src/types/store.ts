@@ -239,6 +239,9 @@ export interface GlobalState {
   getQuickLinks: () => QuickLink[]
   getExperienceById: (id: string) => Experience | undefined
 
+  setProjects: (projects: Project[]) => void
+  setTimelineItems: (items: TimelineItem[]) => void
+
   // 项目 CRUD 操作
   createProject: (project: Omit<Project, 'id' | 'updatedAt'>) => Project
   updateProject: (id: string, updates: Partial<Project>) => void

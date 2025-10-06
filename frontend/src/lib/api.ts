@@ -155,3 +155,51 @@ export function updateProfileSection<T extends Record<string, unknown> | Array<u
     }
   );
 }
+
+export interface ProjectStatsResponse {
+  success: boolean;
+  data: {
+    totalProjects: number;
+    statusDistribution: Record<string, number>;
+    activeProjects: number;
+    maintainedProjects: number;
+    archivedProjects: number;
+    totalTimeline: number;
+    thisMonthTimeline: number;
+    latestProjectUpdatedAt: string | null;
+    latestTimelinePublishedAt: string | null;
+  };
+}
+
+export interface ProjectListResponse<T = unknown> {
+  success: boolean;
+  data: T;
+  total: number;
+}
+
+export interface TimelineListResponse<T = unknown> {
+  success: boolean;
+  data: T;
+  total?: number;
+}
+
+export function fetchProjectStats(username: string, token: string) {
+  return request<ProjectStatsResponse>(
+    `/api/projects/${encodeURIComponent(username)}/stats/overview`,
+    { token }
+  );
+}
+
+export function fetchProjects(username: string, token: string) {
+  return request<ProjectListResponse>(
+    `/api/projects/${encodeURIComponent(username)}`,
+    { token }
+  );
+}
+
+export function fetchTimeline(username: string, token: string) {
+  return request<TimelineListResponse>(
+    `/api/timeline/${encodeURIComponent(username)}`,
+    { token }
+  );
+}

@@ -1032,6 +1032,14 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
     return get().experiences.find(exp => exp.id === id)
   },
 
+  setProjects: (projects: Project[]) => {
+    set(() => ({ projects }));
+  },
+
+  setTimelineItems: (items: TimelineItem[]) => {
+    set(() => ({ timelineItems: items }));
+  },
+
   likeTimelineItem: (id: string) => {
     set((state) => ({
       timelineItems: state.timelineItems.map(item =>
