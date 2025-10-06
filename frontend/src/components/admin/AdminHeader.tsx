@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Settings,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const getPageTitle = (pathname: string): string => {
   if (pathname === '/admin') return '管理控制台';
@@ -31,6 +32,7 @@ export function AdminHeader({
   const pathname = usePathname();
   const displayTitle = title || getPageTitle(pathname);
   const { theme, setTheme } = useTheme();
+  const user = useAuthStore((state) => state.user);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -39,6 +41,21 @@ export function AdminHeader({
   const handleSettings = () => {
     router.push('/admin/settings');
   };
+
+  const displayName = useMemo(() => {
+    if (!user) return '未登录';
+    if (user.bound_username) return user.bound_username;
+    if (user.auth_type === 'github' && user.github_username) {
+      return user.github_username;
+    }
+    return user.role === 'admin' ? '管理员' : '用户';
+  }, [user]);
+
+  const avatarLetter = useMemo(() => {
+    if (!displayName) return 'A';
+    const letter = displayName.trim()[0]?.toUpperCase();
+    return letter || 'A';
+  }, [displayName]);
 
   return (
     <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -56,9 +73,9 @@ export function AdminHeader({
           {/* 账号邮箱 */}
           <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
             <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-xs font-medium text-primary">A</span>
+              <span className="text-xs font-medium text-primary">{avatarLetter}</span>
             </div>
-            <span>admin@example.com</span>
+            <span>{displayName}</span>
           </div>
 
           {/* 主题切换 */}

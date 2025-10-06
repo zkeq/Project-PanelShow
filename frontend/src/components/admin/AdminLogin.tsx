@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SiteAddressInput } from "@/components/ui/site-address-input";
 import { Github, Loader2, LockKeyhole, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -15,7 +14,6 @@ export function AdminLogin() {
   const router = useRouter();
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("admin123");
-  const [siteAddress, setSiteAddress] = useState("");
   const [isGitHubLoading, setIsGitHubLoading] = useState(false);
 
   const {
@@ -221,17 +219,6 @@ export function AdminLogin() {
             </div>
           </div>
 
-          <div className="text-xs text-center text-muted-foreground">
-            如需预览绑定后的站点，可先填写站点绑定信息：
-          </div>
-
-          <div className="space-y-2">
-            <SiteAddressInput
-              value={siteAddress}
-              onChange={setSiteAddress}
-              placeholder="预览站点地址"
-            />
-          </div>
         </CardContent>
       </Card>
     </div>
