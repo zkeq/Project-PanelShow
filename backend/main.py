@@ -1,10 +1,13 @@
 """
 极简JSON后端 - 所有API路由
 """
-from fastapi import FastAPI, HTTPException, Depends, Body, Path
+from fastapi import FastAPI, HTTPException, Depends, Body, Path, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from typing import Any, Dict, List, Union
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
+from pathlib import Path as FilePath
+import uuid
 import db
 import auth
 
@@ -21,6 +24,54 @@ app.add_middleware(
 
 
 # ==================== 辅助函数 ====================
+
+FILE_UPLOAD_ROOT = (FilePath(__file__).parent / "data" / "uploads")
+FILE_UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+
+app.mount("/uploads", StaticFiles(directory=str(FILE_UPLOAD_ROOT)), name="uploads")
+
+ALLOWED_IMAGE_TYPES = {
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/jpg": ".jpg",
+    "image/gif": ".gif",
+    "image/webp": ".webp"
+}
+
+
+def parse_datetime(value: Union[str, None]) -> Union[datetime, None]:
+    """尝试解析日期/时间字符串"""
+    if not value:
+        return None
+
+    if isinstance(value, str):
+        cleaned = value.strip()
+        if not cleaned:
+            return None
+
+        if cleaned.endswith("Z"):
+            cleaned = cleaned[:-1] + "+00:00"
+
+        try:
+            return datetime.fromisoformat(cleaned)
+        except ValueError:
+            pass
+
+        for fmt in ("%Y-%m-%d", "%Y/%m/%d"):
+            try:
+                return datetime.strptime(cleaned, fmt)
+            except ValueError:
+                continue
+
+    return None
+
+
+def normalize_datetime(value: datetime) -> datetime:
+    """将日期时间转换为无时区的UTC基准，便于比较"""
+    if value.tzinfo is not None:
+        return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value
+
 
 def check_bound_username(current_user: dict, username: str):
     """检查用户是否绑定了用户名，以及是否匹配"""
@@ -342,6 +393,78 @@ async def delete_project(
     return {"message": "项目删除成功"}
 
 
+@app.get("/api/projects/{username}/stats/overview", tags=["项目管理"])
+async def get_project_stats_overview(
+    username: str,
+    current_user: dict = Depends(auth.require_auth)
+):
+    """获取项目与时间线的统计信息"""
+
+    check_bound_username(current_user, username)
+
+    projects = db.read_json(username, "projects.json")
+    timeline_items = db.read_json(username, "timeline.json")
+
+    projects = projects if isinstance(projects, list) else []
+    timeline_items = timeline_items if isinstance(timeline_items, list) else []
+
+    status_distribution: Dict[str, int] = {}
+    latest_project_updated_at: Union[datetime, None] = None
+
+    for project in projects:
+        status = str(project.get("status", "unknown") or "unknown")
+        status_distribution[status] = status_distribution.get(status, 0) + 1
+
+        updated_at_value = project.get("updatedAt") or project.get("updated_at")
+        parsed_updated_at = parse_datetime(updated_at_value)
+        if parsed_updated_at and (
+            latest_project_updated_at is None
+            or normalize_datetime(parsed_updated_at) > normalize_datetime(latest_project_updated_at)
+        ):
+            latest_project_updated_at = parsed_updated_at
+
+    total_timeline = len(timeline_items)
+    this_month_timeline = 0
+    latest_timeline_entry: Union[datetime, None] = None
+
+    now_utc = datetime.utcnow()
+    for item in timeline_items:
+        published_value = (
+            item.get("publishedAt")
+            or item.get("published_at")
+            or item.get("date")
+        )
+        published_at = parse_datetime(published_value)
+        if not published_at:
+            continue
+
+        normalized_published = normalize_datetime(published_at)
+
+        if normalized_published.year == now_utc.year and normalized_published.month == now_utc.month:
+            this_month_timeline += 1
+
+        if (
+            latest_timeline_entry is None
+            or normalize_datetime(published_at) > normalize_datetime(latest_timeline_entry)
+        ):
+            latest_timeline_entry = published_at
+
+    return {
+        "success": True,
+        "data": {
+            "totalProjects": len(projects),
+            "statusDistribution": status_distribution,
+            "activeProjects": status_distribution.get("active", 0),
+            "maintainedProjects": status_distribution.get("maintained", 0),
+            "archivedProjects": status_distribution.get("archived", 0),
+            "totalTimeline": total_timeline,
+            "thisMonthTimeline": this_month_timeline,
+            "latestProjectUpdatedAt": normalize_datetime(latest_project_updated_at).isoformat() if latest_project_updated_at else None,
+            "latestTimelinePublishedAt": normalize_datetime(latest_timeline_entry).isoformat() if latest_timeline_entry else None,
+        }
+    }
+
+
 # ==================== 时间线管理 ====================
 
 @app.post("/api/timeline/{username}", tags=["时间线管理"])
@@ -490,6 +613,56 @@ async def update_settings_by_type(
     db.write_json(username, f"settings_{setting_type}.json", data)
 
     return {"message": f"设置 {setting_type} 更新成功", "data": data}
+
+
+# ==================== 文件上传 ====================
+
+
+@app.post("/api/uploads/{username}/images", tags=["文件上传"])
+async def upload_image(
+    username: str,
+    file: UploadFile = File(...),
+    category: str = Query("images", description="上传分类，例如 images、covers 等"),
+    current_user: dict = Depends(auth.require_auth)
+):
+    """上传图片文件并返回存储信息"""
+
+    check_bound_username(current_user, username)
+
+    if not file.content_type or file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="仅支持上传 PNG/JPEG/GIF/WEBP 图片")
+
+    contents = await file.read()
+    max_size_bytes = 5 * 1024 * 1024  # 5MB
+    if len(contents) > max_size_bytes:
+        raise HTTPException(status_code=400, detail="文件大小不能超过 5MB")
+
+    original_suffix = FilePath(str(file.filename)).suffix if file.filename else ""
+    fallback_suffix = ALLOWED_IMAGE_TYPES[file.content_type]
+    file_extension = original_suffix or fallback_suffix
+
+    unique_name = f"{uuid.uuid4().hex}{file_extension}"
+    raw_category = category.strip()
+    safe_category = "".join(ch for ch in raw_category if ch.isalnum() or ch in {"-", "_"})
+    if not safe_category:
+        safe_category = "images"
+
+    user_upload_dir = FILE_UPLOAD_ROOT / username / safe_category
+    user_upload_dir.mkdir(parents=True, exist_ok=True)
+
+    destination = user_upload_dir / unique_name
+    with destination.open("wb") as buffer:
+        buffer.write(contents)
+
+    relative_url = f"/uploads/{username}/{safe_category}/{unique_name}"
+
+    return {
+        "success": True,
+        "filename": unique_name,
+        "url": relative_url,
+        "content_type": file.content_type,
+        "size": len(contents)
+    }
 
 
 # ==================== 根路径 ====================
