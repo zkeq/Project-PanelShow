@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGlobalStore } from '@/store/useGlobalStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { ProjectManagementList } from './ProjectManagementList';
 import { TimelineManagementList } from './TimelineManagementList';
 import { SearchAndFilter } from './SearchAndFilter';
@@ -31,6 +32,27 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
+  const hydratedAuth = useAuthStore((state) => state.hydrated);
+  const token = useAuthStore((state) => state.token);
+  const boundUsername = useAuthStore((state) => state.user?.bound_username ?? null);
+  const redirectingRef = useRef(false);
+
+  useEffect(() => {
+    if (!hydratedAuth) return;
+    if (redirectingRef.current) return;
+
+    if (!token) {
+      redirectingRef.current = true;
+      router.replace('/admin/login');
+      return;
+    }
+
+    if (!boundUsername) {
+      redirectingRef.current = true;
+      router.replace('/admin/welcome');
+    }
+  }, [hydratedAuth, token, boundUsername, router]);
 
   // 获取数据
   const { projects, timelineItems, createProject, createTimelineItem } = useGlobalStore();

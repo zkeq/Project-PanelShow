@@ -1,21 +1,27 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+
+export type AddressAvailabilityStatus = 'idle' | 'checking' | 'available' | 'unavailable' | 'error';
 
 interface SiteAddressInputProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
   placeholder?: string;
+  status?: AddressAvailabilityStatus;
+  statusMessage?: string;
 }
 
 export function SiteAddressInput({ 
   value, 
   onChange, 
   className,
-  placeholder = "输入站点地址"
+  placeholder = "输入站点地址",
+  status = 'idle',
+  statusMessage,
 }: SiteAddressInputProps) {
   const [error, setError] = useState<string>('');
 
@@ -63,6 +69,35 @@ export function SiteAddressInput({
 
   const isValid = !error && value.length > 0;
   const hasError = error && value.length > 0;
+  const hasRemoteIssue = !hasError && value.length > 0 && (status === 'unavailable' || status === 'error');
+  const isChecking = !hasError && value.length > 0 && status === 'checking';
+  const isAvailable = !hasError && value.length > 0 && status === 'available';
+
+  const indicatorClass = useMemo(() => {
+    if (hasError || hasRemoteIssue) return 'bg-red-500';
+    if (isAvailable) return 'bg-green-500';
+    if (isChecking) return 'bg-amber-500';
+    return 'bg-muted-foreground/40';
+  }, [hasError, hasRemoteIssue, isAvailable, isChecking]);
+
+  const host = typeof window !== 'undefined' ? window.location.host : 'localhost';
+
+  const primaryMessage = useMemo(() => {
+    if (hasError) return error;
+    if (hasRemoteIssue) return statusMessage || '站点地址已被使用';
+    if (isChecking) return statusMessage || '正在检查站点地址可用性...';
+    if (isAvailable) return `你的站点将在 https://${host}/project/${value} 有效`;
+    if (value.length > 0) {
+      return statusMessage || `你的站点将在 https://${host}/project/${value} 有效`;
+    }
+    return '';
+  }, [error, hasError, hasRemoteIssue, isChecking, isAvailable, statusMessage, host, value]);
+
+  const primaryMessageClass = hasError || hasRemoteIssue
+    ? 'text-sm text-red-600 dark:text-red-400'
+    : isAvailable
+      ? 'text-sm text-green-600 dark:text-green-400'
+      : 'text-sm text-muted-foreground';
 
   return (
     <div className="space-y-2">
@@ -75,7 +110,9 @@ export function SiteAddressInput({
           className={cn(
             "pr-12 transition-colors",
             hasError && "border-red-500 focus-visible:ring-red-500",
-            isValid && "border-green-500 focus-visible:ring-green-500",
+            (isValid && !hasRemoteIssue) && status === 'idle' && "border-green-500 focus-visible:ring-green-500",
+            isAvailable && "border-green-500 focus-visible:ring-green-500",
+            hasRemoteIssue && "border-red-500 focus-visible:ring-red-500",
             className
           )}
         />
@@ -84,7 +121,7 @@ export function SiteAddressInput({
           {value.length > 0 && (
             <div className={cn(
               "w-2 h-2 rounded-full",
-              isValid ? "bg-green-500" : "bg-red-500"
+              indicatorClass
             )} />
           )}
         </div>
@@ -92,20 +129,12 @@ export function SiteAddressInput({
       
       {/* 错误信息或提示信息 */}
       <div className="min-h-[1.25rem] space-y-1">
-        {hasError ? (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        ) : (
-          <>
-            {isValid && (
-              <p className="text-sm text-green-600 dark:text-green-400">
-                你的站点将在 https://{typeof window !== 'undefined' ? window.location.host : 'localhost'}/project/{value} 有效
-              </p>
-            )}
-            <p className="text-sm text-muted-foreground">
-              站点地址不可重复，可在设置页修改
-            </p>
-          </>
+        {primaryMessage && (
+          <p className={primaryMessageClass}>{primaryMessage}</p>
         )}
+        <p className="text-xs text-muted-foreground">
+          站点地址不可重复，可在设置页修改
+        </p>
       </div>
     </div>
   );
