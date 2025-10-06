@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 @import "github-markdown-css/github-markdown-light.css";
 @import "bytemd/dist/index.css";
-@custom-variant dark (&:is(.dark *));
 
 /* Custom animations for admin welcome page */
 @keyframes slow-spin {
