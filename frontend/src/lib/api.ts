@@ -205,6 +205,21 @@ export function fetchTimeline(username: string, token: string) {
   );
 }
 
+export function createTimeline(
+  username: string,
+  data: Record<string, unknown>,
+  token: string
+) {
+  return request<{ message: string; data: Record<string, unknown> }>(
+    `/api/timeline/${encodeURIComponent(username)}`,
+    {
+      method: 'POST',
+      token,
+      body: JSON.stringify(data),
+    }
+  );
+}
+
 export interface GithubSyncResponse {
   success: boolean;
   message: string;
