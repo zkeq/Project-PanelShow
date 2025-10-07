@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -20,13 +20,17 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useShallow } from 'zustand/react/shallow';
 import {
   createTimeline,
+  updateTimeline,
   fetchProject,
   fetchProjects,
+  fetchTimeline,
   fetchSettings,
   updateSettings,
   uploadImage,
 } from '@/lib/api';
-import { AlertCircle, Calendar, CheckCircle2, Clock, RefreshCcw, Save, Send } from 'lucide-react';
+import { AlertCircle, Calendar, Clock, RefreshCcw, Save, Send } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { StatusToast, type StatusToastState } from '@/components/admin/settings/StatusToast';
 
 interface ProjectOption {
   id: string;
@@ -51,8 +55,22 @@ interface DynamicFormState {
 
 const DRAFT_STORAGE_KEY = 'panelshow-admin-dynamic-draft';
 
+const pad = (value: number) => value.toString().padStart(2, '0');
+
+const toDatetimeLocalValue = (input: Date | string) => {
+  const date = typeof input === 'string' ? new Date(input) : input;
+  if (Number.isNaN(date.getTime())) {
+    const now = new Date();
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  }
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
 const createInitialFormState = (): DynamicFormState => ({
-  publishDate: new Date().toISOString().slice(0, 10),
+  publishDate: toDatetimeLocalValue(new Date()),
   projectId: '',
   description: '',
   type: null,
@@ -213,10 +231,15 @@ const normalizeProjectOption = (value: unknown, index: number): ProjectOption | 
 };
 
 export default function AdminDynamicPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { token, user, hydrated } = useAuthStore(
     useShallow((state) => ({ token: state.token, user: state.user, hydrated: state.hydrated }))
   );
   const boundUsername = user?.bound_username ?? null;
+  const timelineId = searchParams.get('id');
+  const isEditMode = Boolean(timelineId);
 
   const [formState, setFormState] = useState<DynamicFormState>(() => createInitialFormState());
   const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
@@ -229,10 +252,13 @@ export default function AdminDynamicPage() {
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [typeSaving, setTypeSaving] = useState(false);
   const [tagSaving, setTagSaving] = useState(false);
-  const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
-  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [projectDetail, setProjectDetail] = useState<Record<string, unknown> | null>(null);
   const [projectDetailLoading, setProjectDetailLoading] = useState(false);
+  const [statusToast, setStatusToast] = useState<StatusToastState | null>(null);
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineError, setTimelineError] = useState<string | null>(null);
+  const [timelineRecord, setTimelineRecord] = useState<Record<string, unknown> | null>(null);
+  const hasPrefilledTimelineRef = useRef(false);
 
   const isProjectSelectionDisabled = useMemo(() => !token || !boundUsername, [token, boundUsername]);
 
@@ -327,6 +353,64 @@ export default function AdminDynamicPage() {
   }, [hydrated, token, boundUsername]);
 
   useEffect(() => {
+    if (!isEditMode) {
+      setTimelineRecord(null);
+      setTimelineError(null);
+      setTimelineLoading(false);
+      hasPrefilledTimelineRef.current = false;
+    }
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      return;
+    }
+
+    if (!timelineId) {
+      setTimelineError('未提供要编辑的动态ID。');
+      return;
+    }
+
+    if (!token || !boundUsername) {
+      setTimelineError('请先登录并绑定用户名后再编辑动态。');
+      return;
+    }
+
+    let cancelled = false;
+    setTimelineLoading(true);
+    setTimelineError(null);
+
+    void fetchTimeline(boundUsername, token)
+      .then((response) => {
+        if (cancelled) return;
+        const list = Array.isArray(response?.data) ? response.data : [];
+        const match = list.find((item) => isRecord(item) && item.id === timelineId);
+        if (!match || !isRecord(match)) {
+          setTimelineError('未找到对应的动态记录。');
+          setTimelineRecord(null);
+          return;
+        }
+        setTimelineRecord(match);
+        hasPrefilledTimelineRef.current = false;
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : '加载动态信息失败，请稍后重试。';
+        setTimelineError(message);
+        setTimelineRecord(null);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setTimelineLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, timelineId, token, boundUsername]);
+
+  useEffect(() => {
     if (!formState.projectId || !token || !boundUsername) {
       setProjectDetail(null);
       setProjectDetailLoading(false);
@@ -360,7 +444,201 @@ export default function AdminDynamicPage() {
   }, [formState.projectId, token, boundUsername]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!isEditMode || !timelineRecord || hasPrefilledTimelineRef.current) {
+      return;
+    }
+
+    const record = timelineRecord;
+    const projectData = isRecord(record.project) ? (record.project as Record<string, unknown>) : null;
+    const publishDateRaw =
+      typeof record.publishedAt === 'string'
+        ? record.publishedAt
+        : typeof record.published_at === 'string'
+          ? record.published_at
+          : typeof record.date === 'string'
+            ? record.date
+            : '';
+    const projectIdFromRecord =
+      typeof record.project_id === 'string'
+        ? record.project_id
+        : typeof record.projectId === 'string'
+          ? record.projectId
+          : projectData && typeof projectData.id === 'string'
+            ? (projectData.id as string)
+            : '';
+
+    const updateTypeMeta = isRecord(record.updateTypeMeta) ? (record.updateTypeMeta as Record<string, unknown>) : null;
+    const updateTypeId =
+      typeof record.updateType === 'string'
+        ? record.updateType
+        : updateTypeMeta && typeof updateTypeMeta.id === 'string'
+          ? (updateTypeMeta.id as string)
+          : '';
+
+    let resolvedType: DynamicTypeOption | null = null;
+    if (updateTypeId) {
+      resolvedType = typeOptions.find((option) => option.id === updateTypeId) ?? null;
+    }
+
+    if (!resolvedType && updateTypeMeta) {
+      const label = typeof updateTypeMeta.label === 'string' ? updateTypeMeta.label : updateTypeId || '动态类型';
+      const color = typeof updateTypeMeta.color === 'string' ? updateTypeMeta.color : '#6366f1';
+      const metaId = typeof updateTypeMeta.id === 'string' ? updateTypeMeta.id : updateTypeId;
+      if (metaId) {
+        resolvedType = { id: metaId, label, color };
+        setTypeOptions((prev) => (prev.some((option) => option.id === metaId) ? prev : [...prev, resolvedType!]));
+      }
+    } else if (!resolvedType && updateTypeId) {
+      const fallbackType: DynamicTypeOption = {
+        id: updateTypeId,
+        label: updateTypeId,
+        color: '#6366f1',
+      };
+      resolvedType = fallbackType;
+      setTypeOptions((prev) => (prev.some((option) => option.id === fallbackType.id) ? prev : [...prev, fallbackType]));
+    }
+
+    const resolvedTags: DynamicTagItem[] = [];
+    if (Array.isArray(record.tags)) {
+      record.tags.forEach((item, index) => {
+        if (!isRecord(item)) return;
+        const labelSource =
+          typeof item.label === 'string'
+            ? item.label
+            : typeof item.name === 'string'
+              ? item.name
+              : `标签${index + 1}`;
+        const normalizedLabel = labelSource.trim();
+        if (!normalizedLabel) return;
+        const idSource =
+          typeof item.id === 'string'
+            ? item.id
+            : createUniqueId(normalizedLabel, resolvedTags.map((tag) => tag.id), `tag-${index + 1}`);
+        const iconSource =
+          typeof item.icon === 'string' && ALLOWED_TAG_ICONS.has(item.icon.toLowerCase())
+            ? (item.icon.toLowerCase() as DynamicTagItem['icon'])
+            : 'code2';
+        if (!resolvedTags.some((tag) => tag.id === idSource)) {
+          resolvedTags.push({ id: idSource, label: normalizedLabel, icon: iconSource });
+        }
+      });
+    }
+
+    if (resolvedTags.length > 0) {
+      setTagLibrary((prev) => {
+        const next = [...prev];
+        resolvedTags.forEach((tag) => {
+          if (!next.some((item) => item.id === tag.id)) {
+            next.push(tag);
+          }
+        });
+        return next;
+      });
+    }
+
+    const linksRecord = isRecord(record.links) ? (record.links as Record<string, unknown>) : null;
+    const demoIntroductionRecord = isRecord(record.demoIntroduction)
+      ? (record.demoIntroduction as Record<string, unknown>)
+      : null;
+    const assetsRecord = isRecord(record.assets) ? (record.assets as Record<string, unknown>) : null;
+    const assetImagesRaw = assetsRecord && Array.isArray(assetsRecord.images) ? assetsRecord.images : [];
+
+    const resolvedImages: DynamicImageAsset[] = [];
+    assetImagesRaw.forEach((item, index) => {
+      if (!isRecord(item)) return;
+      const url = typeof item.url === 'string' ? item.url : typeof item.src === 'string' ? item.src : null;
+      if (!url) return;
+      const id = typeof item.id === 'string' ? item.id : `remote-${index}`;
+      const filename = typeof item.filename === 'string' ? item.filename : undefined;
+      const contentType = typeof item.contentType === 'string' ? item.contentType : undefined;
+      const size = typeof item.size === 'number' ? item.size : undefined;
+      resolvedImages.push({
+        id,
+        file: null,
+        preview: url,
+        source: 'remote',
+        metadata: {
+          url,
+          filename,
+          contentType,
+          size,
+        },
+      });
+    });
+
+    if (resolvedImages.length === 0 && projectData && Array.isArray(projectData.previewImages)) {
+      (projectData.previewImages as unknown[])
+        .filter((item): item is string => typeof item === 'string')
+        .forEach((url, index) => {
+          resolvedImages.push({
+            id: `project-image-${index}`,
+            file: null,
+            preview: url,
+            source: 'remote',
+            metadata: { url },
+          });
+        });
+    }
+
+    hasPrefilledTimelineRef.current = true;
+    setFormState((prev) => {
+      prev.images.forEach((image) => {
+        if (image.source === 'local' && image.file) {
+          URL.revokeObjectURL(image.preview);
+        }
+      });
+
+      return {
+        ...prev,
+        publishDate: publishDateRaw ? toDatetimeLocalValue(publishDateRaw) : prev.publishDate,
+        projectId: projectIdFromRecord || prev.projectId,
+        description:
+          typeof record.changelog === 'string'
+            ? record.changelog
+            : typeof record.content === 'string'
+              ? record.content
+              : prev.description,
+        type: resolvedType,
+        tags: resolvedTags,
+        details:
+          typeof record.details === 'string'
+            ? record.details
+            : projectData && typeof projectData.readme === 'string'
+              ? (projectData.readme as string)
+              : prev.details,
+        images: resolvedImages,
+        codeUrl:
+          (linksRecord && typeof linksRecord.repository === 'string'
+            ? (linksRecord.repository as string)
+            : projectData && typeof projectData.repositoryUrl === 'string'
+              ? (projectData.repositoryUrl as string)
+              : prev.codeUrl) || '',
+        demoUrl:
+          (linksRecord && typeof linksRecord.demo === 'string'
+            ? (linksRecord.demo as string)
+            : projectData && typeof projectData.liveUrl === 'string'
+              ? (projectData.liveUrl as string)
+              : prev.demoUrl) || '',
+        mobileUrl:
+          (linksRecord && typeof linksRecord.mobile === 'string'
+            ? (linksRecord.mobile as string)
+            : projectData && typeof projectData.mobileUrl === 'string'
+              ? (projectData.mobileUrl as string)
+              : prev.mobileUrl) || '',
+        demoLeftMarkdown:
+          (demoIntroductionRecord && typeof demoIntroductionRecord.left === 'string'
+            ? (demoIntroductionRecord.left as string)
+            : prev.demoLeftMarkdown) || '',
+        demoRightMarkdown:
+          (demoIntroductionRecord && typeof demoIntroductionRecord.right === 'string'
+            ? (demoIntroductionRecord.right as string)
+            : prev.demoRightMarkdown) || '',
+      };
+    });
+  }, [isEditMode, timelineRecord, typeOptions, setFormState]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || isEditMode) return;
     try {
       const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
       if (!raw) return;
@@ -375,13 +653,25 @@ export default function AdminDynamicPage() {
     } catch (error) {
       console.warn('恢复草稿失败', error);
     }
-  }, []);
+  }, [isEditMode]);
 
   useEffect(() => {
     return () => {
-      formState.images.forEach((image) => URL.revokeObjectURL(image.preview));
+      formState.images.forEach((image) => {
+        if (image.source === 'local' && image.file) {
+          URL.revokeObjectURL(image.preview);
+        }
+      });
     };
   }, [formState.images]);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const updateFormState = <K extends keyof DynamicFormState>(key: K, value: DynamicFormState[K]) => {
     setFormState((prev) => ({ ...prev, [key]: value }));
@@ -453,31 +743,36 @@ export default function AdminDynamicPage() {
     event.preventDefault();
     if (isSubmitting) return;
 
-    setSubmissionError(null);
-    setSubmissionMessage(null);
-
     if (!token || !boundUsername) {
-      setSubmissionError('请先登录并绑定用户名后再发布动态。');
+      setStatusToast({ type: 'error', message: '请先登录并绑定用户名后再发布动态。' });
       return;
     }
 
     if (!formState.projectId) {
-      setSubmissionError('请选择动态归属的项目。');
+      setStatusToast({ type: 'error', message: '请选择动态归属的项目。' });
       return;
     }
 
     if (!formState.type) {
-      setSubmissionError('请选择动态类型。');
+      setStatusToast({ type: 'error', message: '请选择动态类型。' });
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const publishDateIso = new Date(`${formState.publishDate}T00:00:00`).toISOString();
+      const publishDate = new Date(formState.publishDate);
+      if (Number.isNaN(publishDate.getTime())) {
+        throw new Error('请选择有效的发布时间。');
+      }
+      const publishDateIso = publishDate.toISOString();
 
+      const localUploads = formState.images.filter((image) => image.source === 'local' && image.file);
       const uploadedImages = await Promise.all(
-        formState.images.map(async (image) => {
+        localUploads.map(async (image) => {
+          if (!image.file) {
+            throw new Error('选择的本地图片无效，请重新上传。');
+          }
           const result = await uploadImage(boundUsername, image.file, token, 'timeline');
           return {
             id: image.id,
@@ -488,6 +783,16 @@ export default function AdminDynamicPage() {
           };
         })
       );
+
+      const persistedImages = formState.images
+        .filter((image) => image.source === 'remote')
+        .map((image) => ({
+          id: image.id,
+          url: image.metadata?.url ?? image.preview,
+          filename: image.metadata?.filename ?? null,
+          contentType: image.metadata?.contentType ?? null,
+          size: image.metadata?.size ?? null,
+        }));
 
       const selectedProject = projectOptions.find((option) => option.id === formState.projectId);
       const detail = projectDetail;
@@ -505,7 +810,11 @@ export default function AdminDynamicPage() {
             .filter((item): item is string => Boolean(item))
         : [];
 
-      const previewImages = uploadedImages.map((item) => item.url);
+      const existingPreviewImages = persistedImages
+        .map((item) => item.url)
+        .filter((url): url is string => Boolean(url));
+      const uploadedPreviewImages = uploadedImages.map((item) => item.url);
+      const previewImages = [...existingPreviewImages, ...uploadedPreviewImages];
       const combinedPreviewImages = previewImages.length > 0 ? previewImages : detailPreviewImages;
 
       const projectName =
@@ -540,7 +849,7 @@ export default function AdminDynamicPage() {
         (typeof detail?.mobilePreviewUrl === 'string' ? detail.mobilePreviewUrl : undefined) ||
         (typeof detail?.mobileUrl === 'string' ? detail.mobileUrl : undefined);
 
-      const payload = {
+      const payload: Record<string, unknown> = {
         project_id: formState.projectId,
         publishedAt: publishDateIso,
         author: {
@@ -575,26 +884,68 @@ export default function AdminDynamicPage() {
           mobile: formState.mobileUrl || null,
         },
         assets: {
-          images: uploadedImages,
+          images: [...persistedImages, ...uploadedImages],
         },
-        likes: 0,
-        comments: 0,
-        isLiked: false,
-        createdAt: new Date().toISOString(),
-      } as const;
+        tags: formState.tags,
+      };
 
-      await createTimeline(boundUsername, payload, token);
-
-      setSubmissionMessage('动态已成功发布！');
-      formState.images.forEach((image) => URL.revokeObjectURL(image.preview));
-      setFormState(createInitialFormState());
-      setProjectDetail(null);
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+      if (isEditMode) {
+        payload.updatedAt = new Date().toISOString();
+      } else {
+        payload.createdAt = new Date().toISOString();
       }
+
+      if (isEditMode && timelineId) {
+        await updateTimeline(boundUsername, timelineId, payload, token);
+      } else {
+        await createTimeline(boundUsername, payload, token);
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem(DRAFT_STORAGE_KEY);
+        }
+      }
+
+      formState.images.forEach((image) => {
+        if (image.source === 'local' && image.file) {
+          URL.revokeObjectURL(image.preview);
+        }
+      });
+
+      const nextImagesForState: DynamicImageAsset[] = [...persistedImages, ...uploadedImages]
+        .filter((asset) => typeof asset.url === 'string' && asset.url)
+        .map((asset, index) => ({
+          id: typeof asset.id === 'string' && asset.id ? asset.id : `remote-${index}`,
+          file: null,
+          preview: asset.url as string,
+          source: 'remote',
+          metadata: {
+            url: asset.url as string,
+            filename: asset.filename ?? null,
+            contentType: asset.contentType ?? null,
+            size: asset.size ?? null,
+          },
+        }));
+
+      if (isEditMode) {
+        setFormState((prev) => ({
+          ...prev,
+          images: nextImagesForState,
+        }));
+        setStatusToast({ type: 'success', message: '动态更新成功！' });
+      } else {
+        setStatusToast({ type: 'success', message: '动态已成功发布！' });
+        setFormState(createInitialFormState());
+        setProjectDetail(null);
+      }
+
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+      redirectTimeoutRef.current = setTimeout(() => {
+        router.push('/admin');
+      }, 1200);
     } catch (error) {
       const message = error instanceof Error ? error.message : '提交失败，请稍后重试。';
-      setSubmissionError(message);
+      setStatusToast({ type: 'error', message });
     } finally {
       setIsSubmitting(false);
     }
@@ -618,21 +969,24 @@ export default function AdminDynamicPage() {
         savedAt: new Date().toISOString(),
       } satisfies Partial<DynamicFormState> & { savedAt: string };
       window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
-      alert('草稿已保存到本地浏览器。');
+      setStatusToast({ type: 'success', message: '草稿已保存到本地浏览器。' });
     } catch (error) {
       const message = error instanceof Error ? error.message : '保存草稿失败，请稍后再试。';
-      alert(message);
+      setStatusToast({ type: 'error', message });
     }
   };
+
+  const pageTitle = isEditMode ? '编辑项目动态' : '项目动态发布中心';
+  const pageSubtitle = isEditMode
+    ? '加载并更新已发布的动态内容，保存后将覆盖原有信息。'
+    : '记录项目的每一次重要更新，支持类型、标签、图文与链接的完整配置。';
 
   return (
     <div className="container relative z-10 mx-auto max-w-6xl space-y-8 px-4 py-10">
       <header className="space-y-1">
         <p className="text-sm font-medium text-primary/80">发布动态</p>
-        <h1 className="text-3xl font-semibold tracking-tight">项目动态发布中心</h1>
-        <p className="text-muted-foreground">
-          记录项目的每一次重要更新，支持类型、标签、图文与链接的完整配置。
-        </p>
+        <h1 className="text-3xl font-semibold tracking-tight">{pageTitle}</h1>
+        <p className="text-muted-foreground">{pageSubtitle}</p>
       </header>
 
       <form className="space-y-8" onSubmit={handleSubmit}>
@@ -650,21 +1004,21 @@ export default function AdminDynamicPage() {
           </div>
         )}
 
-        {submissionError && (
-          <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300">
+        {timelineLoading && (
+          <div className="flex items-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            <RefreshCcw className="h-4 w-4 animate-spin" />
+            正在加载动态详情...
+          </div>
+        )}
+
+        {timelineError && (
+          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
             <AlertCircle className="mt-0.5 h-4 w-4" />
-            <span>{submissionError}</span>
+            <span>{timelineError}</span>
           </div>
         )}
 
-        {submissionMessage && (
-          <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300">
-            <CheckCircle2 className="mt-0.5 h-4 w-4" />
-            <span>{submissionMessage}</span>
-          </div>
-        )}
-
-        <Card>
+        <Card className="bg-card shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-xl">
               <Clock className="h-5 w-5 text-primary" />
@@ -681,10 +1035,11 @@ export default function AdminDynamicPage() {
                 </Label>
                 <Input
                   id="publishDate"
-                  type="date"
+                  type="datetime-local"
+                  step={60}
                   value={formState.publishDate}
                   onChange={(event) => updateFormState('publishDate', event.target.value)}
-                />
+                  />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="projectId" className="text-sm font-medium text-muted-foreground">
@@ -764,7 +1119,7 @@ export default function AdminDynamicPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-card shadow-sm">
           <CardHeader>
             <CardTitle className="text-xl">动态详情</CardTitle>
             <CardDescription>使用 Markdown 编辑器撰写完整的更新说明。</CardDescription>
@@ -780,7 +1135,7 @@ export default function AdminDynamicPage() {
 
         <DynamicImageManager images={formState.images} onChange={(images) => updateFormState('images', images)} />
 
-        <Card>
+        <Card className="bg-card shadow-sm">
           <CardHeader>
             <CardTitle className="text-xl">相关链接与说明</CardTitle>
             <CardDescription>补充代码仓库、演示地址及更详细的介绍。</CardDescription>
@@ -851,10 +1206,12 @@ export default function AdminDynamicPage() {
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             <Send className="mr-2 h-4 w-4" />
-            发布动态
+            {isEditMode ? '更新动态' : '发布动态'}
           </Button>
         </div>
       </form>
+
+      {statusToast && <StatusToast status={statusToast} onClose={() => setStatusToast(null)} />}
     </div>
   );
 }

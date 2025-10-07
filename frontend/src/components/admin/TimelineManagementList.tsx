@@ -26,6 +26,7 @@ import Image from 'next/image';
 import { TimelineItem } from '@/types/store';
 import { cn } from '@/lib/utils';
 import { useGlobalStore } from '@/store/useGlobalStore';
+import { useRouter } from 'next/navigation';
 
 interface TimelineManagementListProps {
   items: TimelineItem[];
@@ -34,10 +35,10 @@ interface TimelineManagementListProps {
 
 export function TimelineManagementList({ items, searchQuery }: TimelineManagementListProps) {
   const { deleteTimelineItem } = useGlobalStore();
+  const router = useRouter();
 
   const handleEditTimeline = (timelineId: string) => {
-    console.log('编辑动态:', timelineId);
-    // TODO: 导航到编辑页面
+    router.push(`/admin/dynamic?id=${encodeURIComponent(timelineId)}`);
   };
 
   const handleDeleteTimeline = (timelineId: string) => {

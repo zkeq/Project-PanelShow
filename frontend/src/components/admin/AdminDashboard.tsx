@@ -242,8 +242,6 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
 
   const projects = useGlobalStore((state) => state.projects);
   const timelineItems = useGlobalStore((state) => state.timelineItems);
-  const createProject = useGlobalStore((state) => state.createProject);
-  const createTimelineItem = useGlobalStore((state) => state.createTimelineItem);
   const setProjects = useGlobalStore((state) => state.setProjects);
   const setTimelineItems = useGlobalStore((state) => state.setTimelineItems);
 
@@ -338,25 +336,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
 
   // 新建动态处理
   const handleCreateTimeline = () => {
-    const newTimeline = {
-      author: {
-        name: '管理员',
-        avatar: 'https://avatars.githubusercontent.com/u/62864752',
-        username: 'admin'
-      },
-      project: {
-        name: '示例项目',
-        logo: 'https://avatars.githubusercontent.com/u/62864752',
-        description: '这是一个新的项目动态，请编辑动态信息。',
-        techStack: ['React', 'TypeScript'],
-        readme: '## 项目更新\n\n这是一个新的项目动态。',
-        previewImages: ['/Snipaste_2025-08-23_22-52-13.png'],
-        repositoryUrl: 'https://github.com/example/project'
-      },
-      updateType: 'new' as const,
-      changelog: '新增功能或项目更新'
-    };
-    createTimelineItem(newTimeline);
+    router.push('/admin/dynamic');
   };
 
   // 统计数据

@@ -220,6 +220,22 @@ export function createTimeline(
   );
 }
 
+export function updateTimeline(
+  username: string,
+  timelineId: string,
+  data: Record<string, unknown>,
+  token: string
+) {
+  return request<{ message: string; data: Record<string, unknown> }>(
+    `/api/timeline/${encodeURIComponent(username)}/${encodeURIComponent(timelineId)}`,
+    {
+      method: 'PUT',
+      token,
+      body: JSON.stringify(data),
+    }
+  );
+}
+
 export interface GithubSyncResponse {
   success: boolean;
   message: string;

@@ -496,7 +496,7 @@ Authorization: Bearer <token>
 
 **接口**: `GET /api/timeline/{username}`
 
-**描述**: 获取用户的时间线
+**描述**: 获取用户的时间线，按发布时间倒序返回
 
 **响应**:
 ```json
@@ -510,6 +510,52 @@ Authorization: Bearer <token>
     }
   ],
   "total": 1
+}
+```
+
+---
+
+### 16.1 更新时间线
+
+**接口**: `PUT /api/timeline/{username}/{timeline_id}`
+
+**描述**: 更新指定的时间线项内容
+
+**需要认证**: 是
+
+**权限要求**: 只能操作绑定的用户名数据
+
+**请求体示例**:
+```json
+{
+  "project_id": "project-1",
+  "publishedAt": "2024-08-22T10:30:00Z",
+  "updateType": "feature",
+  "updateTypeMeta": {
+    "id": "feature",
+    "label": "新功能",
+    "color": "#22c55e"
+  },
+  "changelog": "更新了主要功能模块",
+  "assets": {
+    "images": [
+      { "id": "image-1", "url": "/uploads/demo.png" }
+    ]
+  }
+}
+```
+
+**响应**:
+```json
+{
+  "message": "时间线更新成功",
+  "data": {
+    "id": "timeline-1",
+    "project_id": "project-1",
+    "publishedAt": "2024-08-22T10:30:00Z",
+    "updateType": "feature",
+    "changelog": "更新了主要功能模块"
+  }
 }
 ```
 

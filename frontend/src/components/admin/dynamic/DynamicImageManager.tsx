@@ -8,8 +8,15 @@ import { Upload, X, MoveVertical } from 'lucide-react';
 
 export interface DynamicImageAsset {
   id: string;
-  file: File;
+  file: File | null;
   preview: string;
+  source: 'local' | 'remote';
+  metadata?: {
+    url?: string;
+    filename?: string | null;
+    contentType?: string | null;
+    size?: number | null;
+  };
 }
 
 interface DynamicImageManagerProps {
@@ -42,6 +49,12 @@ export function DynamicImageManager({ images, onChange }: DynamicImageManagerPro
           id: `image-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
           file,
           preview,
+          source: 'local',
+          metadata: {
+            filename: file.name,
+            size: file.size,
+            contentType: file.type,
+          },
         });
       });
       onChange([...images, ...nextImages]);
@@ -56,7 +69,9 @@ export function DynamicImageManager({ images, onChange }: DynamicImageManagerPro
   const handleRemove = (id: string) => {
     const image = images.find((item) => item.id === id);
     if (image) {
-      URL.revokeObjectURL(image.preview);
+      if (image.source === 'local' && image.file) {
+        URL.revokeObjectURL(image.preview);
+      }
     }
     onChange(images.filter((item) => item.id !== id));
   };
@@ -148,8 +163,8 @@ export function DynamicImageManager({ images, onChange }: DynamicImageManagerPro
                   </div>
                 </div>
                 <div className="flex items-center justify-between px-3 py-2 text-xs text-muted-foreground">
-                  <span className="truncate" title={image.file.name}>
-                    {image.file.name}
+                  <span className="truncate" title={image.file?.name ?? image.metadata?.filename ?? image.preview}>
+                    {image.file?.name ?? image.metadata?.filename ?? '已上传图片'}
                   </span>
                   <Button type="button" variant="ghost" size="icon" onClick={() => handleRemove(image.id)}>
                     <X className="h-4 w-4" />
