@@ -1,347 +1,383 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { DynamicTags } from '@/components/admin/DynamicTags';
 import { MarkdownEditor } from '@/components/admin/MarkdownEditor';
-import { ImageUpload } from '@/components/admin/dynamic/ImageUpload';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  Calendar,
-  FolderOpen,
-  FileText,
-  Type,
-  Tags,
-  Image,
-  Code,
-  ExternalLink,
-  Monitor,
-  Save,
-  Send,
-  Globe,
-  FileCode
-} from 'lucide-react';
+import { DynamicTagManager, type DynamicTagItem } from '@/components/admin/dynamic/DynamicTagManager';
+import { DynamicTypeSelector, type DynamicTypeOption } from '@/components/admin/dynamic/DynamicTypeSelector';
+import { DynamicImageManager, type DynamicImageAsset } from '@/components/admin/dynamic/DynamicImageManager';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useShallow } from 'zustand/react/shallow';
+import { fetchProjects } from '@/lib/api';
+import { Calendar, Clock, RefreshCcw, Save, Send } from 'lucide-react';
 
-interface DynamicFormData {
-  // 动态基本信息
-  publishDate: string;
-  projectBelong: string;
-  dynamicDescription: string;
-  dynamicType: string;
-  dynamicTags: string[];
-  dynamicDetails: string;
-  dynamicImages: File[];
-  codeUrl: string;
-  demoUrl: string;
-  demoUrlDescriptionLeft: string;
-  demoUrlDescriptionRight: string;
+interface ProjectOption {
+  id: string;
+  name: string;
+  description?: string;
 }
 
-export default function CreateDynamicPage() {
-  const [formData, setFormData] = useState<DynamicFormData>({
-    publishDate: new Date().toISOString().slice(0, 10),
-    projectBelong: '',
-    dynamicDescription: '',
-    dynamicType: '',
-    dynamicTags: [],
-    dynamicDetails: '',
-    dynamicImages: [],
-    codeUrl: '',
-    demoUrl: '',
-    demoUrlDescriptionLeft: '',
-    demoUrlDescriptionRight: ''
-  });
+interface DynamicFormState {
+  publishDate: string;
+  projectId: string;
+  description: string;
+  type: DynamicTypeOption | null;
+  tags: DynamicTagItem[];
+  details: string;
+  images: DynamicImageAsset[];
+  codeUrl: string;
+  demoUrl: string;
+  mobileUrl: string;
+  demoLeftMarkdown: string;
+  demoRightMarkdown: string;
+}
 
+const DRAFT_STORAGE_KEY = 'panelshow-admin-dynamic-draft';
 
-  // 在组件挂载时尝试恢复草稿
-  useEffect(() => {
-    const savedDraft = localStorage.getItem('dynamic-draft');
-    if (savedDraft) {
-      try {
-        const draftData = JSON.parse(savedDraft);
-        const { lastSaved, ...dynamicData } = draftData;
-        
-        if (confirm(`发现保存的草稿（${new Date(lastSaved).toLocaleString()}），是否恢复？`)) {
-          setFormData(dynamicData);
-        }
-      } catch (error) {
-        console.error('恢复草稿失败:', error);
-      }
-    }
-  }, []);
+const createInitialFormState = (): DynamicFormState => ({
+  publishDate: new Date().toISOString().slice(0, 10),
+  projectId: '',
+  description: '',
+  type: null,
+  tags: [],
+  details: '',
+  images: [],
+  codeUrl: '',
+  demoUrl: '',
+  mobileUrl: '',
+  demoLeftMarkdown: '',
+  demoRightMarkdown: '',
+});
 
-  const handleSaveDraft = () => {
-    const draftData = {
-      ...formData,
-      lastSaved: new Date().toISOString()
-    };
-    
-    localStorage.setItem('dynamic-draft', JSON.stringify(draftData));
-    alert('草稿已保存到本地');
-  };
+const normalizeProjectOption = (value: unknown, index: number): ProjectOption | null => {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  const rawId = record.id ?? record.slug ?? record.uid ?? index;
+  const rawName = record.name ?? record.title ?? record.project_name ?? record.label;
 
-  // 动态图片上传适配器
-  const handleDynamicImageUpload = useCallback((images: File[] | ((prev: File[]) => File[])) => {
-    if (typeof images === 'function') {
-      setFormData(prev => ({ ...prev, dynamicImages: images(prev.dynamicImages) }));
-    } else {
-      setFormData(prev => ({ ...prev, dynamicImages: images }));
-    }
-  }, []);
+  const id = typeof rawId === 'string' ? rawId : typeof rawId === 'number' ? String(rawId) : '';
+  const name = typeof rawName === 'string' ? rawName : '';
+  if (!id || !name) {
+    return null;
+  }
 
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const errors: string[] = [];
-    
-    // 内容验证
-    if (!formData.dynamicDescription.trim()) {
-      errors.push('动态描述不能为空');
-    }
-    
-    if (!formData.dynamicDetails.trim()) {
-      errors.push('动态详细信息不能为空');
-    }
-    
-    // URL格式验证
-    const urlFields = [
-      { field: 'codeUrl', name: '代码地址' },
-      { field: 'demoUrl', name: '演示地址' }
-    ];
-    
-    urlFields.forEach(({ field, name }) => {
-      const value = formData[field as keyof typeof formData];
-      if (value && typeof value === 'string' && value.trim()) {
-        try {
-          new URL(value.trim());
-        } catch {
-          errors.push(`${name}格式不正确`);
-        }
-      }
-    });
-    
-    if (errors.length > 0) {
-      alert(`请修正以下问题：\n${errors.join('\n')}`);
+  const description = typeof record.description === 'string' ? record.description : undefined;
+  return { id, name, description };
+};
+
+export default function AdminDynamicPage() {
+  const { token, user, hydrated } = useAuthStore(
+    useShallow((state) => ({ token: state.token, user: state.user, hydrated: state.hydrated }))
+  );
+  const boundUsername = user?.bound_username ?? null;
+
+  const [formState, setFormState] = useState<DynamicFormState>(() => createInitialFormState());
+  const [projectOptions, setProjectOptions] = useState<ProjectOption[]>([]);
+  const [projectLoading, setProjectLoading] = useState(false);
+  const [projectError, setProjectError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isProjectSelectionDisabled = useMemo(() => !token || !boundUsername, [token, boundUsername]);
+
+  const loadProjects = useCallback(async () => {
+    if (!token || !boundUsername) {
+      setProjectOptions([]);
+      setProjectError('请先绑定用户名并登录以加载项目列表。');
       return;
     }
-    
-    console.log('提交表单数据:', formData);
-    alert('动态创建成功！（这是演示版本）');
+
+    setProjectLoading(true);
+    setProjectError(null);
+    try {
+      const response = await fetchProjects(boundUsername, token);
+      const rawList = Array.isArray(response?.data) ? response.data : [];
+      const normalized = rawList
+        .map((item, index) => normalizeProjectOption(item, index))
+        .filter((item): item is ProjectOption => Boolean(item));
+      setProjectOptions(normalized);
+      if (normalized.length === 0) {
+        setProjectError('未找到可用的项目，请先创建项目。');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '获取项目列表失败，请稍后重试。';
+      setProjectError(message);
+    } finally {
+      setProjectLoading(false);
+    }
+  }, [token, boundUsername]);
+
+  useEffect(() => {
+    if (hydrated) {
+      void loadProjects();
+    }
+  }, [hydrated, loadProjects]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<DynamicFormState> & { savedAt?: string };
+      const shouldRestore = window.confirm('检测到本地草稿，是否恢复？');
+      if (!shouldRestore) return;
+      setFormState((prev) => ({
+        ...prev,
+        ...parsed,
+        images: [],
+      }));
+    } catch (error) {
+      console.warn('恢复草稿失败', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      formState.images.forEach((image) => URL.revokeObjectURL(image.preview));
+    };
+  }, [formState.images]);
+
+  const updateFormState = <K extends keyof DynamicFormState>(key: K, value: DynamicFormState[K]) => {
+    setFormState((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    const payload = {
+      ...formState,
+      projectId: formState.projectId || null,
+      type: formState.type,
+      tags: formState.tags,
+      images: formState.images.map((image) => ({ id: image.id, fileName: image.file.name })),
+    };
+
+    console.table(payload);
+    alert('表单数据已准备好提交，当前为演示模式。');
+    setIsSubmitting(false);
+  };
+
+  const handleSaveDraft = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const draft = {
+        publishDate: formState.publishDate,
+        projectId: formState.projectId,
+        description: formState.description,
+        type: formState.type,
+        tags: formState.tags,
+        details: formState.details,
+        codeUrl: formState.codeUrl,
+        demoUrl: formState.demoUrl,
+        mobileUrl: formState.mobileUrl,
+        demoLeftMarkdown: formState.demoLeftMarkdown,
+        demoRightMarkdown: formState.demoRightMarkdown,
+        savedAt: new Date().toISOString(),
+      } satisfies Partial<DynamicFormState> & { savedAt: string };
+      window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+      alert('草稿已保存到本地浏览器。');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '保存草稿失败，请稍后再试。';
+      alert(message);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="container mx-auto py-8 px-4 max-w-6xl space-y-8 relative z-10">
-      {/* 动态基本信息 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <FolderOpen className="inline h-5 w-5 mr-2" />
-            动态基本信息
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="publishDate">
-                <Calendar className="inline h-4 w-4 mr-1" />
-                发布日期
-              </Label>
-              <Input
-                id="publishDate"
-                type="date"
-                value={formData.publishDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, publishDate: e.target.value }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="projectBelong">
-                <FolderOpen className="inline h-4 w-4 mr-1" />
-                项目归属
-              </Label>
-              <Input
-                id="projectBelong"
-                value={formData.projectBelong}
-                onChange={(e) => setFormData(prev => ({ ...prev, projectBelong: e.target.value }))}
-                placeholder="输入项目归属"
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="dynamicType">
-              <Type className="inline h-4 w-4 mr-1" />
-              动态类型
-            </Label>
-            <Select value={formData.dynamicType} onValueChange={(value) => setFormData(prev => ({ ...prev, dynamicType: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="选择动态类型" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="update">🔄 项目更新</SelectItem>
-                <SelectItem value="release">🚀 版本发布</SelectItem>
-                <SelectItem value="feature">✨ 新功能</SelectItem>
-                <SelectItem value="bugfix">🐛 问题修复</SelectItem>
-                <SelectItem value="announcement">📢 公告</SelectItem>
-                <SelectItem value="other">📝 其他</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="dynamicDescription">
-              <FileText className="inline h-4 w-4 mr-1" />
-              动态描述 *
-            </Label>
-            <Textarea
-              id="dynamicDescription"
-              value={formData.dynamicDescription}
-              onChange={(e) => setFormData(prev => ({ ...prev, dynamicDescription: e.target.value }))}
-              placeholder="简要描述动态内容"
-              rows={3}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>
-              <Tags className="inline h-4 w-4 mr-1" />
-              动态标签
-            </Label>
-            <DynamicTags
-              tags={formData.dynamicTags}
-              onChange={(tags) => setFormData(prev => ({ ...prev, dynamicTags: tags }))}
-              placeholder="输入动态标签"
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="container mx-auto max-w-6xl space-y-8 py-10">
+      <header className="space-y-1">
+        <p className="text-sm font-medium text-primary/80">发布动态</p>
+        <h1 className="text-3xl font-semibold tracking-tight">项目动态发布中心</h1>
+        <p className="text-muted-foreground">
+          记录项目的每一次重要更新，支持类型、标签、图文与链接的完整配置。
+        </p>
+      </header>
 
-      {/* 动态详细信息 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <FileText className="inline h-5 w-5 mr-2" />
-            动态详细信息 *
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
+      <form className="space-y-8" onSubmit={handleSubmit}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Clock className="h-5 w-5 text-primary" />
+              发布信息
+            </CardTitle>
+            <CardDescription>设置动态的时间、归属项目和简要描述。</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="publishDate" className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  发布时间
+                </Label>
+                <Input
+                  id="publishDate"
+                  type="date"
+                  value={formState.publishDate}
+                  onChange={(event) => updateFormState('publishDate', event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="projectId" className="text-sm font-medium text-muted-foreground">
+                  项目归属
+                </Label>
+                <div className="flex gap-2">
+                  <select
+                    id="projectId"
+                    value={formState.projectId}
+                    onChange={(event) => updateFormState('projectId', event.target.value)}
+                    className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    disabled={isProjectSelectionDisabled || projectLoading}
+                  >
+                    <option value="" disabled>
+                      {projectLoading ? '正在加载项目...' : '请选择归属项目'}
+                    </option>
+                    {projectOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => void loadProjects()}
+                    disabled={projectLoading || isProjectSelectionDisabled}
+                    title="刷新项目列表"
+                  >
+                    <RefreshCcw className={`h-4 w-4 ${projectLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
+                {projectError && (
+                  <p className="text-xs text-destructive">{projectError}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium text-muted-foreground">
+                动态描述
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="简要说明本次动态的核心内容..."
+                value={formState.description}
+                onChange={(event) => updateFormState('description', event.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <DynamicTypeSelector value={formState.type} onChange={(value) => updateFormState('type', value)} />
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">动态标签</Label>
+              <DynamicTagManager tags={formState.tags} onChange={(tags) => updateFormState('tags', tags)} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">动态详情</CardTitle>
+            <CardDescription>使用 Markdown 编辑器撰写完整的更新说明。</CardDescription>
+          </CardHeader>
+          <CardContent>
             <MarkdownEditor
-              value={formData.dynamicDetails}
-              onChange={(dynamicDetails) => setFormData(prev => ({ ...prev, dynamicDetails }))}
-              placeholder="输入动态详细信息..."
+              value={formState.details}
+              onChange={(value) => updateFormState('details', value)}
+              placeholder="使用 Markdown 描述此次动态的详细内容、亮点、注意事项等..."
             />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* 动态图片 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <Image className="inline h-5 w-5 mr-2" />
-            动态图片
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ImageUpload
-            images={formData.dynamicImages}
-            setImages={handleDynamicImageUpload}
-          />
-        </CardContent>
-      </Card>
+        <DynamicImageManager images={formState.images} onChange={(images) => updateFormState('images', images)} />
 
-      {/* 相关链接 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <ExternalLink className="inline h-5 w-5 mr-2" />
-            相关链接
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="codeUrl">
-                <Code className="inline h-4 w-4 mr-1" />
-                代码地址
-              </Label>
-              <Input
-                id="codeUrl"
-                type="url"
-                value={formData.codeUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, codeUrl: e.target.value }))}
-                placeholder="https://github.com/username/repo"
-              />
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">相关链接与说明</CardTitle>
+            <CardDescription>补充代码仓库、演示地址及更详细的介绍。</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="codeUrl">代码地址</Label>
+                <Input
+                  id="codeUrl"
+                  type="url"
+                  placeholder="https://github.com/your/repository"
+                  value={formState.codeUrl}
+                  onChange={(event) => updateFormState('codeUrl', event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="demoUrl">演示地址</Label>
+                <Input
+                  id="demoUrl"
+                  type="url"
+                  placeholder="https://demo.example.com"
+                  value={formState.demoUrl}
+                  onChange={(event) => updateFormState('demoUrl', event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mobileUrl">移动端地址</Label>
+                <Input
+                  id="mobileUrl"
+                  type="url"
+                  placeholder="https://m.example.com"
+                  value={formState.mobileUrl}
+                  onChange={(event) => updateFormState('mobileUrl', event.target.value)}
+                />
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="demoUrl">
-                <Monitor className="inline h-4 w-4 mr-1" />
-                演示地址
-              </Label>
-              <Input
-                id="demoUrl"
-                type="url"
-                value={formData.demoUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, demoUrl: e.target.value }))}
-                placeholder="https://demo.example.com"
-              />
-            </div>
-          </div>
-          
-          {/* 演示地址介绍左右两栏 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="demoUrlDescriptionLeft">
-                <Code className="inline h-4 w-4 mr-1" />
-                演示地址介绍左侧栏 Markdown
-              </Label>
-              <Textarea
-                id="demoUrlDescriptionLeft"
-                value={formData.demoUrlDescriptionLeft}
-                onChange={(e) => setFormData(prev => ({ ...prev, demoUrlDescriptionLeft: e.target.value }))}
-                placeholder="输入左侧栏演示介绍的 Markdown 内容..."
-                rows={6}
-                className="font-mono text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="demoUrlDescriptionRight">
-                <FileCode className="inline h-4 w-4 mr-1" />
-                演示地址介绍右侧栏 Markdown
-              </Label>
-              <Textarea
-                id="demoUrlDescriptionRight"
-                value={formData.demoUrlDescriptionRight}
-                onChange={(e) => setFormData(prev => ({ ...prev, demoUrlDescriptionRight: e.target.value }))}
-                placeholder="输入右侧栏演示介绍的 Markdown 内容..."
-                rows={6}
-                className="font-mono text-sm"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="demoLeftMarkdown">演示介绍左侧栏 (Markdown)</Label>
+                <Textarea
+                  id="demoLeftMarkdown"
+                  className="min-h-[180px] font-mono text-sm"
+                  placeholder="填写演示页左侧栏的说明内容..."
+                  value={formState.demoLeftMarkdown}
+                  onChange={(event) => updateFormState('demoLeftMarkdown', event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="demoRightMarkdown">演示介绍右侧栏 (Markdown)</Label>
+                <Textarea
+                  id="demoRightMarkdown"
+                  className="min-h-[180px] font-mono text-sm"
+                  placeholder="填写演示页右侧栏的说明内容..."
+                  value={formState.demoRightMarkdown}
+                  onChange={(event) => updateFormState('demoRightMarkdown', event.target.value)}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* 提交按钮 */}
-      <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={handleSaveDraft}>
-          <Save className="w-4 h-4 mr-2" />
-          保存草稿
-        </Button>
-        <Button type="submit">
-          <Send className="w-4 h-4 mr-2" />
-          发布动态
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="outline" onClick={handleSaveDraft}>
+            <Save className="mr-2 h-4 w-4" />
+            保存草稿
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            <Send className="mr-2 h-4 w-4" />
+            发布动态
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }
