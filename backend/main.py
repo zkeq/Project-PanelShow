@@ -1,7 +1,7 @@
 """
 极简JSON后端 - 所有API路由
 """
-from fastapi import FastAPI, HTTPException, Depends, Body, Path, UploadFile, File, Query
+from fastapi import FastAPI, HTTPException, Depends, Body, Path, UploadFile, File, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from typing import Any, Dict, List, Union
@@ -203,15 +203,25 @@ async def get_me(current_user: dict = Depends(auth.require_auth)):
 
 
 @app.get("/api/auth/check-username/{username}", tags=["认证系统"])
-async def check_username(username: str):
+async def check_username(username: str, request: Request):
     """检查用户名是否可用（无需认证）"""
-    # 检查用户是否存在
+    auth_header = request.headers.get("Authorization")
+    current_user = None
+    if auth_header and auth_header.lower().startswith("bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+        current_user = auth.try_resolve_user_from_token(token)
+
+    if current_user and current_user.get("bound_username") == username:
+        return {
+            "username": username,
+            "exists": True,
+            "is_bound": False,
+            "available": True,
+            "message": "当前账号已绑定该用户名，可继续使用"
+        }
+
     user_exists = db.user_exists(username)
-
-    # 检查用户名是否已被绑定
     is_bound = auth.is_username_bound(username)
-
-    # 只要未被绑定就可用（不存在或存在但未绑定）
     available = not is_bound
 
     return {
@@ -571,6 +581,60 @@ async def update_profile_section(
     db.write_json(username, "profile.json", profile_data)
 
     return {"message": f"{section} 更新成功", "data": data}
+
+
+@app.post("/api/profile/{username}/github-sync", tags=["个人资料管理"])
+async def sync_github_profile(
+    username: str,
+    github_username: str = Body(..., embed=True),
+    current_user: dict = Depends(auth.require_auth)
+):
+    """根据 GitHub 用户名同步头像和社交数据"""
+
+    check_bound_username(current_user, username)
+
+    summary = await auth.github_fetch_user_summary(github_username)
+    user_data = summary.get("user", {})
+    total_stars = summary.get("total_stars", 0)
+
+    profile_data = db.read_json(username, "profile.json")
+    profile_section = profile_data.get("profile", {})
+
+    profile_section.update({
+        "github": github_username,
+        "github_username": github_username,
+        "github_avatar_url": user_data.get("avatar_url"),
+        "github_profile_url": user_data.get("html_url"),
+        "github_followers": user_data.get("followers", 0),
+        "github_following": user_data.get("following", 0),
+        "github_public_repos": user_data.get("public_repos", 0),
+        "github_public_gists": user_data.get("public_gists", 0),
+        "github_total_stars": total_stars,
+        "github_company": user_data.get("company"),
+        "github_location": user_data.get("location"),
+        "github_blog": user_data.get("blog"),
+        "github_bio": user_data.get("bio"),
+        "github_updated_at": datetime.utcnow().isoformat(),
+    })
+
+    # 如果没有自定义头像或希望覆盖，则更新头像
+    if not profile_section.get("avatar") and user_data.get("avatar_url"):
+        profile_section["avatar"] = user_data.get("avatar_url")
+
+    # 如果缺少作者名称，尝试从 GitHub 昵称同步
+    if not profile_section.get("name") and user_data.get("name"):
+        profile_section["name"] = user_data.get("name")
+
+    profile_data["profile"] = profile_section
+    db.write_json(username, "profile.json", profile_data)
+
+    return {
+        "success": True,
+        "message": "GitHub 信息同步成功",
+        "data": profile_section,
+        "github_user": user_data,
+        "total_stars": total_stars,
+    }
 
 
 # ==================== 用户设置（按类型） ====================

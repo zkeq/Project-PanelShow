@@ -161,6 +161,19 @@ export interface Experience {
 }
 
 // 个人资料类型
+export interface SkillItem {
+  id?: string
+  label: string
+  icon?: string
+}
+
+export interface SkillCategory {
+  id: string
+  title: string
+  icon?: string
+  items: SkillItem[]
+}
+
 export interface ProfileInfo {
   username: string
   name: string
@@ -169,10 +182,8 @@ export interface ProfileInfo {
   github: string
   website: string
   bio: string
-  skills: {
-    frontend: string[]
-    backend: string[]
-  }
+  aboutSubtitle?: string
+  skills: SkillCategory[]
   interests: string[]
 }
 

@@ -94,7 +94,7 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
 
     siteAddressCheckTimeout.current = setTimeout(async () => {
       try {
-        const result = await checkUsernameAvailability(trimmed);
+        const result = await checkUsernameAvailability(trimmed, token ?? undefined);
         if (currentValue !== siteAddress.trim()) {
           return;
         }

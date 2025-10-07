@@ -1,16 +1,39 @@
 import type { NextConfig } from "next";
 
+const remotePatterns = [
+  {
+    protocol: 'https' as const,
+    hostname: 'avatars.githubusercontent.com',
+    port: '',
+    pathname: '/**',
+  },
+];
+
+if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+  try {
+    const apiUrl = new URL(process.env.NEXT_PUBLIC_API_BASE_URL);
+    remotePatterns.push({
+      protocol: apiUrl.protocol.replace(':', '') as 'http' | 'https',
+      hostname: apiUrl.hostname,
+      port: apiUrl.port,
+      pathname: '/uploads/**',
+    });
+  } catch (error) {
+    console.warn('Invalid NEXT_PUBLIC_API_BASE_URL for image remote patterns', error);
+  }
+} else {
+  remotePatterns.push({
+    protocol: 'http',
+    hostname: 'localhost',
+    port: '8000',
+    pathname: '/uploads/**',
+  });
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'avatars.githubusercontent.com',
-        port: '',
-        pathname: '/**',
-      },
-    ],
+    remotePatterns,
   },
   // 添加开发时的热重载配置
   ...(process.env.NODE_ENV === 'development' && {

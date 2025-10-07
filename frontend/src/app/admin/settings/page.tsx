@@ -2,17 +2,19 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, User, Briefcase, Phone, Settings } from "lucide-react"
+import { ArrowLeft, User, Briefcase, Phone, Settings, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { BasicInformation } from "@/components/admin/settings/BasicInformation"
 import { WorkExperience } from "@/components/admin/settings/WorkExperience"
 import { ContactInformation } from "@/components/admin/settings/ContactInformation"
+import { AboutMe } from "@/components/admin/settings/AboutMe"
 
 const sidebarSections = [
   {
     title: "个人资料",
     items: [
       { id: "basic-info", label: "基本信息", icon: User, description: "管理个人基本信息和头像" },
+      { id: "about-me", label: "关于我", icon: BookOpen, description: "配置关于我页面内容" },
       { id: "work-experience", label: "工作经历", icon: Briefcase, description: "编辑工作经验和职业历程" },
       { id: "contact-info", label: "联系方式", icon: Phone, description: "更新联系信息和社交链接" },
     ],
@@ -26,6 +28,8 @@ export default function SettingsPage() {
     switch (activeSection) {
       case "basic-info":
         return <BasicInformation />
+      case "about-me":
+        return <AboutMe />
       case "work-experience":
         return <WorkExperience />
       case "contact-info":
@@ -118,5 +122,4 @@ export default function SettingsPage() {
       </div>
     )
   }
-
 

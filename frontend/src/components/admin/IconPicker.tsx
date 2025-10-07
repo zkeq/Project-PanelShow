@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Icon, addAPIProvider } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,9 +21,10 @@ interface IconPickerProps {
   value: string;
   onChange: (icon: string) => void;
   placeholder?: string;
+  label?: string;
 }
 
-// 热门图标分类
+// 常用推荐图标分类
 const popularIcons = {
   '常用': [
     'lucide:code',
@@ -42,6 +43,22 @@ const popularIcons = {
     'lucide:clock',
     'lucide:map-pin',
     'lucide:globe',
+  ],
+  '联系信息': [
+    'lucide:mail',
+    'lucide:mail-open',
+    'lucide:phone',
+    'lucide:phone-call',
+    'lucide:message-circle',
+    'lucide:message-square',
+    'lucide:send',
+    'lucide:at-sign',
+    'lucide:share-2',
+    'lucide:link',
+    'lucide:link-2',
+    'lucide:id-card',
+    'lucide:briefcase',
+    'lucide:building-2',
   ],
   '技术栈': [
     'logos:react',
@@ -125,43 +142,91 @@ const popularIcons = {
   ],
 };
 
-// 品牌图标
-const brandIcons = [
-  'simple-icons:github',
-  'simple-icons:gitlab',
-  'simple-icons:bitbucket',
-  'simple-icons:google',
-  'simple-icons:microsoft',
-  'simple-icons:apple',
-  'simple-icons:amazon',
-  'simple-icons:meta',
-  'simple-icons:twitter',
-  'simple-icons:linkedin',
-  'simple-icons:youtube',
-  'simple-icons:instagram',
-  'simple-icons:discord',
-  'simple-icons:slack',
-  'simple-icons:notion',
-  'simple-icons:figma',
-  'mdi:github',
-  'mdi:google',
-  'mdi:microsoft',
-  'mdi:apple',
-  'mdi:twitter',
-  'mdi:facebook',
-  'mdi:linkedin',
-  'mdi:youtube',
-  'mdi:instagram',
-  'tabler:brand-github',
-  'tabler:brand-google',
-  'tabler:brand-twitter',
-  'tabler:brand-facebook',
-  'tabler:brand-linkedin',
-  'tabler:brand-figma',
-  'tabler:brand-slack',
-];
+// 联系人、社交相关图标
+const contactIconGroups: Record<string, string[]> = {
+  '联系方式': [
+    'lucide:mail',
+    'lucide:mail-open',
+    'lucide:phone',
+    'lucide:phone-call',
+    'lucide:message-circle',
+    'lucide:message-square',
+    'lucide:send',
+    'lucide:share-2',
+    'lucide:at-sign',
+  ],
+  '位置与组织': [
+    'lucide:map-pin',
+    'lucide:map',
+    'lucide:compass',
+    'lucide:globe',
+    'lucide:building-2',
+    'lucide:landmark',
+    'lucide:briefcase',
+  ],
+  '链接与网络': [
+    'lucide:link',
+    'lucide:link-2',
+    'lucide:share',
+    'lucide:rss',
+    'lucide:qr-code',
+  ],
+};
 
-export function IconPicker({ value, onChange, placeholder = "选择图标" }: IconPickerProps) {
+// 品牌与平台图标
+const brandIconGroups: Record<string, string[]> = {
+  '开发平台': [
+    'simple-icons:github',
+    'simple-icons:gitlab',
+    'simple-icons:bitbucket',
+    'simple-icons:stackblitz',
+    'simple-icons:vercel',
+    'simple-icons:codesandbox',
+    'simple-icons:stackoverflow',
+  ],
+  '国际社交媒体': [
+    'simple-icons:twitter',
+    'simple-icons:linkedin',
+    'simple-icons:facebook',
+    'simple-icons:instagram',
+    'simple-icons:youtube',
+    'simple-icons:telegram',
+    'simple-icons:reddit',
+    'simple-icons:medium',
+    'simple-icons:whatsapp',
+  ],
+  '设计与协作': [
+    'simple-icons:figma',
+    'simple-icons:notion',
+    'simple-icons:slack',
+    'simple-icons:trello',
+    'simple-icons:asana',
+    'simple-icons:miro',
+    'simple-icons:behance',
+    'simple-icons:dribbble',
+  ],
+  '中文社区': [
+    'simple-icons:wechat',
+    'simple-icons:sinaweibo',
+    'simple-icons:zhihu',
+    'simple-icons:bilibili',
+    'simple-icons:douban',
+    'simple-icons:tencentqq',
+    'simple-icons:alibabacloud',
+  ],
+  '品牌与公司': [
+    'simple-icons:google',
+    'simple-icons:microsoft',
+    'simple-icons:apple',
+    'simple-icons:amazon',
+    'simple-icons:meta',
+    'simple-icons:xiaomi',
+    'simple-icons:tesla',
+    'simple-icons:bytedance',
+  ],
+};
+
+export function IconPicker({ value, onChange, placeholder = "选择图标", label = "图标" }: IconPickerProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [customIcon, setCustomIcon] = useState('');
@@ -189,7 +254,7 @@ export function IconPicker({ value, onChange, placeholder = "选择图标" }: Ic
 
   return (
     <div className="space-y-2">
-      <Label>图标</Label>
+      <Label>{label}</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -257,8 +322,9 @@ export function IconPicker({ value, onChange, placeholder = "选择图标" }: Ic
           </div>
 
           <Tabs defaultValue="popular" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="popular">热门图标</TabsTrigger>
+              <TabsTrigger value="contact">联系 / 社交</TabsTrigger>
               <TabsTrigger value="brands">品牌图标</TabsTrigger>
             </TabsList>
 
@@ -295,31 +361,76 @@ export function IconPicker({ value, onChange, placeholder = "选择图标" }: Ic
               </ScrollArea>
             </TabsContent>
 
+            <TabsContent value="contact" className="mt-0">
+              <ScrollArea className="h-80">
+                <div className="p-4 space-y-4">
+                  {Object.entries(contactIconGroups).map(([category, icons]) => {
+                    const filtered = filteredIcons(icons);
+                    if (!filtered.length) return null;
+                    return (
+                      <div key={category} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {category}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {filtered.length} 个图标
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-8 gap-2">
+                          {filtered.map((iconName) => (
+                            <Button
+                              key={iconName}
+                              variant={value === iconName ? "default" : "ghost"}
+                              size="sm"
+                              className="p-2 h-10 w-10"
+                              onClick={() => handleIconSelect(iconName)}
+                              title={iconName}
+                            >
+                              <Icon icon={iconName} className="w-4 h-4" />
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
             <TabsContent value="brands" className="mt-0">
               <ScrollArea className="h-80">
-                <div className="p-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      品牌
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {filteredIcons(brandIcons).length} 个图标
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-8 gap-2">
-                    {filteredIcons(brandIcons).map((iconName) => (
-                      <Button
-                        key={iconName}
-                        variant={value === iconName ? "default" : "ghost"}
-                        size="sm"
-                        className="p-2 h-10 w-10"
-                        onClick={() => handleIconSelect(iconName)}
-                        title={iconName}
-                      >
-                        <Icon icon={iconName} className="w-4 h-4" />
-                      </Button>
-                    ))}
-                  </div>
+                <div className="p-4 space-y-4">
+                  {Object.entries(brandIconGroups).map(([category, icons]) => {
+                    const filtered = filteredIcons(icons);
+                    if (!filtered.length) return null;
+                    return (
+                      <div key={category} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {category}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {filtered.length} 个图标
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-8 gap-2">
+                          {filtered.map((iconName) => (
+                            <Button
+                              key={iconName}
+                              variant={value === iconName ? "default" : "ghost"}
+                              size="sm"
+                              className="p-2 h-10 w-10"
+                              onClick={() => handleIconSelect(iconName)}
+                              title={iconName}
+                            >
+                              <Icon icon={iconName} className="w-4 h-4" />
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </TabsContent>

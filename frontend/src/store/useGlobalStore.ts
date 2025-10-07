@@ -862,20 +862,31 @@ const mockProfileInfo: ProfileInfo = {
   github: "zkeq",
   website: "personal-website.com",
   bio: "我是一名充满热情的全栈开发工程师，拥有 5 年以上的软件开发经验。专注于构建高性能、可扩展的 Web 应用，热衷于学习新技术和分享知识。在职业生涯中，我参与了多个大型项目的开发，从前端界面到后端架构，从数据库设计到部署运维，积累了丰富的全栈开发经验。我相信技术的力量，也相信团队合作的重要性。",
-  skills: {
-    frontend: [
-      "React / Vue.js",
-      "Next.js / Nuxt.js", 
-      "TypeScript",
-      "Tailwind CSS"
-    ],
-    backend: [
-      "Python / Go",
-      "Django / FastAPI",
-      "PostgreSQL / Redis",
-      "Docker / Kubernetes"
-    ]
-  },
+  aboutSubtitle: "了解我的技能、兴趣和职业目标",
+  skills: [
+    {
+      id: "frontend",
+      title: "前端开发",
+      icon: "lucide:laptop",
+      items: [
+        { id: "frontend-1", label: "React / Vue.js", icon: "logos:react" },
+        { id: "frontend-2", label: "Next.js / Nuxt.js", icon: "logos:nextjs-icon" },
+        { id: "frontend-3", label: "TypeScript", icon: "logos:typescript-icon" },
+        { id: "frontend-4", label: "Tailwind CSS", icon: "logos:tailwindcss-icon" }
+      ]
+    },
+    {
+      id: "backend",
+      title: "后端开发",
+      icon: "lucide:server",
+      items: [
+        { id: "backend-1", label: "Python / Go", icon: "logos:python" },
+        { id: "backend-2", label: "Django / FastAPI", icon: "logos:django" },
+        { id: "backend-3", label: "PostgreSQL / Redis", icon: "logos:postgresql" },
+        { id: "backend-4", label: "Docker / Kubernetes", icon: "logos:docker-icon" }
+      ]
+    }
+  ],
   interests: ["编程", "开源", "摄影", "阅读", "旅行", "音乐"]
 }
 
@@ -928,42 +939,42 @@ const mockQuickLinks: QuickLink[] = [
     id: '1',
     name: 'GitHub',
     url: 'https://github.com/zkeq',
-    icon: 'Github',
+    icon: 'simple-icons:github',
     description: '我的开源项目和代码仓库'
   },
   {
     id: '2',
     name: '博客',
     url: 'https://blog.example.com',
-    icon: 'BookOpen',
+    icon: 'lucide:book-open',
     description: '技术文章和学习笔记'
   },
   {
     id: '3',
     name: 'LinkedIn',
     url: 'https://linkedin.com/in/profile',
-    icon: 'Linkedin',
+    icon: 'simple-icons:linkedin',
     description: '职业经历和联系方式'
   },
   {
     id: '4',
     name: 'Twitter',
     url: 'https://twitter.com/username',
-    icon: 'Twitter',
+    icon: 'simple-icons:twitter',
     description: '技术动态和日常分享'
   },
   {
     id: '5',
     name: '简历下载',
     url: '/resume.pdf',
-    icon: 'Download',
+    icon: 'lucide:download',
     description: '下载完整版简历'
   },
   {
     id: '6',
     name: 'Email',
     url: 'mailto:contact@example.com',
-    icon: 'Mail',
+    icon: 'lucide:mail',
     description: '通过邮件联系我'
   }
 ]

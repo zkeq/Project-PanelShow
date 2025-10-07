@@ -128,9 +128,10 @@ export function bindUsername(username: string, token: string) {
   });
 }
 
-export function checkUsernameAvailability(username: string) {
+export function checkUsernameAvailability(username: string, token?: string) {
   return request<UsernameAvailabilityResponse>(
-    `/api/auth/check-username/${encodeURIComponent(username)}`
+    `/api/auth/check-username/${encodeURIComponent(username)}`,
+    token ? { token } : undefined
   );
 }
 
@@ -202,4 +203,68 @@ export function fetchTimeline(username: string, token: string) {
     `/api/timeline/${encodeURIComponent(username)}`,
     { token }
   );
+}
+
+export interface GithubSyncResponse {
+  success: boolean;
+  message: string;
+  data: Record<string, unknown>;
+  github_user: Record<string, unknown>;
+  total_stars: number;
+}
+
+export function syncGithubProfile(username: string, githubUsername: string, token: string) {
+  return request<GithubSyncResponse>(
+    `/api/profile/${encodeURIComponent(username)}/github-sync`,
+    {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ github_username: githubUsername }),
+    }
+  );
+}
+
+export interface UploadImageResponse {
+  success: boolean;
+  filename: string;
+  url: string;
+  content_type: string;
+  size: number;
+}
+
+export async function uploadImage(
+  username: string,
+  file: File,
+  token: string,
+  category = 'images'
+): Promise<UploadImageResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/uploads/${encodeURIComponent(username)}/images?category=${encodeURIComponent(category)}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `上传失败 (${response.status})`);
+  }
+
+  const data = (await response.json()) as UploadImageResponse;
+  const normalizedUrl =
+    typeof data.url === 'string' && data.url.startsWith('/')
+      ? `${API_BASE_URL.replace(/\/+$/, '')}/${data.url.replace(/^\/+/, '')}`
+      : data.url;
+
+  return {
+    ...data,
+    url: normalizedUrl,
+  };
 }

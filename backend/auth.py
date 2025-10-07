@@ -76,6 +76,53 @@ def decode_token(token: str) -> dict:
         )
 
 
+def _build_user_from_payload(payload: dict) -> dict:
+    auth_type = payload.get("auth_type")
+
+    if auth_type == "admin":
+        return {
+            "role": "admin",
+            "auth_type": "admin",
+            "bound_username": get_admin_binding()
+        }
+    elif auth_type == "github":
+        github_id = payload.get("github_id")
+        github_username = payload.get("github_username")
+
+        if not github_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="无效的认证凭证"
+            )
+
+        return {
+            "role": "user",
+            "auth_type": "github",
+            "github_id": github_id,
+            "github_username": github_username,
+            "bound_username": get_user_binding(github_id)
+        }
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭证"
+        )
+
+
+def resolve_user_from_token(token: str) -> dict:
+    payload = decode_token(token)
+    return _build_user_from_payload(payload)
+
+
+def try_resolve_user_from_token(token: Optional[str]) -> Optional[dict]:
+    if not token:
+        return None
+    try:
+        return resolve_user_from_token(token)
+    except HTTPException:
+        return None
+
+
 def authenticate_admin(username: str, password: str):
     """验证管理员（账号密码登录）"""
     if username != ADMIN_USERNAME:
@@ -140,6 +187,78 @@ async def github_get_user_info(access_token: str) -> dict:
         return response.json()
 
 
+async def github_fetch_user_summary(github_username: str) -> dict:
+    """直接通过用户名获取 GitHub 用户概要信息及星标统计"""
+    username = github_username.strip()
+    if not username:
+        raise HTTPException(status_code=400, detail="GitHub 用户名不能为空")
+
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "Project-PanelShow",
+    }
+
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
+        try:
+            user_resp = await client.get(
+                f"https://api.github.com/users/{username}",
+                headers=headers,
+            )
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="获取 GitHub 用户信息超时，请检查网络后重试")
+        except httpx.RequestError:
+            raise HTTPException(status_code=503, detail="获取 GitHub 用户信息失败，请稍后重试")
+
+        if user_resp.status_code == 404:
+            raise HTTPException(status_code=404, detail="GitHub 用户不存在")
+
+        if user_resp.status_code != 200:
+            raise HTTPException(status_code=400, detail="获取 GitHub 用户信息失败")
+
+        user_data = user_resp.json()
+
+        total_stars = 0
+        per_page = 100
+        page = 1
+
+        while True:
+            try:
+                repo_resp = await client.get(
+                    f"https://api.github.com/users/{username}/repos",
+                    headers=headers,
+                    params={"per_page": per_page, "page": page, "type": "owner", "sort": "updated"},
+                )
+            except httpx.TimeoutException:
+                raise HTTPException(status_code=504, detail="获取 GitHub 仓库列表超时，请检查网络后重试")
+            except httpx.RequestError:
+                raise HTTPException(status_code=503, detail="获取 GitHub 仓库列表失败，请稍后重试")
+
+            if repo_resp.status_code != 200:
+                raise HTTPException(status_code=400, detail="获取 GitHub 仓库列表失败")
+
+            repos = repo_resp.json()
+            if not isinstance(repos, list):
+                break
+
+            total_stars += sum(
+                repo.get("stargazers_count", 0)
+                for repo in repos
+                if isinstance(repo, dict)
+            )
+
+            if len(repos) < per_page:
+                break
+
+            page += 1
+            if page > 10:  # 安全限制，避免大量请求
+                break
+
+    return {
+        "user": user_data,
+        "total_stars": total_stars,
+    }
+
+
 def save_user_binding(github_id: str, username: str):
     """保存用户绑定关系（GitHub ID -> username）"""
     bindings = db.read_json("_system", "user_bindings.json")
@@ -184,40 +303,7 @@ def get_admin_binding() -> Optional[str]:
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """获取当前登录用户"""
     token = credentials.credentials
-    payload = decode_token(token)
-
-    auth_type = payload.get("auth_type")
-
-    if auth_type == "admin":
-        # 管理员登录
-        return {
-            "role": "admin",
-            "auth_type": "admin",
-            "bound_username": get_admin_binding()
-        }
-    elif auth_type == "github":
-        # GitHub 用户登录
-        github_id = payload.get("github_id")
-        github_username = payload.get("github_username")
-
-        if not github_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="无效的认证凭证"
-            )
-
-        return {
-            "role": "user",
-            "auth_type": "github",
-            "github_id": github_id,
-            "github_username": github_username,
-            "bound_username": get_user_binding(github_id)
-        }
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证凭证"
-        )
+    return resolve_user_from_token(token)
 
 
 def require_auth(current_user: dict = Depends(get_current_user)):

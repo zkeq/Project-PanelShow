@@ -10,16 +10,10 @@ import {
   Layers,
   Code2,
   Briefcase,
-  User,
-  Github,
-  Globe,
-  BookOpen,
-  Linkedin,
-  Twitter,
-  Download,
-  Mail
+  User
 } from 'lucide-react'
 import { useGlobalStore } from '@/store/useGlobalStore'
+import { Icon } from '@iconify/react'
 
 interface SidebarNavigationProps {
   activeTab: 'projects' | 'timeline'
@@ -53,18 +47,7 @@ export default function SidebarNavigation({
   
   // 获取快捷链接数据
   const quickLinks = useGlobalStore(state => state.getQuickLinks())
-  
-  // 图标映射
-  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-    Github,
-    Globe,
-    BookOpen,
-    Linkedin,
-    Twitter,
-    Download,
-    Mail
-  }
-  
+
   // 技术栈结构
   const techStackStructure = [
     {
@@ -325,7 +308,9 @@ export default function SidebarNavigation({
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground px-3 mb-2">快速链接</p>
                   {quickLinks.map((link) => {
-                    const Icon = iconMap[link.icon] || Globe
+                    const iconName = typeof link.icon === 'string' && link.icon.trim().length > 0
+                      ? link.icon
+                      : 'lucide:link'
                     return (
                       <a 
                         key={link.id}
@@ -335,7 +320,7 @@ export default function SidebarNavigation({
                         className="flex items-center space-x-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                         title={link.description}
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon icon={iconName} className="w-4 h-4" />
                         <span>{link.name}</span>
                       </a>
                     )
