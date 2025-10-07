@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +46,7 @@ import {
   Save,
   Send
 } from 'lucide-react';
+import { StatusToast, type StatusToastState } from '@/components/admin/settings/StatusToast';
 
 const DEFAULT_STATUS_OPTIONS: ProjectStatus[] = [
   { id: 'active', label: '活跃项目', color: 'bg-green-500' },
@@ -269,6 +270,8 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
   const [projectError, setProjectError] = useState<string | null>(null);
   const canUploadAssets = Boolean(token && boundUsername);
   const canUseDraft = !isEditMode;
+  const [statusToast, setStatusToast] = useState<StatusToastState | null>(null);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const requireAuthContext = () => {
     if (!token) {
@@ -497,7 +500,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
     };
     
     localStorage.setItem('project-draft', JSON.stringify(draftData));
-    alert('草稿已保存到本地');
+    setStatusToast({ type: 'success', message: '草稿已保存到本地' });
   };
 
   // 在组件挂载时尝试恢复草稿（仅创建模式）
@@ -526,6 +529,14 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
     if (token && boundUsername) return;
     setProjectLoading(false);
   }, [isEditMode, token, boundUsername]);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!token || !boundUsername) {
@@ -725,7 +736,10 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
     }
 
     if (errors.length > 0) {
-      alert(`请修正以下问题：\n${errors.join('\n')}`);
+      setStatusToast({
+        type: 'error',
+        message: `请修正以下问题：${errors.join('；')}`,
+      });
       return;
     }
 
@@ -734,7 +748,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       authContext = requireAuthContext();
     } catch (authError) {
       const message = authError instanceof Error ? authError.message : '请完成账号绑定后再提交';
-      alert(message);
+      setStatusToast({ type: 'error', message });
       return;
     }
 
@@ -756,18 +770,24 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
 
       if (!isEditMode) {
         payload.createdAt = now;
-        const response = await createProject(authContext.username, payload, authContext.authToken);
+        await createProject(authContext.username, payload, authContext.authToken);
         localStorage.removeItem('project-draft');
-        alert(`作品集创建成功！项目ID: ${response.data?.id ?? '已生成'}`);
+        setFormData({ ...INITIAL_FORM_DATA });
+        setStatusToast({ type: 'success', message: '作品集创建成功！' });
       } else if (projectId) {
         await updateProject(authContext.username, projectId, payload, authContext.authToken);
-        alert('作品集更新成功！');
+        setStatusToast({ type: 'success', message: '作品集更新成功！' });
       }
 
-      router.push('/admin');
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+      redirectTimeoutRef.current = setTimeout(() => {
+        router.push('/admin');
+      }, 1200);
     } catch (error) {
       const message = error instanceof Error ? error.message : '提交失败，请稍后重试';
-      alert(message);
+      setStatusToast({ type: 'error', message });
     } finally {
       setIsSubmitting(false);
     }
@@ -1115,6 +1135,9 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
           </Button>
         </div>
       </form>
+      {statusToast && (
+        <StatusToast status={statusToast} onClose={() => setStatusToast(null)} />
+      )}
     </div>
   );
 }
