@@ -501,9 +501,40 @@ async def create_timeline(
 
 @app.get("/api/timeline/{username}", tags=["时间线管理"])
 async def get_timeline(username: str):
-    """获取时间线列表"""
+    """获取时间线列表，按时间倒序返回"""
     timeline = db.read_json(username, "timeline.json")
-    return {"success": True, "data": timeline, "total": len(timeline)}
+    if not isinstance(timeline, list):
+        timeline = []
+
+    reversed_timeline = list(reversed(timeline))
+    return {"success": True, "data": reversed_timeline, "total": len(reversed_timeline)}
+
+
+@app.put("/api/timeline/{username}/{timeline_id}", tags=["时间线管理"])
+async def update_timeline(
+    username: str,
+    timeline_id: str,
+    data: Dict[str, Any],
+    current_user: dict = Depends(auth.require_auth),
+):
+    """更新指定的时间线项"""
+    check_bound_username(current_user, username)
+
+    timeline = db.read_json(username, "timeline.json")
+    if not isinstance(timeline, list):
+        timeline = []
+
+    for index, item in enumerate(timeline):
+        if item.get("id") == timeline_id:
+            updated_item = {**item, **data}
+            updated_item["id"] = item.get("id", timeline_id)
+            if "likes" not in data:
+                updated_item["likes"] = item.get("likes", 0)
+            timeline[index] = updated_item
+            db.write_json(username, "timeline.json", timeline)
+            return {"message": "时间线更新成功", "data": updated_item}
+
+    raise HTTPException(status_code=404, detail="时间线项不存在")
 
 
 @app.post("/api/timeline/{username}/{timeline_id}/like", tags=["时间线管理"])
