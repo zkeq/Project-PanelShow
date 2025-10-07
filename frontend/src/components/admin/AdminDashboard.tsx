@@ -238,6 +238,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
   const token = useAuthStore((state) => state.token);
   const boundUsername = useAuthStore((state) => state.user?.bound_username ?? null);
   const redirectingRef = useRef(false);
+  const dataFetchKeyRef = useRef<string | null>(null);
 
   const projects = useGlobalStore((state) => state.projects);
   const timelineItems = useGlobalStore((state) => state.timelineItems);
@@ -265,7 +266,15 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
   useEffect(() => {
     if (!token || !boundUsername) return;
 
+    const fetchKey = `${token}:${boundUsername}`;
+    if (dataFetchKeyRef.current === fetchKey) {
+      return;
+    }
+
+    dataFetchKeyRef.current = fetchKey;
+
     let cancelled = false;
+    let fetchCompleted = false;
 
     const loadData = async () => {
       setIsFetchingRemote(true);
@@ -276,7 +285,9 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
           fetchTimeline(boundUsername, token),
         ]);
 
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         const projectData = projectsRes && projectsRes.success && Array.isArray(projectsRes.data)
           ? projectsRes.data
@@ -295,10 +306,13 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
         setRemoteStats(statsRes && statsRes.success ? statsRes.data : null);
         setFetchError(null);
       } catch (error) {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
         const message = error instanceof Error ? error.message : '数据加载失败，请稍后重试';
         setFetchError(message);
       } finally {
+        fetchCompleted = true;
         if (!cancelled) {
           setIsFetchingRemote(false);
         }
@@ -309,6 +323,10 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
 
     return () => {
       cancelled = true;
+      if (!fetchCompleted) {
+        dataFetchKeyRef.current = null;
+        setIsFetchingRemote(false);
+      }
     };
   }, [token, boundUsername, setProjects, setTimelineItems]);
 
@@ -404,8 +422,19 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
               </div>
             )}
             {fetchError && (
-              <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                {fetchError}
+              <div className="flex items-center justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                <span>{fetchError}</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive border-destructive"
+                  onClick={() => {
+                    dataFetchKeyRef.current = null;
+                    setFetchError(null);
+                  }}
+                >
+                  重试
+                </Button>
               </div>
             )}
           </div>

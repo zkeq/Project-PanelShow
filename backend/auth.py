@@ -89,17 +89,22 @@ def authenticate_admin(username: str, password: str):
 
 async def github_get_access_token(code: str) -> str:
     """通过 GitHub code 获取 access_token"""
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://github.com/login/oauth/access_token",
-            data={
-                "client_id": GITHUB_CLIENT_ID,
-                "client_secret": GITHUB_CLIENT_SECRET,
-                "code": code,
-                "redirect_uri": GITHUB_REDIRECT_URI,
-            },
-            headers={"Accept": "application/json"}
-        )
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
+        try:
+            response = await client.post(
+                "https://github.com/login/oauth/access_token",
+                data={
+                    "client_id": GITHUB_CLIENT_ID,
+                    "client_secret": GITHUB_CLIENT_SECRET,
+                    "code": code,
+                    "redirect_uri": GITHUB_REDIRECT_URI,
+                },
+                headers={"Accept": "application/json"}
+            )
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="GitHub 授权请求超时，请检查网络后重试")
+        except httpx.RequestError:
+            raise HTTPException(status_code=503, detail="GitHub 授权请求失败，请稍后重试")
 
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail="GitHub 授权失败")
@@ -115,14 +120,19 @@ async def github_get_access_token(code: str) -> str:
 
 async def github_get_user_info(access_token: str) -> dict:
     """通过 access_token 获取 GitHub 用户信息"""
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            "https://api.github.com/user",
-            headers={
-                "Authorization": f"Bearer {access_token}",
-                "Accept": "application/json"
-            }
-        )
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
+        try:
+            response = await client.get(
+                "https://api.github.com/user",
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json"
+                }
+            )
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="获取 GitHub 用户信息超时，请检查网络后重试")
+        except httpx.RequestError:
+            raise HTTPException(status_code=503, detail="获取 GitHub 用户信息失败，请稍后重试")
 
         if response.status_code != 200:
             raise HTTPException(status_code=400, detail="获取 GitHub 用户信息失败")
