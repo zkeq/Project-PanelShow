@@ -268,3 +268,83 @@ export async function uploadImage(
     url: normalizedUrl,
   };
 }
+
+export interface SettingsResponse<T = unknown> {
+  success: boolean;
+  data: T;
+}
+
+export function fetchSettings<T>(username: string, settingType: string, token: string) {
+  return request<SettingsResponse<T>>(
+    `/api/settings/${encodeURIComponent(username)}/${encodeURIComponent(settingType)}`,
+    { token }
+  );
+}
+
+export function updateSettings<T>(
+  username: string,
+  settingType: string,
+  data: T,
+  token: string
+) {
+  return request<{ message: string; data: T }>(
+    `/api/settings/${encodeURIComponent(username)}/${encodeURIComponent(settingType)}`,
+    {
+      method: 'PUT',
+      token,
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export interface CreateProjectResponse<T = Record<string, unknown>> {
+  message: string;
+  data: T;
+}
+
+export function createProject<T extends Record<string, unknown>>(
+  username: string,
+  project: T,
+  token: string
+) {
+  return request<CreateProjectResponse<T>>(
+    `/api/projects/${encodeURIComponent(username)}`,
+    {
+      method: 'POST',
+      token,
+      body: JSON.stringify(project),
+    }
+  );
+}
+
+export interface ProjectDetailResponse<T = Record<string, unknown>> {
+  success: boolean;
+  data: T;
+}
+
+export function fetchProject<T = Record<string, unknown>>(
+  username: string,
+  projectId: string,
+  token: string
+) {
+  return request<ProjectDetailResponse<T>>(
+    `/api/projects/${encodeURIComponent(username)}/${encodeURIComponent(projectId)}`,
+    { token }
+  );
+}
+
+export function updateProject<T extends Record<string, unknown>>(
+  username: string,
+  projectId: string,
+  project: T,
+  token: string
+) {
+  return request<{ message: string; data: T }>(
+    `/api/projects/${encodeURIComponent(username)}/${encodeURIComponent(projectId)}`,
+    {
+      method: 'PUT',
+      token,
+      body: JSON.stringify(project),
+    }
+  );
+}

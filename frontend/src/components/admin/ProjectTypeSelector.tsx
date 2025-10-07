@@ -16,36 +16,33 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { 
-  Plus, 
-  Check, 
-  ChevronDown, 
-  Building2, 
-  User, 
+import {
+  Plus,
+  Check,
+  ChevronDown,
+  Building2,
+  User,
   Rocket,
   Monitor,
   Code,
   Palette,
   Database,
-  Smartphone
+  Smartphone,
 } from 'lucide-react';
 
-interface ProjectType {
+export interface ProjectType {
   id: string;
   label: string;
   icon: string;
 }
 
+
 interface ProjectTypeSelectorProps {
   value: ProjectType | null;
+  options: ProjectType[];
   onChange: (type: ProjectType | null) => void;
+  onCreateOption?: (input: { label: string; icon: string }) => Promise<ProjectType> | ProjectType;
 }
-
-const defaultTypes: ProjectType[] = [
-  { id: 'company', label: '公司项目', icon: 'Building2' },
-  { id: 'personal', label: '个人项目', icon: 'User' },
-  { id: 'startup', label: '创业项目', icon: 'Rocket' },
-];
 
 const iconOptions = [
   { name: 'Building2', component: Building2, label: '公司' },
@@ -59,30 +56,54 @@ const iconOptions = [
 ];
 
 function getIconComponent(iconName: string) {
-  const icon = iconOptions.find(opt => opt.name === iconName);
+  const icon = iconOptions.find((opt) => opt.name === iconName);
   return icon?.component || Building2;
 }
 
-export function ProjectTypeSelector({ value, onChange }: ProjectTypeSelectorProps) {
-  const [types, setTypes] = useState<ProjectType[]>(defaultTypes);
+export function ProjectTypeSelector({ value, options, onChange, onCreateOption }: ProjectTypeSelectorProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newType, setNewType] = useState({
     label: '',
-    icon: 'Building2'
+    icon: 'Building2',
   });
+  const [adding, setAdding] = useState(false);
 
-  const handleAddType = () => {
-    if (!newType.label.trim()) return;
-    
-    const type: ProjectType = {
-      id: `custom-${Date.now()}`,
-      label: newType.label.trim(),
-      icon: newType.icon
-    };
-    
-    setTypes(prev => [...prev, type]);
-    setNewType({ label: '', icon: 'Building2' });
-    setIsAddDialogOpen(false);
+  const handleAddType = async () => {
+    const trimmedLabel = newType.label.trim();
+    if (!trimmedLabel) return;
+
+    try {
+      setAdding(true);
+      let created: ProjectType;
+
+      if (onCreateOption) {
+        const result = await Promise.resolve(onCreateOption({
+          label: trimmedLabel,
+          icon: newType.icon,
+        }));
+
+        if (!result) {
+          throw new Error('未获得新类型的返回数据');
+        }
+
+        created = result;
+      } else {
+        created = {
+          id: `custom-${Date.now()}`,
+          label: trimmedLabel,
+          icon: newType.icon,
+        };
+      }
+
+      onChange(created);
+      setNewType({ label: '', icon: 'Building2' });
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '添加类型失败，请稍后重试';
+      alert(message);
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
@@ -107,11 +128,18 @@ export function ProjectTypeSelector({ value, onChange }: ProjectTypeSelectorProp
           </PopoverTrigger>
           <PopoverContent className="w-60 p-2">
             <div className="space-y-1">
-              {types.map((type) => {
+              {options.length === 0 && (
+                <div className="px-2 py-2 text-xs text-muted-foreground">
+                  暂无类型，请先创建一个。
+                </div>
+              )}
+
+              {options.map((type) => {
                 const IconComponent = getIconComponent(type.icon);
                 return (
                   <button
                     key={type.id}
+                    type="button"
                     className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent rounded-sm"
                     onClick={() => onChange(type)}
                   >
@@ -121,7 +149,7 @@ export function ProjectTypeSelector({ value, onChange }: ProjectTypeSelectorProp
                   </button>
                 );
               })}
-              
+
               <div className="border-t pt-2 mt-2">
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
@@ -140,11 +168,11 @@ export function ProjectTypeSelector({ value, onChange }: ProjectTypeSelectorProp
                         <Input
                           id="type-label"
                           value={newType.label}
-                          onChange={(e) => setNewType(prev => ({ ...prev, label: e.target.value }))}
+                          onChange={(e) => setNewType((prev) => ({ ...prev, label: e.target.value }))}
                           placeholder="输入类型名称"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label>选择图标</Label>
                         <div className="grid grid-cols-4 gap-2">
@@ -155,11 +183,11 @@ export function ProjectTypeSelector({ value, onChange }: ProjectTypeSelectorProp
                                 key={icon.name}
                                 type="button"
                                 className={`flex flex-col items-center gap-1 p-2 rounded-md border-2 ${
-                                  newType.icon === icon.name 
-                                    ? 'border-primary bg-primary/5' 
+                                  newType.icon === icon.name
+                                    ? 'border-primary bg-primary/5'
                                     : 'border-border hover:border-primary/50'
                                 }`}
-                                onClick={() => setNewType(prev => ({ ...prev, icon: icon.name }))}
+                                onClick={() => setNewType((prev) => ({ ...prev, icon: icon.name }))}
                               >
                                 <IconComponent className="w-5 h-5" />
                                 <span className="text-xs text-center">{icon.label}</span>
@@ -168,7 +196,7 @@ export function ProjectTypeSelector({ value, onChange }: ProjectTypeSelectorProp
                           })}
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2 p-2 border rounded">
                         {(() => {
                           const IconComponent = getIconComponent(newType.icon);
@@ -176,16 +204,19 @@ export function ProjectTypeSelector({ value, onChange }: ProjectTypeSelectorProp
                         })()}
                         <span className="text-sm">{newType.label || '预览'}</span>
                       </div>
-                      
+
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={() => setIsAddDialogOpen(false)}
                         >
                           取消
                         </Button>
-                        <Button onClick={handleAddType} disabled={!newType.label.trim()}>
-                          添加
+                        <Button
+                          onClick={handleAddType}
+                          disabled={!newType.label.trim() || adding}
+                        >
+                          {adding ? '添加中…' : '添加'}
                         </Button>
                       </div>
                     </div>
@@ -197,8 +228,8 @@ export function ProjectTypeSelector({ value, onChange }: ProjectTypeSelectorProp
         </Popover>
 
         {value && (
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => onChange(null)}
           >

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -12,11 +12,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { 
-  Plus, 
+import {
+  Plus,
   X,
-  Zap, 
-  Shield, 
+  Zap,
+  Shield,
   Sparkles,
   Rocket,
   Users,
@@ -26,32 +26,46 @@ import {
   Palette,
   Database,
   Settings,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 
-interface ProjectFeature {
+export interface ProjectFeature {
   id: string;
   label: string;
   color: string;
   icon: string;
 }
 
+
 interface ProjectFeatureSelectorProps {
   features: ProjectFeature[];
+  options: ProjectFeature[];
   onChange: (features: ProjectFeature[]) => void;
+  onCreateOption?: (
+    input: { label: string; color: string; icon: string }
+  ) => Promise<ProjectFeature> | ProjectFeature;
 }
-
-const defaultFeatures: ProjectFeature[] = [
-  { id: 'performance', label: '高性能', color: 'bg-green-500', icon: 'Zap' },
-  { id: 'security', label: '安全可靠', color: 'bg-blue-500', icon: 'Shield' },
-  { id: 'modern', label: '现代化', color: 'bg-purple-500', icon: 'Sparkles' },
-];
 
 const colorOptions = [
   'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500',
   'bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 'bg-pink-500',
   'bg-gray-500', 'bg-cyan-500', 'bg-teal-500', 'bg-emerald-500'
 ];
+
+const colorHexMap: Record<string, string> = {
+  'bg-red-500': '#ef4444',
+  'bg-orange-500': '#f97316',
+  'bg-yellow-500': '#eab308',
+  'bg-green-500': '#22c55e',
+  'bg-blue-500': '#3b82f6',
+  'bg-indigo-500': '#6366f1',
+  'bg-purple-500': '#a855f7',
+  'bg-pink-500': '#ec4899',
+  'bg-gray-500': '#6b7280',
+  'bg-cyan-500': '#06b6d4',
+  'bg-teal-500': '#14b8a6',
+  'bg-emerald-500': '#10b981',
+};
 
 const iconOptions = [
   { name: 'Zap', component: Zap, label: '闪电' },
@@ -69,74 +83,91 @@ const iconOptions = [
 ];
 
 function getIconComponent(iconName: string) {
-  const icon = iconOptions.find(opt => opt.name === iconName);
+  const icon = iconOptions.find((opt) => opt.name === iconName);
   return icon?.component || Zap;
 }
 
-export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSelectorProps) {
-  const [availableFeatures, setAvailableFeatures] = useState<ProjectFeature[]>(defaultFeatures);
+function getColorHex(color: string) {
+  return colorHexMap[color] ?? '#3b82f6';
+}
+
+export function ProjectFeatureSelector({ features, options, onChange, onCreateOption }: ProjectFeatureSelectorProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newFeature, setNewFeature] = useState({
     label: '',
     color: 'bg-blue-500',
-    icon: 'Zap'
+    icon: 'Zap',
   });
+  const [adding, setAdding] = useState(false);
+
+  const unselectedFeatures = useMemo(
+    () => options.filter((option) => !features.some((feature) => feature.id === option.id)),
+    [features, options]
+  );
 
   const addFeature = (feature: ProjectFeature) => {
-    if (!features.find(f => f.id === feature.id)) {
+    if (!features.some((item) => item.id === feature.id)) {
       onChange([...features, feature]);
     }
   };
 
   const removeFeature = (featureId: string) => {
-    onChange(features.filter(f => f.id !== featureId));
+    onChange(features.filter((feature) => feature.id !== featureId));
   };
 
-  const handleAddCustomFeature = () => {
-    if (!newFeature.label.trim()) return;
-    
-    const feature: ProjectFeature = {
-      id: `custom-${Date.now()}`,
-      label: newFeature.label.trim(),
-      color: newFeature.color,
-      icon: newFeature.icon
-    };
-    
-    setAvailableFeatures(prev => [...prev, feature]);
-    addFeature(feature);
-    setNewFeature({ label: '', color: 'bg-blue-500', icon: 'Zap' });
-    setIsAddDialogOpen(false);
-  };
+  const handleAddCustomFeature = async () => {
+    const trimmedLabel = newFeature.label.trim();
+    if (!trimmedLabel) return;
 
-  const unselectedFeatures = availableFeatures.filter(
-    af => !features.find(f => f.id === af.id)
-  );
+    try {
+      setAdding(true);
+      let created: ProjectFeature;
+
+      if (onCreateOption) {
+        const result = await Promise.resolve(onCreateOption({
+          label: trimmedLabel,
+          color: newFeature.color,
+          icon: newFeature.icon,
+        }));
+
+        if (!result) {
+          throw new Error('未获得新特性的返回数据');
+        }
+
+        created = result;
+      } else {
+        created = {
+          id: `custom-${Date.now()}`,
+          label: trimmedLabel,
+          color: newFeature.color,
+          icon: newFeature.icon,
+        };
+      }
+
+      addFeature(created);
+      setNewFeature({ label: '', color: 'bg-blue-500', icon: 'Zap' });
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '添加特性失败，请稍后重试';
+      alert(message);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
-      {/* 已选择的特性 */}
       {features.length > 0 && (
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
             {features.map((feature) => {
               const IconComponent = getIconComponent(feature.icon);
+              const backgroundColor = getColorHex(feature.color);
               return (
-                <Badge 
+                <Badge
                   key={feature.id}
                   className="flex items-center gap-1 px-2 py-1 text-white"
-                  style={{ backgroundColor: feature.color.replace('bg-', '').replace('-500', '') === 'red' ? '#ef4444' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'orange' ? '#f97316' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'yellow' ? '#eab308' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'green' ? '#22c55e' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'blue' ? '#3b82f6' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'indigo' ? '#6366f1' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'purple' ? '#a855f7' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'pink' ? '#ec4899' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'gray' ? '#6b7280' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'cyan' ? '#06b6d4' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'teal' ? '#14b8a6' :
-                    feature.color.replace('bg-', '').replace('-500', '') === 'emerald' ? '#10b981' : '#3b82f6'
-                  }}
+                  style={{ backgroundColor }}
                 >
                   <IconComponent className="h-3 w-3" />
                   {feature.label}
@@ -155,12 +186,12 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
         </div>
       )}
 
-      {/* 可选择的特性 */}
       {unselectedFeatures.length > 0 && (
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
             {unselectedFeatures.map((feature) => {
               const IconComponent = getIconComponent(feature.icon);
+              const backgroundColor = getColorHex(feature.color);
               return (
                 <Button
                   key={feature.id}
@@ -170,7 +201,10 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
                   onClick={() => addFeature(feature)}
                   className="flex items-center gap-1"
                 >
-                  <div className={`w-3 h-3 rounded-full ${feature.color}`} />
+                  <span
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor }}
+                  />
                   <IconComponent className="h-3 w-3" />
                   {feature.label}
                   <Plus className="h-3 w-3" />
@@ -181,7 +215,6 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
         </div>
       )}
 
-      {/* 添加自定义特性 */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogTrigger asChild>
           <Button type="button" variant="outline" className="w-full border-dashed border-2 hover:bg-muted/50">
@@ -199,11 +232,11 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
               <Input
                 id="feature-label"
                 value={newFeature.label}
-                onChange={(e) => setNewFeature(prev => ({ ...prev, label: e.target.value }))}
+                onChange={(e) => setNewFeature((prev) => ({ ...prev, label: e.target.value }))}
                 placeholder="输入特性名称"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label>选择颜色</Label>
               <div className="grid grid-cols-6 gap-2">
@@ -214,7 +247,7 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
                     className={`w-8 h-8 rounded-full ${color} border-2 ${
                       newFeature.color === color ? 'border-foreground' : 'border-border'
                     }`}
-                    onClick={() => setNewFeature(prev => ({ ...prev, color }))}
+                    onClick={() => setNewFeature((prev) => ({ ...prev, color }))}
                   />
                 ))}
               </div>
@@ -230,11 +263,11 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
                       key={icon.name}
                       type="button"
                       className={`flex flex-col items-center gap-1 p-2 rounded-md border-2 ${
-                        newFeature.icon === icon.name 
-                          ? 'border-primary bg-primary/5' 
+                        newFeature.icon === icon.name
+                          ? 'border-primary bg-primary/5'
                           : 'border-border hover:border-primary/50'
                       }`}
-                      onClick={() => setNewFeature(prev => ({ ...prev, icon: icon.name }))}
+                      onClick={() => setNewFeature((prev) => ({ ...prev, icon: icon.name }))}
                     >
                       <IconComponent className="w-4 h-4" />
                       <span className="text-xs text-center">{icon.label}</span>
@@ -243,25 +276,31 @@ export function ProjectFeatureSelector({ features, onChange }: ProjectFeatureSel
                 })}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30">
-              <div className={`w-3 h-3 rounded-full ${newFeature.color}`} />
+              <span
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: getColorHex(newFeature.color) }}
+              />
               {(() => {
                 const IconComponent = getIconComponent(newFeature.icon);
                 return <IconComponent className="w-4 h-4" />;
               })()}
               <span className="text-sm font-medium">{newFeature.label || '预览特性'}</span>
             </div>
-            
+
             <div className="flex justify-end gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setIsAddDialogOpen(false)}
               >
                 取消
               </Button>
-              <Button onClick={handleAddCustomFeature} disabled={!newFeature.label.trim()}>
-                添加特性
+              <Button
+                onClick={handleAddCustomFeature}
+                disabled={!newFeature.label.trim() || adding}
+              >
+                {adding ? '添加中…' : '添加特性'}
               </Button>
             </div>
           </div>

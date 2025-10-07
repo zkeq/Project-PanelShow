@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -17,25 +16,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Plus, Check, ChevronDown, Settings } from 'lucide-react';
+import { Plus, Check, ChevronDown } from 'lucide-react';
 
-interface ProjectStatus {
+export interface ProjectStatus {
   id: string;
   label: string;
   color: string;
 }
 
+
 interface ProjectStatusSelectorProps {
   value: ProjectStatus | null;
+  options: ProjectStatus[];
   onChange: (status: ProjectStatus | null) => void;
+  onCreateOption?: (input: { label: string; color: string }) => Promise<ProjectStatus> | ProjectStatus;
 }
-
-const defaultStatuses: ProjectStatus[] = [
-  { id: 'active', label: '活跃项目', color: 'bg-green-500' },
-  { id: 'building', label: '施工中', color: 'bg-yellow-500' },
-  { id: 'iterated', label: '已迭代', color: 'bg-blue-500' },
-  { id: 'archived', label: '已归档', color: 'bg-gray-500' },
-];
 
 const colorOptions = [
   'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500',
@@ -43,26 +38,50 @@ const colorOptions = [
   'bg-gray-500', 'bg-cyan-500', 'bg-teal-500', 'bg-emerald-500'
 ];
 
-export function ProjectStatusSelector({ value, onChange }: ProjectStatusSelectorProps) {
-  const [statuses, setStatuses] = useState<ProjectStatus[]>(defaultStatuses);
+export function ProjectStatusSelector({ value, options, onChange, onCreateOption }: ProjectStatusSelectorProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState({
     label: '',
     color: 'bg-blue-500'
   });
+  const [adding, setAdding] = useState(false);
 
-  const handleAddStatus = () => {
-    if (!newStatus.label.trim()) return;
-    
-    const status: ProjectStatus = {
-      id: `custom-${Date.now()}`,
-      label: newStatus.label.trim(),
-      color: newStatus.color
-    };
-    
-    setStatuses(prev => [...prev, status]);
-    setNewStatus({ label: '', color: 'bg-blue-500' });
-    setIsAddDialogOpen(false);
+  const handleAddStatus = async () => {
+    const trimmedLabel = newStatus.label.trim();
+    if (!trimmedLabel) return;
+
+    try {
+      setAdding(true);
+      let created: ProjectStatus;
+
+      if (onCreateOption) {
+        const result = await Promise.resolve(onCreateOption({
+          label: trimmedLabel,
+          color: newStatus.color,
+        }));
+
+        if (!result) {
+          throw new Error('未获得新状态的返回数据');
+        }
+
+        created = result;
+      } else {
+        created = {
+          id: `custom-${Date.now()}`,
+          label: trimmedLabel,
+          color: newStatus.color,
+        };
+      }
+
+      onChange(created);
+      setNewStatus({ label: '', color: 'bg-blue-500' });
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '添加状态失败，请稍后重试';
+      alert(message);
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (
@@ -84,9 +103,16 @@ export function ProjectStatusSelector({ value, onChange }: ProjectStatusSelector
           </PopoverTrigger>
           <PopoverContent className="w-60 p-2">
             <div className="space-y-1">
-              {statuses.map((status) => (
+              {options.length === 0 && (
+                <div className="px-2 py-2 text-xs text-muted-foreground">
+                  暂无状态，请先创建一个。
+                </div>
+              )}
+
+              {options.map((status) => (
                 <button
                   key={status.id}
+                  type="button"
                   className="w-full flex items-center gap-2 px-2 py-1.5 text-left hover:bg-accent rounded-sm"
                   onClick={() => onChange(status)}
                 >
@@ -95,7 +121,7 @@ export function ProjectStatusSelector({ value, onChange }: ProjectStatusSelector
                   {value?.id === status.id && <Check className="h-4 w-4 ml-auto" />}
                 </button>
               ))}
-              
+
               <div className="border-t pt-2 mt-2">
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
@@ -114,11 +140,11 @@ export function ProjectStatusSelector({ value, onChange }: ProjectStatusSelector
                         <Input
                           id="status-label"
                           value={newStatus.label}
-                          onChange={(e) => setNewStatus(prev => ({ ...prev, label: e.target.value }))}
+                          onChange={(e) => setNewStatus((prev) => ({ ...prev, label: e.target.value }))}
                           placeholder="输入状态名称"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label>选择颜色</Label>
                         <div className="grid grid-cols-6 gap-2">
@@ -129,26 +155,29 @@ export function ProjectStatusSelector({ value, onChange }: ProjectStatusSelector
                               className={`w-8 h-8 rounded-full ${color} border-2 ${
                                 newStatus.color === color ? 'border-foreground' : 'border-border'
                               }`}
-                              onClick={() => setNewStatus(prev => ({ ...prev, color }))}
+                              onClick={() => setNewStatus((prev) => ({ ...prev, color }))}
                             />
                           ))}
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         <div className={`w-3 h-3 rounded-full ${newStatus.color}`} />
                         <span className="text-sm">{newStatus.label || '预览'}</span>
                       </div>
-                      
+
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={() => setIsAddDialogOpen(false)}
                         >
                           取消
                         </Button>
-                        <Button onClick={handleAddStatus} disabled={!newStatus.label.trim()}>
-                          添加
+                        <Button
+                          onClick={handleAddStatus}
+                          disabled={!newStatus.label.trim() || adding}
+                        >
+                          {adding ? '添加中…' : '添加'}
                         </Button>
                       </div>
                     </div>
@@ -160,8 +189,8 @@ export function ProjectStatusSelector({ value, onChange }: ProjectStatusSelector
         </Popover>
 
         {value && (
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => onChange(null)}
           >

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, type ChangeEvent, type DragEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,6 +43,7 @@ interface Screenshot {
 interface ScreenshotManagerProps {
   screenshots: Screenshot[];
   onChange: (screenshots: Screenshot[]) => void;
+  onUpload?: (file: File) => Promise<{ url: string; name?: string }>;
 }
 
 interface SortableScreenshotItemProps {
@@ -207,17 +208,28 @@ function SortableScreenshotItem({ screenshot, onUpdate, onRemove }: SortableScre
   );
 }
 
-export function ScreenshotManager({ screenshots, onChange }: ScreenshotManagerProps) {
+
+export function ScreenshotManager({ screenshots, onChange, onUpload }: ScreenshotManagerProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const generateId = () => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return `screenshot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  };
 
   const addScreenshot = () => {
     const newScreenshot: Screenshot = {
-      id: `screenshot-${Date.now()}`,
+      id: generateId(),
       name: '',
       description: '',
       url: ''
@@ -248,8 +260,86 @@ export function ScreenshotManager({ screenshots, onChange }: ScreenshotManagerPr
     }
   };
 
+  const handleUploadResult = (file: File, result: { url: string; name?: string }) => {
+    const newScreenshot: Screenshot = {
+      id: generateId(),
+      name: result.name || file.name || '未命名图片',
+      description: '',
+      url: result.url,
+    };
+    onChange([...screenshots, newScreenshot]);
+  };
+
+  const uploadFile = async (file: File) => {
+    if (!onUpload) return;
+    setIsUploading(true);
+    setUploadError(null);
+    try {
+      const result = await onUpload(file);
+      handleUploadResult(file, result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '上传失败，请重试';
+      setUploadError(message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileInputChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && onUpload) {
+      await uploadFile(file);
+    }
+    event.target.value = '';
+  };
+
+  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
+    if (!onUpload) return;
+    event.preventDefault();
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      await uploadFile(file);
+    }
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (onUpload) {
+      event.preventDefault();
+    }
+  };
+
+  const triggerFileDialog = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="space-y-6">
+      {onUpload && (
+        <div
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          className={`flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted/30 p-6 text-sm text-muted-foreground transition-colors ${
+            isUploading ? 'opacity-70' : 'hover:border-primary/60 hover:text-foreground'
+          }`}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileInputChange}
+            className="hidden"
+          />
+          <ImageIcon className="h-10 w-10" />
+          <div className="text-center space-y-1">
+            <p>{isUploading ? '图片上传中，请稍候…' : '拖拽图片到此处，或点击下方按钮上传图片'}</p>
+            <Button type="button" variant="secondary" size="sm" onClick={triggerFileDialog} disabled={isUploading}>
+              选择图片
+            </Button>
+          </div>
+          {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
+        </div>
+      )}
+
       {screenshots.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -289,6 +379,7 @@ export function ScreenshotManager({ screenshots, onChange }: ScreenshotManagerPr
         onClick={addScreenshot}
         variant="outline"
         className="w-full border-dashed"
+        disabled={isUploading}
       >
         <Plus className="h-4 w-4 mr-2" />
         添加截图
@@ -298,7 +389,7 @@ export function ScreenshotManager({ screenshots, onChange }: ScreenshotManagerPr
         <div className="text-center py-8 text-muted-foreground">
           <ImageIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
           <p>还没有添加任何截图</p>
-          <p className="text-sm">点击上方按钮添加项目截图</p>
+          <p className="text-sm">{onUpload ? '可上传图片或手动添加截图信息' : '点击上方按钮添加项目截图'}</p>
         </div>
       )}
     </div>

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,15 +26,13 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { 
-  Plus, 
-  X, 
-  GripVertical, 
-  Image as ImageIcon,
-  AlertCircle,
+import {
+  Plus,
+  X,
+  GripVertical,
   Sparkles,
   Monitor,
-  Smartphone
+  Smartphone,
 } from 'lucide-react';
 
 interface ColorfulTag {
@@ -69,15 +66,17 @@ export interface FeatureHighlight {
 interface FeatureHighlightManagerProps {
   features: FeatureHighlight[];
   onChange: (features: FeatureHighlight[]) => void;
+  onUploadScreenshot?: (featureId: string, file: File) => Promise<{ url: string; name?: string }>;
 }
 
 interface SortableFeatureItemProps {
   feature: FeatureHighlight;
   onUpdate: (id: string, updates: Partial<FeatureHighlight>) => void;
   onRemove: (id: string) => void;
+  onUploadScreenshot?: (featureId: string, file: File) => Promise<{ url: string; name?: string }>;
 }
 
-function SortableFeatureItem({ feature, onUpdate, onRemove }: SortableFeatureItemProps) {
+function SortableFeatureItem({ feature, onUpdate, onRemove, onUploadScreenshot }: SortableFeatureItemProps) {
   const {
     attributes,
     listeners,
@@ -156,6 +155,7 @@ function SortableFeatureItem({ feature, onUpdate, onRemove }: SortableFeatureIte
                 <ScreenshotManager
                   screenshots={feature.screenshots}
                   onChange={(screenshots) => onUpdate(feature.id, { screenshots })}
+                  onUpload={onUploadScreenshot ? (file) => onUploadScreenshot(feature.id, file) : undefined}
                 />
               </div>
 
@@ -233,7 +233,7 @@ function SortableFeatureItem({ feature, onUpdate, onRemove }: SortableFeatureIte
   );
 }
 
-export function FeatureHighlightManager({ features, onChange }: FeatureHighlightManagerProps) {
+export function FeatureHighlightManager({ features, onChange, onUploadScreenshot }: FeatureHighlightManagerProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -306,6 +306,7 @@ export function FeatureHighlightManager({ features, onChange }: FeatureHighlight
                     feature={feature}
                     onUpdate={updateFeature}
                     onRemove={removeFeature}
+                    onUploadScreenshot={onUploadScreenshot}
                   />
                 ))}
               </div>

@@ -5,6 +5,7 @@ import { BarChart3 } from 'lucide-react';
 import { Project } from '@/types/store';
 import { useGlobalStore } from '@/store/useGlobalStore';
 import { AdminProjectCard } from './AdminProjectCard';
+import { useRouter } from 'next/navigation';
 
 interface ProjectManagementListProps {
   projects: Project[];
@@ -13,10 +14,10 @@ interface ProjectManagementListProps {
 
 export function ProjectManagementList({ projects, searchQuery }: ProjectManagementListProps) {
   const { deleteProject } = useGlobalStore();
+  const router = useRouter();
 
   const handleEditProject = (projectId: string) => {
-    console.log('编辑项目:', projectId);
-    // TODO: 导航到编辑页面
+    router.push(`/admin/projects/${projectId}/edit`);
   };
 
   const handleDeleteProject = (projectId: string) => {
