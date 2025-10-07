@@ -226,9 +226,9 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
       {/* 动态背景元素 */}
       <div className="absolute inset-0 pointer-events-none">
         {/* 主要光晕 - 使用更淡的灰色 */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-muted/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-muted/15 rounded-full blur-3xl animate-pulse delay-700" />
-        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-muted/10 rounded-full blur-2xl animate-pulse delay-1000" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-muted/15 rounded-full blur-3xl opacity-80" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-muted/10 rounded-full blur-3xl opacity-70" />
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-muted/10 rounded-full blur-2xl opacity-60" />
         
         {/* 几何装饰 - 使用border色调 */}
         <div className="absolute top-20 right-20 w-32 h-32 border border-border/50 rounded-lg rotate-12 animate-slow-spin" />
@@ -236,8 +236,8 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
         <div className="absolute top-1/2 left-10 w-16 h-16 bg-muted/30 rounded-lg rotate-45" />
         
         {/* 额外的浮动装饰 */}
-        <div className="absolute top-1/3 right-1/2 w-20 h-20 bg-muted/15 rounded-full blur-xl animate-pulse delay-500" />
-        <div className="absolute bottom-1/3 left-1/2 w-28 h-28 bg-muted/20 rounded-full blur-2xl animate-pulse delay-1500" />
+        <div className="absolute top-1/3 right-1/2 w-20 h-20 bg-muted/15 rounded-full blur-xl opacity-60" />
+        <div className="absolute bottom-1/3 left-1/2 w-28 h-28 bg-muted/20 rounded-full blur-2xl opacity-60" />
       </div>
 
       {/* 主内容 */}
