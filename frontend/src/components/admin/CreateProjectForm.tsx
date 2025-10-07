@@ -351,12 +351,10 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       }
     }
     if (typeof value === 'string') {
-      const found = statusOptions.find((option) => option.id === value || option.label === value);
-      if (found) return found;
       return { id: value, label: value, color: 'bg-blue-500' };
     }
     return null;
-  }, [statusOptions]);
+  }, []);
 
   const ensureTypeValue = useCallback((value: unknown): ProjectType | null => {
     if (!value) return null;
@@ -379,12 +377,10 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       }
     }
     if (typeof value === 'string') {
-      const found = typeOptions.find((option) => option.id === value || option.label === value);
-      if (found) return found;
       return { id: value, label: value, icon: 'FolderOpen' };
     }
     return null;
-  }, [typeOptions]);
+  }, []);
 
   const ensureFeatureList = useCallback((value: unknown): ProjectFeature[] => {
     if (!Array.isArray(value)) return [];
