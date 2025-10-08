@@ -53,6 +53,7 @@ export interface Project {
   description: string
   status: 'active' | 'maintained' | 'completed' | 'building'
   category: string
+  techStacks?: string[]
   previewImage: string
   updatedAt: string
   // 可自定义属性列表

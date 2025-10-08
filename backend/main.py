@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from typing import Any, Dict, List, Union
 from datetime import timedelta, datetime, timezone
+import copy
+import re
 from pathlib import Path as FilePath
 import uuid
 import db
@@ -367,6 +369,69 @@ async def get_projects(username: str):
             project["heroAttributes"] = hero_attributes[:3]
 
     return {"success": True, "data": projects, "total": len(projects)}
+
+
+@app.get("/api/tech-stacks/{username}", tags=["项目管理"])
+async def get_tech_stack_configuration(username: str):
+    """获取技术栈分类配置（公开接口）"""
+
+    projects = get_user_projects_and_ids(username)
+    valid_project_ids = extract_valid_project_ids(projects)
+
+    raw_config = db.read_json(username, "settings_techStacks.json")
+    normalized = normalize_tech_stack_config(raw_config, valid_project_ids)
+
+    if not normalized.get("categories"):
+        default_config = create_default_tech_stack_config(projects)
+        normalized = normalize_tech_stack_config(default_config, valid_project_ids)
+
+    project_assignments = normalized.get("projectAssignments", {})
+
+    return {
+        "success": True,
+        "data": {
+            "categories": normalized.get("categories", []),
+            "updatedAt": normalized.get("updatedAt"),
+            "projectAssignments": project_assignments,
+        },
+    }
+
+
+@app.put("/api/tech-stacks/{username}", tags=["项目管理"])
+async def update_tech_stack_configuration(
+    username: str,
+    payload: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(auth.require_auth),
+):
+    """更新技术栈分类配置（需要认证）"""
+
+    check_bound_username(current_user, username)
+
+    projects = get_user_projects_and_ids(username)
+    valid_project_ids = extract_valid_project_ids(projects)
+
+    normalized = normalize_tech_stack_config(payload, valid_project_ids)
+    normalized_assignments = normalized.get("projectAssignments", {})
+
+    normalized["updatedAt"] = datetime.now(timezone.utc).isoformat()
+
+    data_to_save = {
+        "categories": normalized.get("categories", []),
+        "updatedAt": normalized.get("updatedAt"),
+    }
+    db.write_json(username, "settings_techStacks.json", data_to_save)
+
+    update_project_tech_stacks(username, projects, normalized_assignments)
+
+    return {
+        "success": True,
+        "message": "技术栈设置更新成功",
+        "data": {
+            "categories": data_to_save["categories"],
+            "updatedAt": data_to_save["updatedAt"],
+            "projectAssignments": normalized_assignments,
+        },
+    }
 
 
 @app.get("/api/projects/{username}/{project_id}", tags=["项目管理"])
@@ -957,3 +1022,225 @@ async def root():
 async def health():
     """健康检查"""
     return {"status": "ok"}
+def slugify(value: str) -> str:
+    """将任意字符串转换为安全的 slug."""
+    value = value.strip().lower()
+    value = re.sub(r"[^a-z0-9-]+", "-", value)
+    value = re.sub(r"-+", "-", value)
+    return value.strip("-")
+
+
+def create_default_tech_stack_config(projects: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """基于默认模板和已有项目生成技术栈配置."""
+
+    template = [
+        {
+            "id": "backend",
+            "label": "技术栈 - 后端",
+            "icon": "lucide:cpu",
+            "children": [
+                {"id": "backend-python", "label": "Python", "icon": "lucide:code-2", "projectIds": []},
+                {"id": "backend-go", "label": "Go", "icon": "lucide:code-2", "projectIds": []},
+            ],
+        },
+        {
+            "id": "frontend",
+            "label": "技术栈 - 前端",
+            "icon": "lucide:layers",
+            "children": [
+                {"id": "frontend-vue", "label": "Vue", "icon": "lucide:code-2", "projectIds": []},
+                {"id": "frontend-nextjs", "label": "Next.js", "icon": "lucide:code-2", "projectIds": []},
+            ],
+        },
+    ]
+
+    # 复制模板，避免修改原始数据
+    config = {"categories": copy.deepcopy(template), "updatedAt": None}
+
+    # 基于项目已有的 techStacks 字段预填充默认配置
+    project_lookup = {}
+    for project in projects:
+        if isinstance(project, dict):
+            project_id = project.get("id")
+            if isinstance(project_id, str):
+                project_lookup[project_id] = project
+
+    id_to_child = {}
+    for category in config["categories"]:
+        for child in category.get("children", []):
+            id_to_child[child["id"]] = child
+
+    for project_id, project in project_lookup.items():
+        tech_stack_ids = project.get("techStacks")
+        if isinstance(tech_stack_ids, list):
+            for stack_id in tech_stack_ids:
+                if isinstance(stack_id, str) and stack_id in id_to_child:
+                    child = id_to_child[stack_id]
+                    if project_id not in child["projectIds"]:
+                        child["projectIds"].append(project_id)
+
+    return config
+
+
+def normalize_tech_stack_config(
+    data: Any,
+    valid_project_ids: List[str],
+) -> Dict[str, Any]:
+    """校验并规范化技术栈配置数据."""
+
+    valid_project_set = set(pid for pid in valid_project_ids if isinstance(pid, str))
+
+    if not isinstance(data, dict):
+        data = {}
+
+    categories_input = data.get("categories")
+    if not isinstance(categories_input, list):
+        categories_input = []
+
+    categories: List[Dict[str, Any]] = []
+    seen_category_ids: set[str] = set()
+    seen_child_ids: set[str] = set()
+
+    for index, item in enumerate(categories_input):
+        if not isinstance(item, dict):
+            continue
+
+        raw_label = item.get("label") or item.get("title")
+        label = str(raw_label).strip() if raw_label else ""
+        if not label:
+            label = f"分类 {index + 1}"
+
+        raw_category_id = item.get("id")
+        if isinstance(raw_category_id, str) and raw_category_id.strip():
+            category_id = raw_category_id.strip()
+        else:
+            candidate = slugify(label) or f"category-{index + 1}"
+            category_id = candidate
+        suffix = 1
+        base_category_id = category_id
+        while category_id in seen_category_ids or not category_id:
+            category_id = f"{base_category_id}-{suffix}"
+            suffix += 1
+        seen_category_ids.add(category_id)
+
+        icon = item.get("icon")
+        icon_value = icon if isinstance(icon, str) and icon.strip() else None
+
+        children_input = item.get("children")
+        children: List[Dict[str, Any]] = []
+        if isinstance(children_input, list):
+            for child_index, child_item in enumerate(children_input):
+                if not isinstance(child_item, dict):
+                    continue
+
+                raw_child_label = child_item.get("label") or child_item.get("title")
+                child_label = str(raw_child_label).strip() if raw_child_label else ""
+                if not child_label:
+                    child_label = f"子分类 {child_index + 1}"
+
+                raw_child_id = child_item.get("id")
+                if isinstance(raw_child_id, str) and raw_child_id.strip():
+                    child_id = raw_child_id.strip()
+                else:
+                    candidate_child = slugify(f"{category_id}-{child_label}") or f"{category_id}-{child_index + 1}"
+                    child_id = candidate_child
+                child_suffix = 1
+                base_child_id = child_id
+                while child_id in seen_child_ids or not child_id:
+                    child_id = f"{base_child_id}-{child_suffix}"
+                    child_suffix += 1
+                seen_child_ids.add(child_id)
+
+                child_icon = child_item.get("icon")
+                child_icon_value = child_icon if isinstance(child_icon, str) and child_icon.strip() else None
+
+                project_ids_value = child_item.get("projectIds")
+                normalized_project_ids: List[str] = []
+                if isinstance(project_ids_value, list):
+                    for raw_project_id in project_ids_value:
+                        if isinstance(raw_project_id, str) and raw_project_id in valid_project_set:
+                            if raw_project_id not in normalized_project_ids:
+                                normalized_project_ids.append(raw_project_id)
+
+                children.append(
+                    {
+                        "id": child_id,
+                        "label": child_label,
+                        "icon": child_icon_value,
+                        "projectIds": normalized_project_ids,
+                    }
+                )
+
+        categories.append(
+            {
+                "id": category_id,
+                "label": label,
+                "icon": icon_value,
+                "children": children,
+            }
+        )
+
+    # 构建项目与子分类的映射关系
+    project_assignments: Dict[str, List[str]] = {}
+    for category in categories:
+        for child in category.get("children", []):
+            for project_id in child.get("projectIds", []):
+                project_assignments.setdefault(project_id, []).append(child["id"])
+
+    updated_at = data.get("updatedAt") if isinstance(data.get("updatedAt"), str) else None
+
+    return {"categories": categories, "updatedAt": updated_at, "projectAssignments": project_assignments}
+
+
+def get_user_projects_and_ids(username: str) -> List[Dict[str, Any]]:
+    """获取用户所有项目列表（确保为列表类型）"""
+
+    projects = db.read_json(username, "projects.json")
+    if not isinstance(projects, list):
+        return []
+    return projects
+
+
+def extract_valid_project_ids(projects: List[Dict[str, Any]]) -> List[str]:
+    """从项目列表中提取有效的项目ID"""
+
+    ids: List[str] = []
+    for project in projects:
+        if isinstance(project, dict):
+            project_id = project.get("id")
+            if isinstance(project_id, str) and project_id:
+                ids.append(project_id)
+    return ids
+
+
+def update_project_tech_stacks(
+    username: str,
+    projects: List[Dict[str, Any]],
+    assignments: Dict[str, List[str]],
+):
+    """根据分配结果更新项目中的 techStacks 字段"""
+
+    updated = False
+    for project in projects:
+        if not isinstance(project, dict):
+            continue
+        project_id = project.get("id")
+        if not isinstance(project_id, str):
+            continue
+
+        assigned = assignments.get(project_id, [])
+        normalized_assigned = sorted(set(assigned))
+        existing = project.get("techStacks")
+
+        if normalized_assigned:
+            if existing != normalized_assigned:
+                project["techStacks"] = normalized_assigned
+                updated = True
+        else:
+            if existing:
+                project["techStacks"] = []
+                updated = True
+
+    if updated:
+        db.write_json(username, "projects.json", projects)
+

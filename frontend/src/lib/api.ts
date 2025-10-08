@@ -1,3 +1,5 @@
+import type { TechStackConfig, TechStackResponseData } from '@/types/tech-stack'
+
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
 interface RequestOptions extends RequestInit {
@@ -206,6 +208,40 @@ export function fetchProjects(username: string, token: string) {
   return request<ProjectListResponse>(
     `/api/projects/${encodeURIComponent(username)}`,
     { token }
+  );
+}
+
+export interface TechStackListResponse {
+  success: boolean;
+  data: TechStackResponseData;
+}
+
+export interface TechStackUpdateResponse {
+  success: boolean;
+  message: string;
+  data: TechStackResponseData;
+}
+
+export function fetchTechStacks(username: string, token?: string) {
+  const options = token ? { token } : undefined;
+  return request<TechStackListResponse>(
+    `/api/tech-stacks/${encodeURIComponent(username)}`,
+    options
+  );
+}
+
+export function updateTechStacks(
+  username: string,
+  config: TechStackConfig,
+  token: string
+) {
+  return request<TechStackUpdateResponse>(
+    `/api/tech-stacks/${encodeURIComponent(username)}`,
+    {
+      method: 'PUT',
+      token,
+      body: JSON.stringify(config),
+    }
   );
 }
 
