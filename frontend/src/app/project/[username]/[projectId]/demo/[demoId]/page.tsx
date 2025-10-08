@@ -12,7 +12,12 @@ import DemoFrame from '@/components/demo/DemoFrame'
 import ProjectInfo from '@/components/demo/ProjectInfo'
 import DemoInfo from '@/components/demo/DemoInfo'
 import { fetchProjectDetail } from '@/lib/api'
-import type { DemoContent, FeatureHighlight, ProjectOverview } from '@/types/demo'
+import type {
+  DemoContent,
+  FeatureHighlight,
+  ProjectOverview,
+  ProjectDetailApiData,
+} from '@/types/demo'
 
 interface DemoPageProps {
   params: Promise<{
@@ -71,14 +76,18 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
 
     fetchProjectDetail(username, projectId, { signal: controller.signal })
       .then((response) => {
-        const data = response?.data
+        const data = (response?.data ?? {}) as Partial<ProjectDetailApiData>
         if (!data) {
           throw new Error("未获取到项目演示信息")
         }
 
         const overview: ProjectOverview = {
-          name: data.name ?? "项目演示",
-          description: data.description ?? "",
+          name:
+            typeof data.name === "string" && data.name.trim().length > 0
+              ? data.name
+              : "项目演示",
+          description:
+            typeof data.description === "string" ? data.description : "",
           tags: Array.isArray(data.tags)
             ? data.tags.filter((tag): tag is string => typeof tag === "string")
             : [],
