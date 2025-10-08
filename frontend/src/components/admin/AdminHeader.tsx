@@ -2,10 +2,11 @@
 
 import React, { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   Settings,
   Sun,
-  Moon
+  Moon,
+  LogOut
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname, useRouter } from 'next/navigation';
@@ -33,6 +34,7 @@ export function AdminHeader({
   const displayTitle = title || getPageTitle(pathname);
   const { theme, setTheme } = useTheme();
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -40,6 +42,11 @@ export function AdminHeader({
 
   const handleSettings = () => {
     router.push('/admin/settings');
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.replace('/admin/login');
   };
 
   const displayName = useMemo(() => {
@@ -94,6 +101,12 @@ export function AdminHeader({
           <Button variant="outline" size="sm" onClick={handleSettings}>
             <Settings className="w-4 h-4 mr-2" />
             设置
+          </Button>
+
+          {/* 退出登录 */}
+          <Button variant="destructive" size="sm" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-2" />
+            退出登录
           </Button>
         </div>
       </div>
