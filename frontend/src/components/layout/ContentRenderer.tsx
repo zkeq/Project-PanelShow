@@ -3,6 +3,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { TimelineItem } from '@/types/timeline'
 import { Project } from '@/types/store'
+import { ProfileData } from '@/hooks/useProfileData'
 
 import AllProjectsContent from '@/components/project/AllProjectsContent'
 import CategoryProjectsContent from '@/components/project/CategoryProjectsContent'
@@ -39,6 +40,7 @@ interface ContentRendererProps {
   onToggleExpand: (projectId: string) => void
   getMonthName: (month: string) => string
   mobileNavigation?: MobileNavigationData
+  profileData: ProfileData
 }
 
 export default function ContentRenderer({
@@ -50,7 +52,8 @@ export default function ContentRenderer({
   expandedProjects,
   onToggleExpand,
   getMonthName,
-  mobileNavigation
+  mobileNavigation,
+  profileData
 }: ContentRendererProps) {
 
   // 技术栈结构
@@ -73,17 +76,17 @@ export default function ContentRenderer({
     }
   ]
 
-  // 用户资料
+  // 从API数据构建用户资料
   const userProfile = {
-    username: 'zkeq',
-    displayName: 'Zkeq',
-    bio: 'A front-end engineer. Enjoy something that brings convenience to people. Just show, Just love.',
-    followers: 195,
-    following: 15,
-    company: '广州图欧科技有限公司',
-    website: 'https://icodeq.com',
-    stars: 610,
-    avatar: 'https://avatars.githubusercontent.com/u/62864752'
+    username: profileData.profile?.username || username,
+    displayName: profileData.profile?.name || username,
+    bio: String(profileData.profile?.github_bio || profileData.profile?.bio || ''),
+    followers: profileData.profile?.github_followers || 0,
+    following: profileData.profile?.github_following || 0,
+    company: profileData.profile?.github_company || '',
+    website: profileData.profile?.github_blog || '',
+    stars: profileData.profile?.github_total_stars || 0,
+    avatar: profileData.profile?.avatar || `https://avatars.githubusercontent.com/u/0`
   }
 
   // 时间线模式处理
@@ -218,7 +221,9 @@ export default function ContentRenderer({
           </div>
         )}
 
-        <ExperienceContent />
+        <ExperienceContent
+          experiences={profileData.experiences || []}
+        />
       </div>
     )
   }
@@ -239,9 +244,12 @@ export default function ContentRenderer({
           </div>
         )}
 
-        <AboutContent 
+        <AboutContent
           username={username}
-          github="zkeq"
+          github={profileData.profile?.github_username || username}
+          bio={String(profileData.profile?.bio || '')}
+          skills={profileData.profile?.skills}
+          interests={profileData.profile?.interests as string[] | undefined}
         />
       </div>
     )

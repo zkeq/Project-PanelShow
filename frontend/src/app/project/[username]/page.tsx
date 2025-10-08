@@ -1,8 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useGlobalStore } from '@/store/useGlobalStore'
+import { checkUsername } from '@/lib/api'
+import { useProfileData } from '@/hooks/useProfileData'
+import { Card, CardContent } from '@/components/ui/card'
+import { AlertCircle, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 // 导入新的组件
 import HeaderNavigation from '@/components/layout/HeaderNavigation'
@@ -13,6 +19,8 @@ import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
 export default function UserProjectPage() {
   const params = useParams()
   const username = params.username as string
+
+  // 所有 hooks 必须在顶部调用
   const [activeTab, setActiveTab] = useState<'projects' | 'timeline'>('projects')
   const [activeSection, setActiveSection] = useState('all-projects')
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['backend', 'frontend'])
@@ -20,10 +28,96 @@ export default function UserProjectPage() {
   const [expandedYears, setExpandedYears] = useState<string[]>(['2024', '2025'])
   const [expandedProjects, setExpandedProjects] = useState<string[]>([])
 
+  const [userStatus, setUserStatus] = useState<{
+    loading: boolean;
+    exists: boolean;
+    isBound: boolean;
+    error: string | null;
+  }>({
+    loading: true,
+    exists: false,
+    isBound: false,
+    error: null
+  })
+
   // 从 Zustand store 获取数据
   const { getTimelineItems, getProjectsByUsername } = useGlobalStore()
   const timelineItems = getTimelineItems()
   const projects = getProjectsByUsername(username)
+
+  // 获取profile数据
+  const profileData = useProfileData(username)
+
+  // 检查用户名是否存在和被绑定
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const response = await checkUsername(username)
+
+        // 用户必须存在且被绑定才能访问
+        if (response.exists && response.is_bound) {
+          setUserStatus({
+            loading: false,
+            exists: true,
+            isBound: true,
+            error: null
+          })
+        } else {
+          setUserStatus({
+            loading: false,
+            exists: response.exists,
+            isBound: response.is_bound,
+            error: response.exists ? '该用户还未完成设置' : '该用户不存在'
+          })
+        }
+      } catch (error) {
+        setUserStatus({
+          loading: false,
+          exists: false,
+          isBound: false,
+          error: '无法验证用户信息'
+        })
+      }
+    }
+
+    checkUser()
+  }, [username])
+
+  // 显示加载状态
+  if (userStatus.loading || profileData.loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center gap-4 py-8">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="text-lg text-muted-foreground">正在加载站点数据...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // 显示错误状态
+  if (userStatus.error || profileData.error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center gap-4 py-8">
+            <AlertCircle className="h-12 w-12 text-destructive" />
+            <h2 className="text-xl font-semibold">访问受限</h2>
+            <p className="text-muted-foreground text-center">{userStatus.error || profileData.error}</p>
+            <div className="flex gap-2 mt-4">
+              <Button asChild>
+                <Link href="/">返回首页</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // 用户验证通过，继续渲染页面
 
 
   // 从时间线数据中生成时间分类结构
@@ -95,7 +189,11 @@ export default function UserProjectPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* 顶部导航栏 */}
-      <HeaderNavigation username={username} />
+      <HeaderNavigation
+        username={username}
+        avatar={profileData.profile?.avatar}
+        displayName={profileData.profile?.name}
+      />
 
       {/* 主体内容区 */}
       <div className="flex">
@@ -114,6 +212,8 @@ export default function UserProjectPage() {
             onCategoryToggle={handleCategoryToggle}
             onYearToggle={handleYearToggle}
             getMonthName={getMonthName}
+            quickLinks={profileData.quickLinks || []}
+            experiences={profileData.experiences || []}
           />
         </div>
 
@@ -133,6 +233,7 @@ export default function UserProjectPage() {
                 expandedProjects={expandedProjects}
                 onToggleExpand={toggleProjectExpansion}
                 getMonthName={getMonthName}
+                profileData={profileData}
                 // 移动端需要的导航控制
                 mobileNavigation={{
                   techStackStructure: [

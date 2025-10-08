@@ -395,3 +395,97 @@ export function executeJsCode(code: string) {
     body: JSON.stringify({ code }),
   });
 }
+
+// Profile API
+export interface ProfileResponse {
+  success: boolean;
+  data: {
+    username?: string;
+    name?: string;
+    title?: string;
+    email?: string;
+    github?: string;
+    website?: string;
+    bio?: string;
+    avatar?: string;
+    github_username?: string;
+    github_followers?: number;
+    github_following?: number;
+    github_total_stars?: number;
+    github_public_repos?: number;
+    github_company?: string;
+    github_location?: string;
+    github_blog?: string;
+    github_bio?: string;
+    location?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface UsersResponse {
+  success: boolean;
+  data: Record<string, {
+    username: string;
+    name: string;
+    avatar: string;
+    bio: string;
+    location?: string;
+    website?: string;
+    githubUrl?: string;
+    twitterUrl?: string;
+  }>;
+}
+
+export interface ExperiencesResponse {
+  success: boolean;
+  data: Array<{
+    id: string;
+    title: string;
+    company: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    period: string;
+    responsibilities: string[];
+  }>;
+}
+
+export interface QuickLinksResponse {
+  success: boolean;
+  data: Array<{
+    id: string;
+    name: string;
+    url: string;
+    icon: string;
+    description: string;
+  }>;
+}
+
+export function getProfile(username: string) {
+  return request<ProfileResponse>(`/api/profile/${username}/profile`);
+}
+
+export function getUsers(username: string) {
+  return request<UsersResponse>(`/api/profile/${username}/users`);
+}
+
+export function getExperiences(username: string) {
+  return request<ExperiencesResponse>(`/api/profile/${username}/experiences`);
+}
+
+export function getQuickLinks(username: string) {
+  return request<QuickLinksResponse>(`/api/profile/${username}/quickLinks`);
+}
+
+// 检查用户名可用性
+export interface CheckUsernameResponse {
+  username: string;
+  exists: boolean;
+  is_bound: boolean;
+  available: boolean;
+  message: string;
+}
+
+export function checkUsername(username: string) {
+  return request<CheckUsernameResponse>(`/api/auth/check-username/${username}`);
+}

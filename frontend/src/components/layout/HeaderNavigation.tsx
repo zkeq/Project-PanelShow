@@ -4,15 +4,20 @@ import { Button } from '@/components/ui/button'
 import { Settings } from 'lucide-react'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface HeaderNavigationProps {
   username: string
   showManageButton?: boolean
+  avatar?: string
+  displayName?: string
 }
 
-export default function HeaderNavigation({ 
-  username, 
-  showManageButton = true 
+export default function HeaderNavigation({
+  username,
+  showManageButton = true,
+  avatar,
+  displayName
 }: HeaderNavigationProps) {
   const router = useRouter()
 
@@ -24,20 +29,34 @@ export default function HeaderNavigation({
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6 mx-auto">
         <div className="flex items-center space-x-2 min-w-0 flex-1">
-          <div className="w-7 h-7 bg-muted/80 border border-border/60 rounded-md flex items-center justify-center text-foreground text-sm font-semibold flex-shrink-0">
-            {username?.charAt(0).toUpperCase()}
-          </div>
+          {avatar ? (
+            <div className="w-7 h-7 rounded-md overflow-hidden flex-shrink-0 border border-border/60">
+              <Image
+                src={avatar}
+                alt={displayName || username}
+                width={28}
+                height={28}
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-7 h-7 bg-muted/80 border border-border/60 rounded-md flex items-center justify-center text-foreground text-sm font-semibold flex-shrink-0">
+              {username?.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="flex items-center space-x-2 min-w-0">
-            <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">{username}</h1>
+            <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">
+              {displayName || username}
+            </h1>
             <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap hidden sm:inline">的作品集</span>
           </div>
         </div>
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
           <ThemeSwitch />
           {showManageButton && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="h-8"
               onClick={handleManageClick}
             >

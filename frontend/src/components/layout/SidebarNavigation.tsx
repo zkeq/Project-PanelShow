@@ -28,6 +28,23 @@ interface SidebarNavigationProps {
   onCategoryToggle: (categoryId: string) => void
   onYearToggle: (year: string) => void
   getMonthName: (month: string) => string
+  quickLinks?: Array<{
+    id: string;
+    name: string;
+    url: string;
+    icon: string;
+    description: string;
+  }>
+  experiences?: Array<{
+    id: string;
+    title: string;
+    company: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    period: string;
+    responsibilities: string[];
+  }>
 }
 
 export default function SidebarNavigation({
@@ -42,11 +59,10 @@ export default function SidebarNavigation({
   onSidebarToggle,
   onCategoryToggle,
   onYearToggle,
-  getMonthName
+  getMonthName,
+  quickLinks = [],
+  experiences = []
 }: SidebarNavigationProps) {
-  
-  // 获取快捷链接数据
-  const quickLinks = useGlobalStore(state => state.getQuickLinks())
 
   // 技术栈结构
   const techStackStructure = [
