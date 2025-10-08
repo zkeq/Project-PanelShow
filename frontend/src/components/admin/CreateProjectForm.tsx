@@ -404,38 +404,44 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
   const ensureFeatureList = useCallback((value: unknown): ProjectFeature[] => {
     if (!Array.isArray(value)) return [];
     const usedIds = new Set<string>();
-    return value
-      .map((item, index) => {
-        if (typeof item !== 'object' || item === null) return null;
-        const record = item as Record<string, unknown>;
-        const label = typeof record.label === 'string'
-          ? record.label
-          : typeof record.name === 'string'
-            ? record.name
-            : '';
-        if (!label) return null;
-        const slug = slugify(label) || `feature-${index}`;
-        let id = typeof record.id === 'string' ? record.id : slug;
-        let counter = 1;
-        while (usedIds.has(id)) {
-          id = `${slug}-${counter++}`;
-        }
-        usedIds.add(id);
-        const color = typeof record.color === 'string' ? record.color : undefined;
-        const icon = typeof record.icon === 'string' ? record.icon : 'Sparkles';
-        const appearance =
-          parseFeatureChipAppearance(record.appearance) ??
-          parseFeatureChipAppearance(record.style) ??
-          parseFeatureChipAppearance(record.visuals);
-        return {
-          id,
-          label,
-          color,
-          icon,
-          appearance: appearance ?? (!color ? { presetId: DEFAULT_FEATURE_CHIP_PRESET_ID } : undefined),
-        };
-      })
-      .filter((item): item is ProjectFeature => item !== null);
+    const features: ProjectFeature[] = [];
+
+    value.forEach((item, index) => {
+      if (typeof item !== 'object' || item === null) return;
+
+      const record = item as Record<string, unknown>;
+      const label = typeof record.label === 'string'
+        ? record.label
+        : typeof record.name === 'string'
+          ? record.name
+          : '';
+      if (!label) return;
+
+      const slug = slugify(label) || `feature-${index}`;
+      let id = typeof record.id === 'string' ? record.id : slug;
+      let counter = 1;
+      while (usedIds.has(id)) {
+        id = `${slug}-${counter++}`;
+      }
+      usedIds.add(id);
+
+      const color = typeof record.color === 'string' ? record.color : undefined;
+      const icon = typeof record.icon === 'string' ? record.icon : 'Sparkles';
+      const appearance =
+        parseFeatureChipAppearance(record.appearance) ??
+        parseFeatureChipAppearance(record.style) ??
+        parseFeatureChipAppearance(record.visuals);
+
+      features.push({
+        id,
+        label,
+        color,
+        icon,
+        appearance: appearance ?? (!color ? { presetId: DEFAULT_FEATURE_CHIP_PRESET_ID } : undefined),
+      });
+    });
+
+    return features;
   }, []);
 
   const ensureScreenshots = useCallback((
