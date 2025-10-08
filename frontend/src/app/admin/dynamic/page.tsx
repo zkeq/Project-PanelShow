@@ -886,7 +886,6 @@ export default function AdminDynamicPage() {
         assets: {
           images: [...persistedImages, ...uploadedImages],
         },
-        tags: formState.tags,
       };
 
       if (isEditMode) {

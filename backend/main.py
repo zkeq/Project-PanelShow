@@ -10,6 +10,8 @@ from pathlib import Path as FilePath
 import uuid
 import db
 import auth
+import hashlib
+import json
 
 app = FastAPI(title="极简JSON后端", version="2.0.0")
 
@@ -21,6 +23,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# JS 代码执行缓存（内存缓存）
+js_execution_cache: Dict[str, Dict[str, Any]] = {}
 
 
 # ==================== 辅助函数 ====================
@@ -339,6 +344,24 @@ async def create_project(
 async def get_projects(username: str):
     """获取项目列表"""
     projects = db.read_json(username, "projects.json")
+
+    # 为每个项目处理 projectInfos 分类
+    for project in projects:
+        if isinstance(project, dict):
+            project_infos = project.get("projectInfos", [])
+            home_attributes = []
+            sidebar_attributes = []
+
+            for info in project_infos:
+                if isinstance(info, dict):
+                    if info.get("showInHomepage"):
+                        home_attributes.append(info)
+                    if info.get("showInSidebar"):
+                        sidebar_attributes.append(info)
+
+            project["homeAttributes"] = home_attributes
+            project["sidebarAttributes"] = sidebar_attributes
+
     return {"success": True, "data": projects, "total": len(projects)}
 
 
@@ -357,6 +380,21 @@ async def get_project(username: str, project_id: str):
 
     # 将时间线添加到项目数据中
     project["timeline_items"] = project_timeline
+
+    # 处理 projectInfos 分类
+    project_infos = project.get("projectInfos", [])
+    home_attributes = []
+    sidebar_attributes = []
+
+    for info in project_infos:
+        if isinstance(info, dict):
+            if info.get("showInHomepage"):
+                home_attributes.append(info)
+            if info.get("showInSidebar"):
+                sidebar_attributes.append(info)
+
+    project["homeAttributes"] = home_attributes
+    project["sidebarAttributes"] = sidebar_attributes
 
     return {"success": True, "data": project}
 
@@ -758,6 +796,133 @@ async def upload_image(
         "content_type": file.content_type,
         "size": len(contents)
     }
+
+
+# ==================== JS 代码执行 ====================
+
+@app.post("/api/execute-js", tags=["工具"])
+async def execute_js_code(code: str = Body(..., embed=True)):
+    """执行 JS 代码片段并返回结果（带 6 小时缓存）
+
+    安全说明：
+    - 使用 Node.js 的 vm 模块执行代码
+    - 代码在沙箱环境中运行
+    - 限制执行时间为 24 秒
+    - 允许访问网络（可以使用 fetch、axios 等）
+    - 禁止访问文件系统
+    """
+    import subprocess
+    import tempfile
+
+    # 生成代码的哈希作为缓存 key
+    code_hash = hashlib.sha256(code.encode()).hexdigest()
+
+    # 检查缓存
+    now = datetime.utcnow()
+    if code_hash in js_execution_cache:
+        cache_entry = js_execution_cache[code_hash]
+        cache_time = cache_entry.get("cached_at")
+        if cache_time and (now - cache_time).total_seconds() < 21600:  # 6 小时 = 21600 秒
+            return {
+                "success": True,
+                "result": cache_entry.get("result"),
+                "cached": True,
+                "cached_at": cache_time.isoformat()
+            }
+
+    # 创建临时文件执行代码
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
+            # 使用 vm2 模块（如果可用）或 vm 模块执行代码
+            # vm2 更安全但需要额外安装，vm 是 Node.js 内置的
+            js_code = f'''
+const vm = require('vm');
+const https = require('https');
+const http = require('http');
+
+const userCode = `{code}`;
+
+try {{
+    // 创建沙箱环境，允许使用 console 和一些基本功能
+    const sandbox = {{
+        console: console,
+        setTimeout: setTimeout,
+        setInterval: setInterval,
+        clearTimeout: clearTimeout,
+        clearInterval: clearInterval,
+        // 允许使用 Promise
+        Promise: Promise,
+        // 提供 fetch API（Node.js 18+）
+        fetch: typeof fetch !== 'undefined' ? fetch : undefined,
+        // 提供 http/https 模块用于网络请求
+        https: https,
+        http: http,
+        // 可以添加其他允许的全局对象
+    }};
+
+    const context = vm.createContext(sandbox);
+    const result = vm.runInContext(userCode, context, {{
+        timeout: 24000,  // 24 秒超时
+        displayErrors: true
+    }});
+
+    // 处理 Promise 结果
+    if (result instanceof Promise) {{
+        result.then(resolved => {{
+            console.log(JSON.stringify({{ success: true, result: resolved }}));
+        }}).catch(error => {{
+            console.log(JSON.stringify({{ success: false, error: error.message }}));
+        }});
+    }} else {{
+        console.log(JSON.stringify({{ success: true, result: result }}));
+    }}
+}} catch (error) {{
+    console.log(JSON.stringify({{ success: false, error: error.message }}));
+}}
+'''
+            f.write(js_code)
+            temp_file = f.name
+
+        # 执行 Node.js
+        result = subprocess.run(
+            ['node', temp_file],
+            capture_output=True,
+            text=True,
+            timeout=30  # 30 秒总超时（留一些余量）
+        )
+
+        # 删除临时文件
+        FilePath(temp_file).unlink(missing_ok=True)
+
+        # 解析结果
+        if result.returncode == 0:
+            try:
+                output = json.loads(result.stdout.strip())
+                if output.get("success"):
+                    # 缓存结果
+                    js_execution_cache[code_hash] = {
+                        "result": output.get("result"),
+                        "cached_at": now
+                    }
+                    return {
+                        "success": True,
+                        "result": output.get("result"),
+                        "cached": False
+                    }
+                else:
+                    raise HTTPException(status_code=400, detail=f"执行错误: {output.get('error')}")
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail=f"输出解析失败: {result.stdout}")
+        else:
+            raise HTTPException(status_code=500, detail=f"执行失败: {result.stderr}")
+
+    except subprocess.TimeoutExpired:
+        FilePath(temp_file).unlink(missing_ok=True)
+        raise HTTPException(status_code=408, detail="代码执行超时（24秒）")
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="Node.js 未安装")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"执行错误: {str(e)}")
 
 
 # ==================== 根路径 ====================

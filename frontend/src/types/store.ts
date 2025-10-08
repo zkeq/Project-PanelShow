@@ -32,17 +32,35 @@ export interface ProjectAttribute {
   icon?: string
 }
 
+// 项目信息项类型
+export interface ProjectInfo {
+  id: string;
+  icon: string;
+  label: string;
+  valueCode: string;
+  showInHomepage: boolean;
+  showInSidebar: boolean;
+  color: string;
+  order: number;
+}
+
 // 项目数据类型
 export interface Project {
   id: string
   name: string
   description: string
-  status: 'active' | 'maintained' | 'completed'
+  status: 'active' | 'maintained' | 'completed' | 'building'
   category: string
   previewImage: string
   updatedAt: string
   // 可自定义属性列表
   attributes: ProjectAttribute[]
+  // 项目信息（原始数据）
+  projectInfos?: ProjectInfo[]
+  // 首页展示的属性
+  homeAttributes?: ProjectInfo[]
+  // 侧边栏展示的属性
+  sidebarAttributes?: ProjectInfo[]
   // 卡片主题色配置
   themeColor: {
     primary: string
@@ -71,7 +89,7 @@ export interface ProjectDetail {
   id: string
   name: string
   description: string
-  status: 'active' | 'maintained' | 'completed'
+  status: 'active' | 'maintained' | 'completed' | 'building'
   previewImage: string
   previewUrl: string
   longDescription: string

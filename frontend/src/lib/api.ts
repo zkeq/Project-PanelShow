@@ -379,3 +379,19 @@ export function updateProject<T extends Record<string, unknown>>(
     }
   );
 }
+
+// ==================== JS 代码执行 ====================
+
+export interface ExecuteJsResponse {
+  success: boolean;
+  result: unknown;
+  cached?: boolean;
+  cached_at?: string;
+}
+
+export function executeJsCode(code: string) {
+  return request<ExecuteJsResponse>('/api/execute-js', {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+  });
+}

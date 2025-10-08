@@ -73,11 +73,18 @@ const mapProjectFromApi = (raw: unknown): Project => {
     };
   }
 
-  const allowedStatuses = new Set<Project['status']>(['active', 'maintained', 'completed']);
+  const allowedStatuses = new Set<Project['status']>(['active', 'maintained', 'completed', 'building']);
   const rawStatus = pickString(raw['status'], 'active').toLowerCase();
-  const status = allowedStatuses.has(rawStatus as Project['status'])
-    ? (rawStatus as Project['status'])
-    : rawStatus === 'archived'
+
+  // 支持对象格式的 status
+  let statusValue = rawStatus;
+  if (isRecord(raw['status'])) {
+    statusValue = pickString(raw['status']['id'], 'active').toLowerCase();
+  }
+
+  const status = allowedStatuses.has(statusValue as Project['status'])
+    ? (statusValue as Project['status'])
+    : statusValue === 'archived'
       ? 'completed'
       : 'active';
 
@@ -123,6 +130,35 @@ const mapProjectFromApi = (raw: unknown): Project => {
     .filter((item): item is string => typeof item === 'string')
     .map((item) => normalizeImageSrc(item, FALLBACK_PREVIEW_IMAGE));
 
+  // 解析 homeAttributes 和 sidebarAttributes
+  const homeAttributesSource = raw['homeAttributes'];
+  const homeAttributes = Array.isArray(homeAttributesSource)
+    ? homeAttributesSource.filter(isRecord).map((attr) => ({
+        id: pickString(attr['id'], `${Date.now()}`),
+        icon: pickString(attr['icon'], ''),
+        label: pickString(attr['label'], ''),
+        valueCode: pickString(attr['valueCode'], ''),
+        showInHomepage: Boolean(attr['showInHomepage']),
+        showInSidebar: Boolean(attr['showInSidebar']),
+        color: pickString(attr['color'], ''),
+        order: pickNumber(attr['order'], 0),
+      }))
+    : [];
+
+  const sidebarAttributesSource = raw['sidebarAttributes'];
+  const sidebarAttributes = Array.isArray(sidebarAttributesSource)
+    ? sidebarAttributesSource.filter(isRecord).map((attr) => ({
+        id: pickString(attr['id'], `${Date.now()}`),
+        icon: pickString(attr['icon'], ''),
+        label: pickString(attr['label'], ''),
+        valueCode: pickString(attr['valueCode'], ''),
+        showInHomepage: Boolean(attr['showInHomepage']),
+        showInSidebar: Boolean(attr['showInSidebar']),
+        color: pickString(attr['color'], ''),
+        order: pickNumber(attr['order'], 0),
+      }))
+    : [];
+
   return {
     id: pickString(raw['id'], pickString(raw['project_id'], `${Date.now()}`)),
     name: pickString(raw['name'], '未命名项目'),
@@ -132,6 +168,8 @@ const mapProjectFromApi = (raw: unknown): Project => {
     previewImage: previewFallback,
     updatedAt: pickString(raw['updatedAt'], pickString(raw['updated_at'], new Date().toISOString().split('T')[0])),
     attributes,
+    homeAttributes,
+    sidebarAttributes,
     themeColor,
   };
 };

@@ -11,6 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Icon } from '@iconify/react';
 import { IconPicker } from './IconPicker';
+import { useExecuteCode } from '@/hooks/useExecuteCode';
+import { Loader2 } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -88,6 +90,36 @@ const colorThemes = [
   "text-emerald-700 bg-emerald-100 border-emerald-300 dark:text-emerald-300 dark:bg-emerald-900/40 dark:border-emerald-700",
   "text-purple-700 bg-purple-100 border-purple-300 dark:text-purple-300 dark:bg-purple-900/40 dark:border-purple-700",
 ];
+
+// 预览项组件
+function PreviewItem({ info }: { info: ProjectInfo }) {
+  const { value, loading } = useExecuteCode(info.valueCode, '计算中...');
+
+  return (
+    <div className="space-y-2">
+      <div
+        className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border ${info.color}`}
+      >
+        <Icon icon={info.icon} className="w-4 h-4" />
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground font-medium">
+          {info.label}
+        </p>
+        <p className="text-sm font-semibold text-foreground flex items-center gap-1">
+          {loading ? (
+            <>
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span className="text-xs">执行中...</span>
+            </>
+          ) : (
+            value
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 // 可排序的列表项组件
 function SortableItem({ info, onEdit, onDelete }: { 
@@ -501,29 +533,15 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
               <Eye className="w-5 h-5" />
               预览效果
             </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              展示 JavaScript 代码执行后的实际结果
+            </p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4">
-              {infos.map((info) => {
-                return (
-                  <div key={info.id} className="space-y-2">
-                    <div
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border ${info.color}`}
-                    >
-                      <Icon icon={info.icon} className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground font-medium">
-                        {info.label}
-                      </p>
-                      <p className="text-sm font-semibold text-foreground">
-                        {/* 这里简单显示代码内容，实际使用时会执行 */}
-                        <code className="text-xs">{info.valueCode.slice(0, 20)}...</code>
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+              {infos.map((info) => (
+                <PreviewItem key={info.id} info={info} />
+              ))}
             </div>
           </CardContent>
         </Card>

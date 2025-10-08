@@ -484,7 +484,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
           mobilePreviewUrl,
           leftMarkdown,
           rightMarkdown,
-        } satisfies FeatureHighlight;
+        } as FeatureHighlight;
       })
       .filter((item): item is FeatureHighlight => item !== null);
   }, [ensureScreenshots]);
@@ -770,12 +770,12 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
 
       if (!isEditMode) {
         payload.createdAt = now;
-        await createProject(authContext.username, payload, authContext.authToken);
+        await createProject(authContext.username, payload as unknown as Record<string, unknown>, authContext.authToken);
         localStorage.removeItem('project-draft');
         setFormData({ ...INITIAL_FORM_DATA });
         setStatusToast({ type: 'success', message: '作品集创建成功！' });
       } else if (projectId) {
-        await updateProject(authContext.username, projectId, payload, authContext.authToken);
+        await updateProject(authContext.username, projectId, payload as unknown as Record<string, unknown>, authContext.authToken);
         setStatusToast({ type: 'success', message: '作品集更新成功！' });
       }
 

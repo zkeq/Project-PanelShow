@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ProjectAttributeItem } from "@/components/admin/ProjectAttributeItem";
 import {
   ChevronDown,
   ChevronUp,
@@ -233,6 +234,15 @@ export function AdminProjectCard({
               维护中
             </Badge>
           )}
+          {project.status === "building" && (
+            <Badge
+              variant="secondary"
+              className="absolute top-3 right-3 bg-yellow-500/90 text-white border-0 shadow-sm backdrop-blur-sm"
+            >
+              <div className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />
+              施工中
+            </Badge>
+          )}
           {project.status === "completed" && (
             <Badge
               variant="secondary"
@@ -287,60 +297,76 @@ export function AdminProjectCard({
         </div>
 
         <CardContent className="px-5 pt-4 pb-3 space-y-4">
-          {/* 项目统计信息 - 带图标的现代设计 */}
+          {/* 项目统计信息 - 从 homeAttributes 动态渲染 */}
           <div className="grid grid-cols-4 gap-3">
-            <div className="text-center space-y-1">
-              <div
-                className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}
-              >
-                <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
-              </div>
-              <p className="text-xs text-muted-foreground font-medium">
-                技术栈
-              </p>
-              <p className="font-semibold text-xs text-foreground">
-                {project.attributes.find(attr => attr.key === 'techStack')?.value || "Vue + Python"}
-              </p>
-            </div>
-            <div className="text-center space-y-1">
-              <div
-                className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}
-              >
-                <Calendar className={`w-3 h-3 ${theme.tagText}`} />
-              </div>
-              <p className="text-xs text-muted-foreground font-medium">
-                项目类型
-              </p>
-              <p className="font-semibold text-xs text-foreground">
-                {project.attributes.find(attr => attr.key === 'projectType')?.value || "个人项目"}
-              </p>
-            </div>
-            <div className="text-center space-y-1">
-              <div
-                className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}
-              >
-                <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
-              </div>
-              <p className="text-xs text-muted-foreground font-medium">
-                月PV
-              </p>
-              <p className="font-semibold text-xs text-foreground">
-                {project.attributes.find(attr => attr.key === 'monthlyPV')?.value || "10w"}
-              </p>
-            </div>
-            <div className="text-center space-y-1">
-              <div
-                className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}
-              >
-                <Calendar className={`w-3 h-3 ${theme.tagText}`} />
-              </div>
-              <p className="text-xs text-muted-foreground font-medium">
-                开发周期
-              </p>
-              <p className="font-semibold text-xs text-foreground">
-                {project.attributes.find(attr => attr.key === 'developmentPeriod')?.value || "3个月"}
-              </p>
-            </div>
+            {project.homeAttributes && project.homeAttributes.length > 0 ? (
+              project.homeAttributes
+                .sort((a, b) => a.order - b.order)
+                .slice(0, 4)
+                .map((attr) => (
+                  <ProjectAttributeItem
+                    key={attr.id}
+                    attribute={attr}
+                    theme={theme}
+                  />
+                ))
+            ) : (
+              // 回退到默认显示
+              <>
+                <div className="text-center space-y-1">
+                  <div
+                    className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}
+                  >
+                    <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    技术栈
+                  </p>
+                  <p className="font-semibold text-xs text-foreground">
+                    {project.attributes.find(attr => attr.key === 'techStack')?.value || "Vue + Python"}
+                  </p>
+                </div>
+                <div className="text-center space-y-1">
+                  <div
+                    className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}
+                  >
+                    <Calendar className={`w-3 h-3 ${theme.tagText}`} />
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    项目类型
+                  </p>
+                  <p className="font-semibold text-xs text-foreground">
+                    {project.attributes.find(attr => attr.key === 'projectType')?.value || "个人项目"}
+                  </p>
+                </div>
+                <div className="text-center space-y-1">
+                  <div
+                    className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}
+                  >
+                    <BarChart3 className={`w-3 h-3 ${theme.tagText}`} />
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    月PV
+                  </p>
+                  <p className="font-semibold text-xs text-foreground">
+                    {project.attributes.find(attr => attr.key === 'monthlyPV')?.value || "10w"}
+                  </p>
+                </div>
+                <div className="text-center space-y-1">
+                  <div
+                    className={`inline-flex items-center justify-center rounded-md ${theme.tagBg} px-2 py-1 border ${theme.tagBorder} mx-auto`}
+                  >
+                    <Calendar className={`w-3 h-3 ${theme.tagText}`} />
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    开发周期
+                  </p>
+                  <p className="font-semibold text-xs text-foreground">
+                    {project.attributes.find(attr => attr.key === 'developmentPeriod')?.value || "3个月"}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           <Separator className="my-4" />
