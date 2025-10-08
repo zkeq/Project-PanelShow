@@ -12,7 +12,7 @@ import DemoFrame from '@/components/demo/DemoFrame'
 import ProjectInfo from '@/components/demo/ProjectInfo'
 import DemoInfo from '@/components/demo/DemoInfo'
 import { fetchProjectDetail } from '@/lib/api'
-import type { DemoContent, ProjectOverview } from '@/types/demo'
+import type { DemoContent, ProjectDetailApiData, ProjectOverview } from '@/types/demo'
 
 interface DemoPageProps {
   params: Promise<{
@@ -29,6 +29,15 @@ const getPreviewUrlForView = (content: DemoContent | null, viewMode: ViewMode) =
     ? content.mobilePreviewUrl || content.previewUrl
     : content.previewUrl
 }
+
+const toStringOrFallback = (value: unknown, fallback: string) =>
+  typeof value === "string" && value.trim().length > 0 ? value : fallback
+
+const toOptionalUrl = (value: unknown) =>
+  typeof value === "string" && value.trim().length > 0 ? value : undefined
+
+const toOptionalText = (value: unknown) =>
+  typeof value === "string" ? value : undefined
 
 export default function ProjectMainDemoPage({ params }: DemoPageProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("mobile")
@@ -61,26 +70,26 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
 
     fetchProjectDetail(username, projectId, { signal: controller.signal })
       .then((response) => {
-        const data = response?.data
+        const data = (response?.data ?? {}) as Partial<ProjectDetailApiData>
         if (!data) {
           throw new Error("未获取到项目演示信息")
         }
 
         const overview: ProjectOverview = {
-          name: data.name ?? "项目演示",
-          description: data.description ?? "",
+          name: toStringOrFallback(data.name, "项目演示"),
+          description: typeof data.description === "string" ? data.description : "",
           tags: Array.isArray(data.tags)
             ? data.tags.filter((tag): tag is string => typeof tag === "string")
             : [],
         }
 
         const demo: DemoContent = {
-          title: data.name ?? "项目演示",
-          previewUrl: data.previewUrl || undefined,
-          mobilePreviewUrl: data.mobilePreviewUrl || undefined,
-          sourceUrl: data.sourceUrl || undefined,
-          leftMarkdown: data.leftSidebarMarkdown || undefined,
-          rightMarkdown: data.rightSidebarMarkdown || undefined,
+          title: overview.name,
+          previewUrl: toOptionalUrl(data.previewUrl),
+          mobilePreviewUrl: toOptionalUrl(data.mobilePreviewUrl),
+          sourceUrl: toOptionalUrl(data.sourceUrl),
+          leftMarkdown: toOptionalText(data.leftSidebarMarkdown),
+          rightMarkdown: toOptionalText(data.rightSidebarMarkdown),
         }
 
         setProjectInfo(overview)

@@ -36,13 +36,51 @@ const getPreviewUrlForView = (content: DemoContent | null, viewMode: ViewMode) =
     : content.previewUrl
 }
 
+const toStringOrFallback = (value: unknown, fallback: string) =>
+  typeof value === "string" && value.trim().length > 0 ? value : fallback
+
+const toOptionalUrl = (value: unknown) =>
+  typeof value === "string" && value.trim().length > 0 ? value : undefined
+
+const toOptionalText = (value: unknown) =>
+  typeof value === "string" ? value : undefined
+
 const normalizeFeatureHighlights = (raw: unknown): FeatureHighlight[] => {
   if (!Array.isArray(raw)) return []
-  return raw.filter((item): item is FeatureHighlight => {
-    if (!item || typeof item !== "object") return false
-    const highlight = item as FeatureHighlight
-    return typeof highlight.id === "string" || typeof highlight.title === "string"
-  })
+
+  return raw
+    .map((item, index) => {
+      if (!item || typeof item !== "object") return null
+
+      const record = item as Record<string, unknown>
+      const idValue = record.id
+      let id: string | undefined
+
+      if (typeof idValue === "string" && idValue.trim().length > 0) {
+        id = idValue
+      } else if (typeof idValue === "number") {
+        id = String(idValue)
+      }
+
+      const title = toOptionalText(record.title)
+
+      if (!id && title) {
+        id = `feature-${index + 1}`
+      }
+
+      if (!id) return null
+
+      return {
+        id,
+        title,
+        description: toOptionalText(record.description),
+        previewUrl: toOptionalUrl(record.previewUrl),
+        mobilePreviewUrl: toOptionalUrl(record.mobilePreviewUrl),
+        leftMarkdown: toOptionalText(record.leftMarkdown),
+        rightMarkdown: toOptionalText(record.rightMarkdown),
+      }
+    })
+    .filter((item): item is FeatureHighlight => item !== null)
 }
 
 export default function ProjectDemoPage({ params }: DemoPageProps) {
@@ -81,13 +119,11 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
           throw new Error("未获取到项目演示信息")
         }
 
+        const name = toStringOrFallback(data.name, "项目演示")
+
         const overview: ProjectOverview = {
-          name:
-            typeof data.name === "string" && data.name.trim().length > 0
-              ? data.name
-              : "项目演示",
-          description:
-            typeof data.description === "string" ? data.description : "",
+          name,
+          description: typeof data.description === "string" ? data.description : "",
           tags: Array.isArray(data.tags)
             ? data.tags.filter((tag): tag is string => typeof tag === "string")
             : [],
@@ -110,12 +146,14 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
         }
 
         const demo: DemoContent = {
-          title: highlight.title || data.name || "项目演示",
-          previewUrl: highlight.previewUrl || data.previewUrl || undefined,
-          mobilePreviewUrl: highlight.mobilePreviewUrl || data.mobilePreviewUrl || undefined,
-          sourceUrl: data.sourceUrl || undefined,
-          leftMarkdown: highlight.leftMarkdown || data.leftSidebarMarkdown || undefined,
-          rightMarkdown: highlight.rightMarkdown || data.rightSidebarMarkdown || undefined,
+          title: toStringOrFallback(highlight.title, name),
+          previewUrl: highlight.previewUrl ?? toOptionalUrl(data.previewUrl),
+          mobilePreviewUrl:
+            highlight.mobilePreviewUrl ?? toOptionalUrl(data.mobilePreviewUrl),
+          sourceUrl: toOptionalUrl(data.sourceUrl),
+          leftMarkdown: highlight.leftMarkdown ?? toOptionalText(data.leftSidebarMarkdown),
+          rightMarkdown:
+            highlight.rightMarkdown ?? toOptionalText(data.rightSidebarMarkdown),
         }
 
         setProjectInfo(overview)
