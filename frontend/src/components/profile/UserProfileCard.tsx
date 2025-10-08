@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { Briefcase, Globe, Star } from 'lucide-react'
 
 interface UserProfileCardProps {
@@ -32,12 +31,10 @@ export default function UserProfileCard({
         <div className="flex items-start space-x-4">
           {/* 头像 */}
           <div className="flex-shrink-0">
-            <Image
+            <img
               src={avatar || "https://avatars.githubusercontent.com/u/62864752"}
               alt={displayName}
-              width={64}
-              height={64}
-              className="rounded-full border-2 border-border/60"
+              className="w-16 h-16 rounded-full border-2 border-border/60"
             />
           </div>
           

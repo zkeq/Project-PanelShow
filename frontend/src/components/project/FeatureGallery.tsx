@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -119,12 +118,10 @@ export default function FeatureGallery({
             >
               {/* 主轮播图 */}
               <div className="relative w-full h-full overflow-hidden rounded-t-lg bg-muted/10 flex items-center justify-center">
-                <Image
+                <img
                   src={images[currentSlideIndex].src}
                   alt={images[currentSlideIndex].alt}
-                  fill
-                  className="object-contain"
-                  sizes="410px"
+                  className="w-full h-full object-contain"
                 />
                 
                 {/* 轮播导航按钮 */}
@@ -204,12 +201,10 @@ export default function FeatureGallery({
                     className="relative aspect-square overflow-hidden rounded-md group cursor-pointer"
                     onClick={() => handleImageClick(index)}
                   >
-                    <Image
+                    <img
                       src={image.src}
                       alt={image.alt}
-                      fill
-                      className="object-cover transition-all duration-300 group-hover:scale-110"
-                      sizes="120px"
+                      className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
                     />
                     {/* 悬停遮罩 */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -256,12 +251,10 @@ export default function FeatureGallery({
                     className="relative aspect-square overflow-hidden rounded-md group cursor-pointer"
                     onClick={() => handleImageClick(maxImages)}
                   >
-                    <Image
+                    <img
                       src={images[maxImages].src}
                       alt={images[maxImages].alt}
-                      fill
-                      className="object-cover transition-all duration-300 group-hover:scale-110"
-                      sizes="120px"
+                      className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <div className="text-white text-xs font-medium">
@@ -290,12 +283,10 @@ export default function FeatureGallery({
                 className="relative aspect-square overflow-hidden rounded-md group cursor-pointer bg-muted/30"
                 onClick={() => handleImageClick(index)}
               >
-                <Image
+                <img
                   src={image.src}
                   alt={image.alt}
-                  fill
-                  className="object-cover transition-all duration-300 group-hover:scale-110"
-                  sizes="120px"
+                  className="w-full h-full object-cover transition-all duration-300 group-hover:scale-110"
                 />
                 {/* 悬停遮罩 */}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -392,14 +383,10 @@ export default function FeatureGallery({
           >
             {images[selectedImageIndex] && (
               <div className="relative cursor-default" onClick={(e) => e.stopPropagation()}>
-                <Image
+                <img
                   src={images[selectedImageIndex].src}
                   alt={images[selectedImageIndex].alt}
-                  width={1200}
-                  height={800}
                   className="max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain"
-                  sizes="90vw"
-                  priority
                 />
                 
                 {/* 图片底部渐变信息栏 */}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
@@ -127,11 +126,10 @@ export default function TimelineCard({ item, authorAvatar, authorName, username 
         <div className="flex items-center space-x-3">
           <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted border border-border/60">
             {authorAvatar ? (
-              <Image
+              <img
                 src={authorAvatar}
                 alt={authorName || item.author.name}
-                fill
-                className="object-cover"
+                className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-foreground text-sm font-semibold bg-primary/10">
@@ -252,11 +250,10 @@ export default function TimelineCard({ item, authorAvatar, authorName, username 
                   }`}
                   onClick={() => setPreviewImage({ show: true, index })}
                 >
-                  <Image
+                  <img
                     src={image}
                     alt={`${item.project.name} 预览 ${index + 1}`}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
 
                   {/* 点击打开全屏预览的遮罩 */}

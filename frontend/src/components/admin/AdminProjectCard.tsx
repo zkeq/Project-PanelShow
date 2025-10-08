@@ -36,7 +36,6 @@ import {
   MoreVertical,
   type LucideIcon,
 } from "lucide-react";
-import Image from "next/image";
 import NextLink from "next/link";
 import { useState } from "react";
 import Markdown from "@/components/Markdown";
@@ -204,12 +203,10 @@ export function AdminProjectCard({
       <div className="relative z-10">
         {/* 网站截图 - 完全贴合顶部 */}
         <div className="relative aspect-video overflow-hidden rounded-t-xl">
-          <Image
+          <img
             src={imageSrc}
             alt={project.name}
-            fill
-            className="object-cover transition-all duration-500 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
           />
 
           {/* 渐变遮罩 */}

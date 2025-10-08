@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Settings } from 'lucide-react'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 
 interface HeaderNavigationProps {
   username: string
@@ -31,12 +30,10 @@ export default function HeaderNavigation({
         <div className="flex items-center space-x-2 min-w-0 flex-1">
           {avatar ? (
             <div className="w-7 h-7 rounded-md overflow-hidden flex-shrink-0 border border-border/60">
-              <Image
+              <img
                 src={avatar}
                 alt={displayName || username}
-                width={28}
-                height={28}
-                className="object-cover"
+                className="w-full h-full object-cover"
               />
             </div>
           ) : (

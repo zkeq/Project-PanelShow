@@ -5,9 +5,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Edit, 
-  Trash2, 
+import {
+  Edit,
+  Trash2,
   Heart,
   MessageCircle,
   Calendar,
@@ -22,7 +22,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import Image from 'next/image';
 import { TimelineItem } from '@/types/store';
 import { cn } from '@/lib/utils';
 import { useGlobalStore } from '@/store/useGlobalStore';
@@ -83,12 +82,10 @@ export function TimelineManagementList({ items, searchQuery }: TimelineManagemen
                     <div className="flex items-center space-x-3">
                       {/* 作者头像 */}
                       <div className="relative w-10 h-10">
-                        <Image
+                        <img
                           src={item.author.avatar}
                           alt={item.author.name}
-                          fill
-                          className="object-cover rounded-full"
-                          sizes="40px"
+                          className="w-full h-full object-cover rounded-full"
                         />
                       </div>
                       

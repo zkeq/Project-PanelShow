@@ -3,16 +3,15 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { 
-  ExternalLink, 
-  GitBranch, 
-  Star, 
-  Eye, 
+import {
+  ExternalLink,
+  GitBranch,
+  Star,
+  Eye,
   Users,
   Zap,
   Shield
 } from 'lucide-react'
-import Image from 'next/image'
 
 interface ProjectHeroProps {
   project: {

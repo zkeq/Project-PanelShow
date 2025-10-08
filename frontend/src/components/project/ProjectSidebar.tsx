@@ -4,13 +4,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { 
+import {
   Calendar, Users, Eye, Clock, ExternalLink, BarChart3, FileText, Sparkles,
   Code, Building2, TrendingUp, Zap, User, Handshake, Rocket, Database,
   Palette, Puzzle, CheckCircle, TestTube, Link2, Globe, BookOpen, Settings,
   Shield, Smartphone, Package, type LucideIcon
 } from 'lucide-react'
-import Image from 'next/image'
 
 interface ProjectSidebarProps {
   project: {

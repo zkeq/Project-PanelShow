@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -86,13 +85,10 @@ export default function ImagePreview({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative w-full h-full">
-          <Image
+          <img
             src={images[index]}
             alt={`预览图片 ${index + 1}`}
-            width={1200}
-            height={800}
             className="object-contain max-w-full max-h-[90vh]"
-            priority
           />
         </div>
       </div>

@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { SiteAddressInput, type AddressAvailabilityStatus } from "@/components/ui/site-address-input";
 import { Loader2, Upload, RefreshCw, CheckCircle2 } from "lucide-react";
-import Image from "next/image";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   API_BASE_URL,
@@ -627,7 +626,7 @@ export function BasicInformation() {
             <div className="flex items-center gap-4">
               <div className="relative w-32 h-32 border-2 border-dashed border-muted-foreground/25 rounded-lg flex items-center justify-center overflow-hidden">
                 {form.personalWechatQr ? (
-                  <Image src={form.personalWechatQr} alt="微信二维码" fill className="object-cover" unoptimized />
+                  <img src={form.personalWechatQr} alt="微信二维码" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-sm text-muted-foreground">二维码预览</span>
                 )}
