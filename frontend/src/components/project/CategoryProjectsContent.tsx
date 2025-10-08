@@ -8,13 +8,15 @@ interface CategoryProjectsContentProps {
   expandedProjects: string[]
   onToggleExpand: (projectId: string) => void
   categoryLabel: string
+  username: string
 }
 
-export default function CategoryProjectsContent({ 
-  projects, 
-  expandedProjects, 
+export default function CategoryProjectsContent({
+  projects,
+  expandedProjects,
   onToggleExpand,
-  categoryLabel 
+  categoryLabel,
+  username
 }: CategoryProjectsContentProps) {
   return (
     <div className="space-y-6">
@@ -27,10 +29,11 @@ export default function CategoryProjectsContent({
         </p>
       </div>
 
-      <ProjectGrid 
+      <ProjectGrid
         projects={projects}
         expandedProjects={expandedProjects}
         onToggleExpand={onToggleExpand}
+        username={username}
       />
     </div>
   )

@@ -9,10 +9,15 @@ import {
   Star,
   Users,
   Zap,
-  Shield
+  Shield,
+  Rocket,
+  Sparkles,
+  type LucideIcon
 } from 'lucide-react'
+import { Icon } from '@iconify/react'
 import { ProjectInfo } from '@/types/store'
 import { useExecuteCode } from '@/hooks/useExecuteCode'
+import { cn } from '@/lib/utils'
 
 interface HeroProjectData {
   name: string
@@ -25,12 +30,20 @@ interface HeroProjectData {
   previewUrl?: string
   sourceUrl?: string
   heroAttributes?: ProjectInfo[]
+  featureChips?: FeatureChip[]
 }
 
 interface ProjectHeroProps {
   project: HeroProjectData
   username?: string
   projectId: string
+}
+
+interface FeatureChip {
+  id: string
+  label: string
+  color?: string
+  icon?: string
 }
 
 const HeroStatItem = ({ attribute }: { attribute: ProjectInfo }) => {
@@ -148,6 +161,68 @@ export default function ProjectHero({ project, username, projectId }: ProjectHer
   ]
   const statsToRender = hasHeroAttributes ? heroAttributes! : fallbackStats
 
+  const defaultFeatureChips: FeatureChip[] = [
+    { id: 'default-performance', label: '高性能', color: 'bg-yellow-500', icon: 'Zap' },
+    { id: 'default-security', label: '安全可靠', color: 'bg-emerald-500', icon: 'Shield' },
+    { id: 'default-modern', label: '现代化', color: 'bg-sky-500', icon: 'Sparkles' }
+  ]
+
+  const resolveFeatureChips = () => {
+    if (project.featureChips && project.featureChips.length > 0) {
+      return project.featureChips
+    }
+    return defaultFeatureChips
+  }
+
+  const featureChips = resolveFeatureChips()
+
+  const featureIconMap: Record<string, LucideIcon> = {
+    Zap,
+    Shield,
+    Star,
+    Users,
+    Rocket,
+    Sparkles,
+    GitBranch,
+    ExternalLink
+  }
+
+  const renderFeatureIcon = (iconName?: string) => {
+    if (!iconName) {
+      return <Sparkles className="w-4 h-4" />
+    }
+
+    if (iconName.includes(':')) {
+      return <Icon icon={iconName} className="w-4 h-4" />
+    }
+
+    const IconComponent = featureIconMap[iconName as keyof typeof featureIconMap]
+    if (IconComponent) {
+      return <IconComponent className="w-4 h-4" />
+    }
+
+    return <Sparkles className="w-4 h-4" />
+  }
+
+  const buildFeatureChipClasses = (chip: FeatureChip) => {
+    if (!chip.color) {
+      return 'flex items-center gap-2 px-3 py-2 rounded-lg border border-yellow-200/50 dark:border-yellow-800/40 bg-yellow-50/50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-300 text-sm font-medium shadow-sm'
+    }
+
+    const classes = chip.color.split(/\s+/).filter(Boolean)
+    const hasBackground = classes.some((cls) => cls.startsWith('bg-') || cls.startsWith('bg-[') || cls.startsWith('bg-gradient'))
+    const hasText = classes.some((cls) => cls.startsWith('text-'))
+    const hasBorder = classes.some((cls) => cls.startsWith('border-'))
+
+    return cn(
+      'flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium shadow-sm transition-colors',
+      chip.color,
+      hasBackground ? '' : 'bg-yellow-50/50 dark:bg-yellow-950/20',
+      hasText ? '' : hasBackground ? 'text-white' : 'text-yellow-700 dark:text-yellow-300',
+      hasBorder ? '' : hasBackground ? 'border-transparent' : 'border-yellow-200/50 dark:border-yellow-800/40'
+    )
+  }
+
   return (
     <div className="w-full max-w-[1100px] py-8 mb-12">
       {/* 背景装饰 */}
@@ -254,20 +329,16 @@ export default function ProjectHero({ project, username, projectId }: ProjectHer
         </div>
 
         {/* 特色标签 */}
-        <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-50/50 dark:bg-yellow-950/20 border border-yellow-200/50 dark:border-yellow-800/30">
-            <Zap className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-            <span className="text-sm font-medium text-yellow-700 dark:text-yellow-300">高性能</span>
+        {featureChips.length > 0 && (
+          <div className="flex flex-wrap gap-3">
+            {featureChips.map((chip) => (
+              <div key={chip.id} className={buildFeatureChipClasses(chip)}>
+                {renderFeatureIcon(chip.icon)}
+                <span>{chip.label}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50/50 dark:bg-green-950/20 border border-green-200/50 dark:border-green-800/30">
-            <Shield className="w-4 h-4 text-green-600 dark:text-green-400" />
-            <span className="text-sm font-medium text-green-700 dark:text-green-300">安全可靠</span>
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30">
-            <Star className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-sm font-medium text-blue-700 dark:text-blue-300">现代化</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

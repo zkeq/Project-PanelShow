@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ import {
   Eye,
   Home,
   Sidebar,
+  Sparkles,
 } from 'lucide-react';
 
 export interface ProjectInfo {
@@ -48,6 +49,7 @@ export interface ProjectInfo {
   valueCode: string;
   showInHomepage: boolean;
   showInSidebar: boolean;
+  showInHero: boolean;
   color: string;
   order: number;
 }
@@ -175,6 +177,12 @@ function SortableItem({ info, onEdit, onDelete }: {
               侧边栏
             </Badge>
           )}
+          {info.showInHero && (
+            <Badge variant="secondary" className="text-xs">
+              <Sparkles className="w-3 h-3 mr-1" />
+              Hero
+            </Badge>
+          )}
         </div>
       </div>
       
@@ -201,7 +209,21 @@ function SortableItem({ info, onEdit, onDelete }: {
 }
 
 export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManagerProps) {
-  const [infos, setInfos] = useState<ProjectInfo[]>(projectInfos);
+  const normalizedProjectInfos = useMemo(
+    () =>
+      projectInfos.map((info, index) => ({
+        ...info,
+        showInHero: Boolean(info.showInHero),
+        order: typeof info.order === 'number' ? info.order : index,
+      })),
+    [projectInfos]
+  );
+
+  const [infos, setInfos] = useState<ProjectInfo[]>(normalizedProjectInfos);
+
+  useEffect(() => {
+    setInfos(normalizedProjectInfos);
+  }, [normalizedProjectInfos]);
   const [editingInfo, setEditingInfo] = useState<ProjectInfo | null>(null);
   const [customColor, setCustomColor] = useState('');
   const [formData, setFormData] = useState<Omit<ProjectInfo, 'id' | 'order'>>({
@@ -210,6 +232,7 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
     valueCode: '',
     showInHomepage: false,
     showInSidebar: false,
+    showInHero: false,
     color: colorThemes[0],
   });
 
@@ -223,11 +246,11 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
   // 只在 infos 真正改变时才调用 onChange
   useEffect(() => {
     // 比较新旧数组，避免无限循环
-    const hasChanged = JSON.stringify(infos) !== JSON.stringify(projectInfos);
+    const hasChanged = JSON.stringify(infos) !== JSON.stringify(normalizedProjectInfos);
     if (hasChanged) {
       onChange(infos);
     }
-  }, [infos]);
+  }, [infos, normalizedProjectInfos, onChange]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -288,6 +311,7 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
       valueCode: '',
       showInHomepage: false,
       showInSidebar: false,
+      showInHero: false,
       color: colorThemes[0],
     });
     setCustomColor('');
@@ -301,6 +325,7 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
       valueCode: info.valueCode,
       showInHomepage: info.showInHomepage,
       showInSidebar: info.showInSidebar,
+      showInHero: info.showInHero,
       color: info.color,
     });
   };
@@ -317,6 +342,7 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
       valueCode: '',
       showInHomepage: false,
       showInSidebar: false,
+      showInHero: false,
       color: colorThemes[0],
     });
     setCustomColor('');
@@ -403,7 +429,7 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
           </div>
 
           {/* 展示选项 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="showInHomepage" className="flex items-center gap-2">
                 <Home className="w-4 h-4" />
@@ -427,6 +453,19 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
                 id="showInSidebar"
                 checked={formData.showInSidebar}
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, showInSidebar: checked }))}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="showInHero" className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                展示在 Hero 区域
+                <span className="text-xs text-muted-foreground">（建议不超过3个）</span>
+              </Label>
+              <Switch
+                id="showInHero"
+                checked={formData.showInHero}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, showInHero: checked }))}
               />
             </div>
           </div>

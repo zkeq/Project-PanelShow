@@ -56,6 +56,7 @@ interface ProjectContentProps {
     sourceUrl?: string;
     longDescription?: string;
     homeAttributes?: ProjectInfo[];
+    projectInfos?: ProjectInfo[];
     images?: Array<{
       src: string;
       alt: string;
@@ -175,7 +176,7 @@ const ProjectStatItem = ({ attribute, colorClass }: { attribute: ProjectInfo; co
 
 export default function ProjectContent({ project, username, mobileNavigation, timelineItems }: ProjectContentProps) {
   const router = useRouter();
-  const statsAttributes = (project.homeAttributes || []).slice(0, 12);
+  const statsAttributes = project.projectInfos ?? project.homeAttributes ?? [];
   const demoBasePath = username ? `/project/${username}/${project.id}/demo` : null;
 
   const openDemo = (options?: { demoId?: string | number; fallbackUrl?: string }) => {

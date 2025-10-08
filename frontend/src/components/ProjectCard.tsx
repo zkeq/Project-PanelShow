@@ -42,6 +42,7 @@ interface ProjectCardProps {
   project: Project;
   expandedProjects?: string[];
   onToggleExpand?: (projectId: string) => void;
+  username: string;
 }
 
 // 图标映射函数
@@ -78,6 +79,7 @@ export default function ProjectCard({
   expandedProjects = [],
   onToggleExpand,
   index = 0,
+  username,
 }: ProjectCardProps & { index?: number }) {
   const [localExpanded, setLocalExpanded] = useState(false);
 
@@ -182,7 +184,7 @@ export default function ProjectCard({
 
   return (
     <NextLink
-      href={`/project/zkeq/${project.id}`}
+      href={`/project/${username}/${project.id}`}
       className="block transition-transform hover:scale-[1.02]"
     >
       <Card

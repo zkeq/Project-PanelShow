@@ -35,6 +35,13 @@ interface ProjectFeature {
   demoId?: string | number
 }
 
+interface ProjectFeatureChip {
+  id: string
+  label: string
+  color?: string
+  icon?: string
+}
+
 interface ProjectDetailViewModel {
   id: string
   name: string
@@ -48,6 +55,7 @@ interface ProjectDetailViewModel {
   heroAttributes: ProjectInfo[]
   sidebarAttributes: ProjectInfo[]
   homeAttributes: ProjectInfo[]
+  projectInfos: ProjectInfo[]
   images: Array<{
     src: string
     alt: string
@@ -55,6 +63,7 @@ interface ProjectDetailViewModel {
     description?: string
   }>
   features: ProjectFeature[]
+  featureChips: ProjectFeatureChip[]
   longDescription?: string
   timelineItems: TimelineItem[]
 }
@@ -169,6 +178,31 @@ const mapFeatures = (source: unknown): ProjectFeature[] => {
       } as ProjectFeature
     })
     .filter((feature): feature is NonNullable<typeof feature> => feature !== null)
+}
+
+const mapFeatureChips = (source: unknown): ProjectFeatureChip[] => {
+  if (!Array.isArray(source)) return []
+
+  return source
+    .map((item, index) => {
+      if (!isRecord(item)) return null
+      const rawLabel = item.label ?? item.name
+      const label = typeof rawLabel === 'string' && rawLabel.trim() ? rawLabel.trim() : ''
+      if (!label) return null
+
+      const idSource = item.id ?? item.slug ?? item.value
+      const id = typeof idSource === 'string' && idSource.trim() ? idSource.trim() : `feature-chip-${index}`
+      const color = typeof item.color === 'string' && item.color.trim() ? item.color.trim() : undefined
+      const icon = typeof item.icon === 'string' && item.icon.trim() ? item.icon.trim() : undefined
+
+      return {
+        id,
+        label,
+        color,
+        icon
+      } satisfies ProjectFeatureChip
+    })
+    .filter((chip): chip is ProjectFeatureChip => chip !== null)
 }
 
 const mapTimelineItems = (source: unknown): TimelineItem[] => {
@@ -323,6 +357,7 @@ const mapProjectDetail = (raw: unknown): ProjectDetailViewModel | null => {
   const homeAttributesRaw = mapAttributesArray(raw.homeAttributes)
   const sidebarAttributesRaw = mapAttributesArray(raw.sidebarAttributes)
   const heroAttributesRaw = mapAttributesArray(raw.heroAttributes)
+  const featureChips = mapFeatureChips(raw.features)
 
   const homeAttributes = homeAttributesRaw.length > 0
     ? homeAttributesRaw
@@ -368,8 +403,10 @@ const mapProjectDetail = (raw: unknown): ProjectDetailViewModel | null => {
     heroAttributes,
     sidebarAttributes,
     homeAttributes,
+    projectInfos,
     images,
     features,
+    featureChips,
     longDescription,
     timelineItems
   }
@@ -524,7 +561,8 @@ export default function ProjectDetailPage() {
                   previewUrl: projectData.previewUrl,
                   sourceUrl: projectData.sourceUrl,
                   heroAttributes: projectData.heroAttributes,
-                  tags: projectData.tags
+                  tags: projectData.tags,
+                  featureChips: projectData.featureChips
                 }}
                 username={username}
                 projectId={projectData.id}
@@ -540,6 +578,7 @@ export default function ProjectDetailPage() {
                   sourceUrl: projectData.sourceUrl,
                   longDescription: projectData.longDescription,
                   homeAttributes: projectData.homeAttributes,
+                  projectInfos: projectData.projectInfos,
                   images: projectData.images,
                   features: projectData.features
                 }}

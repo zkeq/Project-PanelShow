@@ -8,6 +8,7 @@ interface AllProjectsContentProps {
   projects: Project[]
   expandedProjects: string[]
   onToggleExpand: (projectId: string) => void
+  username: string
   userProfile: {
     username: string
     displayName: string
@@ -21,11 +22,12 @@ interface AllProjectsContentProps {
   }
 }
 
-export default function AllProjectsContent({ 
-  projects, 
-  expandedProjects, 
+export default function AllProjectsContent({
+  projects,
+  expandedProjects,
   onToggleExpand,
-  userProfile 
+  username,
+  userProfile
 }: AllProjectsContentProps) {
   // 按更新时间倒序排列
   const sortedProjects = [...projects].sort((a, b) => 
@@ -38,10 +40,11 @@ export default function AllProjectsContent({
       <UserProfileCard {...userProfile} />
 
       {/* 项目网格 */}
-      <ProjectGrid 
+      <ProjectGrid
         projects={sortedProjects}
         expandedProjects={expandedProjects}
         onToggleExpand={onToggleExpand}
+        username={username}
       />
     </div>
   )

@@ -55,6 +55,7 @@ interface AdminProjectCardProps {
   onEdit?: (projectId: string) => void;
   onDelete?: (projectId: string) => void;
   index?: number;
+  username?: string;
 }
 
 // 图标映射函数
@@ -93,6 +94,7 @@ export function AdminProjectCard({
   onEdit,
   onDelete,
   index = 0,
+  username,
 }: AdminProjectCardProps) {
   const [localExpanded, setLocalExpanded] = useState(false);
 
@@ -190,6 +192,8 @@ export function AdminProjectCard({
     "linear-gradient(to bottom, rgba(99, 102, 241, 0.15), rgba(13, 13, 13, 0.9))", // indigo - 更深
   ];
 
+  const projectUrl = username ? `/project/${username}/${project.id}` : null;
+
   return (
     <Card
       className={`py-0 text-card-foreground flex flex-col rounded-xl group relative overflow-hidden border border-border bg-card/30 backdrop-blur-sm hover:shadow-lg hover:border-border/70 transition-all duration-300`}
@@ -264,11 +268,18 @@ export function AdminProjectCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild>
-                  <NextLink href={`/project/zkeq/${project.id}`} target="_blank">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    查看项目
-                  </NextLink>
+                <DropdownMenuItem asChild={Boolean(projectUrl)} disabled={!projectUrl}>
+                  {projectUrl ? (
+                    <NextLink href={projectUrl} target="_blank">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      查看项目
+                    </NextLink>
+                  ) : (
+                    <div className="flex items-center opacity-60 cursor-not-allowed select-none">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      查看项目
+                    </div>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
