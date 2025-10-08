@@ -7,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Code2, Database, Globe, Monitor, Rocket, Shield, Star, Users, Zap, Menu, X } from "lucide-react";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -61,11 +60,12 @@ function MobileMenu() {
   );
 }
 
-export default function Home() {
-  const router = useRouter();
+const PROJECT_SHOWCASE_URL = "https://projects.icodeq.com/project/zkeq";
 
+export default function Home() {
+  
   const handleStartExperience = () => {
-    router.push('/admin');
+    window.location.href = PROJECT_SHOWCASE_URL;
   };
 
   return (
@@ -170,7 +170,7 @@ export default function Home() {
                   探索项目展示
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="lg" className="px-8">
+                <Button variant="outline" size="lg" className="px-8" onClick={handleStartExperience}>
                   <Globe className="mr-2 h-4 w-4" />
                   查看演示
                 </Button>

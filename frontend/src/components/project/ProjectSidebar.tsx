@@ -1,5 +1,6 @@
-'use client'
+"use client"
 
+import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -28,6 +29,8 @@ interface ProjectSidebarProps {
   project: SidebarProjectData
   activeSection: string
   onSectionChange: (section: string) => void
+  username?: string
+  projectId?: string
 }
 
 const SidebarAttributeItem = ({ attribute }: { attribute: ProjectInfo }) => {
@@ -59,7 +62,8 @@ const SidebarAttributeItem = ({ attribute }: { attribute: ProjectInfo }) => {
   )
 }
 
-export default function ProjectSidebar({ project, activeSection, onSectionChange }: ProjectSidebarProps) {
+export default function ProjectSidebar({ project, activeSection, onSectionChange, username, projectId }: ProjectSidebarProps) {
+  const router = useRouter();
   const navigationItems = [
     { id: 'overview', label: '项目概览', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'description', label: '项目说明', icon: <FileText className="w-4 h-4" /> },
@@ -70,10 +74,15 @@ export default function ProjectSidebar({ project, activeSection, onSectionChange
   const sidebarAttributes = project.sidebarAttributes?.slice(0, 8) ?? []
 
   const handlePreview = () => {
-    if (project.previewUrl) {
-      window.open(project.previewUrl, '_blank')
+    if (username && projectId) {
+      router.push(`/project/${username}/${projectId}/demo`);
+      return;
     }
-  }
+
+    if (project.previewUrl) {
+      window.open(project.previewUrl, '_blank');
+    }
+  };
 
   return (
     <div className="fixed left-0 top-14 w-80 h-[calc(100vh-3.5rem)] bg-background border-r border-border overflow-y-auto">

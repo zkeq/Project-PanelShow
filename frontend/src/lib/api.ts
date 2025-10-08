@@ -198,6 +198,17 @@ export function fetchProjects(username: string, token: string) {
   );
 }
 
+export function fetchProjectDetail(
+  username: string,
+  projectId: string,
+  options?: RequestOptions
+) {
+  return request<ProjectDetailResponse>(
+    `/api/projects/${encodeURIComponent(username)}/${encodeURIComponent(projectId)}`,
+    options
+  );
+}
+
 export function fetchTimeline(username: string, token: string) {
   return request<TimelineListResponse>(
     `/api/timeline/${encodeURIComponent(username)}`,

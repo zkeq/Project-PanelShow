@@ -31,6 +31,8 @@ interface ProjectFeature {
     label: string
     description?: string
   }>
+  previewUrl?: string
+  demoId?: string | number
 }
 
 interface ProjectDetailViewModel {
@@ -147,13 +149,23 @@ const mapFeatures = (source: unknown): ProjectFeature[] => {
         : undefined
 
       const images = mapImages(item.screenshots, `feature-${index}`)
+      const previewUrl = typeof item.previewUrl === 'string' ? item.previewUrl : undefined
+      const demoIdSource = (item as { demoId?: unknown; id?: unknown; slug?: unknown }).demoId ?? item.id ?? (item as { slug?: unknown }).slug
+      const demoId =
+        typeof demoIdSource === 'number'
+          ? demoIdSource
+          : typeof demoIdSource === 'string' && demoIdSource.trim()
+            ? demoIdSource.trim()
+            : undefined
 
       return {
         title,
         description,
         icon,
         techStack,
-        images: images.length > 0 ? images : undefined
+        images: images.length > 0 ? images : undefined,
+        previewUrl,
+        demoId
       } as ProjectFeature
     })
     .filter((feature): feature is NonNullable<typeof feature> => feature !== null)
@@ -492,6 +504,8 @@ export default function ProjectDetailPage() {
             }}
             activeSection={activeSection}
             onSectionChange={handleSectionChange}
+            username={username}
+            projectId={projectData.id}
           />
         </div>
 
@@ -513,6 +527,7 @@ export default function ProjectDetailPage() {
                   tags: projectData.tags
                 }}
                 username={username}
+                projectId={projectData.id}
               />
 
               <ProjectContent
