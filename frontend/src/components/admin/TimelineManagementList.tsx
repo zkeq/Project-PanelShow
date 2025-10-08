@@ -144,12 +144,10 @@ export function TimelineManagementList({ items, searchQuery }: TimelineManagemen
                   <div className="flex items-start gap-3">
                     {/* 项目Logo */}
                     <div className="relative w-12 h-12 flex-shrink-0">
-                      <Image
+                      <img
                         src={item.project.logo}
                         alt={item.project.name}
-                        fill
-                        className="object-cover rounded-lg"
-                        sizes="48px"
+                        className="w-full h-full object-cover rounded-lg"
                       />
                     </div>
                     
@@ -207,12 +205,10 @@ export function TimelineManagementList({ items, searchQuery }: TimelineManagemen
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {item.project.previewImages.slice(0, 6).map((image, index) => (
                           <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-                            <Image
+                            <img
                               src={image}
                               alt={`预览图 ${index + 1}`}
-                              fill
-                              className="object-cover hover:scale-105 transition-transform duration-300"
-                              sizes="(max-width: 640px) 50vw, 33vw"
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                             />
                           </div>
                         ))}
