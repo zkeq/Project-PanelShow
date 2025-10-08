@@ -114,9 +114,9 @@ const mapImages = (source: unknown, prefix: string) => {
         alt: description || name,
         label: name,
         description
-      }
+      } as ProjectDetailViewModel['images'][number]
     })
-    .filter((item): item is ProjectDetailViewModel['images'][number] => item !== null)
+    .filter((item): item is NonNullable<typeof item> => item !== null)
 }
 
 const mapFeatures = (source: unknown): ProjectFeature[] => {

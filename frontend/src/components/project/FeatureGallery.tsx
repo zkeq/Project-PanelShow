@@ -121,7 +121,7 @@ export default function FeatureGallery({
                 <img
                   src={images[currentSlideIndex].src}
                   alt={images[currentSlideIndex].alt}
-                  className="w-full h-full object-contain"
+                  className="w-full object-contain max-h-[336px]"
                 />
                 
                 {/* 轮播导航按钮 */}
