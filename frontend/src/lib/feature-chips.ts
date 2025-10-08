@@ -53,9 +53,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '琥珀晨光',
     classes: {
       container:
-        'bg-amber-50/80 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40 text-amber-700 dark:text-amber-200',
-      icon: 'text-amber-600 dark:text-amber-300',
-      label: 'text-amber-800 dark:text-amber-100'
+        'bg-amber-50/70 dark:bg-amber-950/15 border-amber-200/40 dark:border-amber-800/30 text-amber-600 dark:text-amber-200',
+      icon: 'text-amber-500 dark:text-amber-200',
+      label: 'text-amber-700 dark:text-amber-100'
     }
   },
   {
@@ -63,9 +63,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '森林微风',
     classes: {
       container:
-        'bg-emerald-50/80 dark:bg-emerald-950/15 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-200',
-      icon: 'text-emerald-600 dark:text-emerald-300',
-      label: 'text-emerald-800 dark:text-emerald-100'
+        'bg-emerald-50/70 dark:bg-emerald-950/15 border-emerald-200/40 dark:border-emerald-800/30 text-emerald-600 dark:text-emerald-200',
+      icon: 'text-emerald-500 dark:text-emerald-200',
+      label: 'text-emerald-700 dark:text-emerald-100'
     }
   },
   {
@@ -73,9 +73,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '天际长风',
     classes: {
       container:
-        'bg-sky-50/80 dark:bg-sky-950/20 border-sky-200/60 dark:border-sky-800/40 text-sky-700 dark:text-sky-200',
-      icon: 'text-sky-600 dark:text-sky-300',
-      label: 'text-sky-800 dark:text-sky-100'
+        'bg-sky-50/70 dark:bg-sky-950/20 border-sky-200/40 dark:border-sky-800/30 text-sky-600 dark:text-sky-200',
+      icon: 'text-sky-500 dark:text-sky-200',
+      label: 'text-sky-700 dark:text-sky-100'
     }
   },
   {
@@ -83,9 +83,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '紫罗云梦',
     classes: {
       container:
-        'bg-violet-50/80 dark:bg-violet-950/20 border-violet-200/60 dark:border-violet-800/40 text-violet-700 dark:text-violet-200',
-      icon: 'text-violet-600 dark:text-violet-300',
-      label: 'text-violet-800 dark:text-violet-100'
+        'bg-violet-50/70 dark:bg-violet-950/20 border-violet-200/40 dark:border-violet-800/30 text-violet-600 dark:text-violet-200',
+      icon: 'text-violet-500 dark:text-violet-200',
+      label: 'text-violet-700 dark:text-violet-100'
     }
   },
   {
@@ -93,9 +93,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '玫瑰石英',
     classes: {
       container:
-        'bg-rose-50/80 dark:bg-rose-950/20 border-rose-200/60 dark:border-rose-800/40 text-rose-700 dark:text-rose-200',
-      icon: 'text-rose-600 dark:text-rose-300',
-      label: 'text-rose-800 dark:text-rose-100'
+        'bg-rose-50/70 dark:bg-rose-950/20 border-rose-200/40 dark:border-rose-800/30 text-rose-600 dark:text-rose-200',
+      icon: 'text-rose-500 dark:text-rose-200',
+      label: 'text-rose-700 dark:text-rose-100'
     }
   },
   {
@@ -103,8 +103,8 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '午夜星辉',
     classes: {
       container:
-        'bg-slate-900/70 dark:bg-slate-900/60 border-slate-700/70 dark:border-slate-700 text-slate-100 dark:text-slate-100',
-      icon: 'text-amber-300 dark:text-amber-200',
+        'bg-slate-900/50 dark:bg-slate-900/50 border-slate-700/40 dark:border-slate-700 text-slate-100 dark:text-slate-100',
+      icon: 'text-amber-200 dark:text-amber-200',
       label: 'text-slate-100'
     }
   },
@@ -113,9 +113,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '极光幻彩',
     classes: {
       container:
-        'bg-indigo-50/80 dark:bg-indigo-950/20 border-indigo-200/60 dark:border-indigo-800/40 text-indigo-700 dark:text-indigo-200',
-      icon: 'text-sky-500 dark:text-sky-300',
-      label: 'text-indigo-800 dark:text-indigo-100'
+        'bg-indigo-50/70 dark:bg-indigo-950/20 border-indigo-200/40 dark:border-indigo-800/30 text-indigo-600 dark:text-indigo-200',
+      icon: 'text-sky-400 dark:text-sky-200',
+      label: 'text-indigo-700 dark:text-indigo-100'
     }
   },
   {
@@ -123,9 +123,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '青柠火花',
     classes: {
       container:
-        'bg-lime-50/80 dark:bg-lime-950/20 border-lime-200/60 dark:border-lime-800/40 text-lime-700 dark:text-lime-200',
-      icon: 'text-lime-600 dark:text-lime-300',
-      label: 'text-lime-800 dark:text-lime-100'
+        'bg-lime-50/70 dark:bg-lime-950/20 border-lime-200/40 dark:border-lime-800/30 text-lime-600 dark:text-lime-200',
+      icon: 'text-lime-500 dark:text-lime-200',
+      label: 'text-lime-700 dark:text-lime-100'
     }
   },
   {
@@ -133,9 +133,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '薰衣草雾',
     classes: {
       container:
-        'bg-fuchsia-50/80 dark:bg-fuchsia-950/20 border-fuchsia-200/60 dark:border-fuchsia-800/40 text-fuchsia-700 dark:text-fuchsia-200',
-      icon: 'text-purple-500 dark:text-purple-300',
-      label: 'text-fuchsia-800 dark:text-fuchsia-100'
+        'bg-fuchsia-50/70 dark:bg-fuchsia-950/20 border-fuchsia-200/40 dark:border-fuchsia-800/30 text-fuchsia-600 dark:text-fuchsia-200',
+      icon: 'text-purple-400 dark:text-purple-200',
+      label: 'text-fuchsia-700 dark:text-fuchsia-100'
     }
   },
   {
@@ -143,9 +143,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '余烬流火',
     classes: {
       container:
-        'bg-orange-50/80 dark:bg-orange-950/20 border-orange-200/60 dark:border-orange-800/40 text-orange-700 dark:text-orange-200',
-      icon: 'text-orange-600 dark:text-orange-300',
-      label: 'text-orange-800 dark:text-orange-100'
+        'bg-orange-50/70 dark:bg-orange-950/20 border-orange-200/40 dark:border-orange-800/30 text-orange-600 dark:text-orange-200',
+      icon: 'text-orange-500 dark:text-orange-200',
+      label: 'text-orange-700 dark:text-orange-100'
     }
   },
   {
@@ -153,9 +153,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '蔚蓝浪潮',
     classes: {
       container:
-        'bg-cyan-50/80 dark:bg-cyan-950/20 border-cyan-200/60 dark:border-cyan-800/40 text-cyan-700 dark:text-cyan-200',
-      icon: 'text-cyan-600 dark:text-cyan-300',
-      label: 'text-cyan-800 dark:text-cyan-100'
+        'bg-cyan-50/70 dark:bg-cyan-950/20 border-cyan-200/40 dark:border-cyan-800/30 text-cyan-600 dark:text-cyan-200',
+      icon: 'text-cyan-500 dark:text-cyan-200',
+      label: 'text-cyan-700 dark:text-cyan-100'
     }
   },
   {
@@ -163,9 +163,9 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     label: '钴石沉静',
     classes: {
       container:
-        'bg-slate-100/80 dark:bg-slate-900/30 border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-200',
-      icon: 'text-slate-500 dark:text-slate-300',
-      label: 'text-slate-800 dark:text-slate-100'
+        'bg-slate-100/70 dark:bg-slate-900/25 border-slate-200/40 dark:border-slate-700/40 text-slate-600 dark:text-slate-200',
+      icon: 'text-slate-500 dark:text-slate-200',
+      label: 'text-slate-700 dark:text-slate-100'
     }
   }
 ]
@@ -183,9 +183,9 @@ export const FEATURE_CHIP_PRESET_LIST = FEATURE_CHIP_PRESETS
 export const DEFAULT_FEATURE_CHIP_PRESET_ID: FeatureChipPresetId = FEATURE_CHIP_PRESETS[0].id
 
 const DEFAULT_CONTAINER_CLASS =
-  'bg-amber-50/80 dark:bg-amber-950/20 border-amber-200/60 dark:border-amber-800/40 text-amber-700 dark:text-amber-200'
-const DEFAULT_ICON_CLASS = 'text-amber-600 dark:text-amber-300'
-const DEFAULT_LABEL_CLASS = 'text-amber-800 dark:text-amber-100'
+  'bg-amber-50/70 dark:bg-amber-950/15 border-amber-200/40 dark:border-amber-800/30 text-amber-600 dark:text-amber-200'
+const DEFAULT_ICON_CLASS = 'text-amber-500 dark:text-amber-200'
+const DEFAULT_LABEL_CLASS = 'text-amber-700 dark:text-amber-100'
 
 const LEGACY_FALLBACK_CONTAINER =
   'bg-yellow-50/70 dark:bg-yellow-950/20 border-yellow-200/50 dark:border-yellow-800/40 text-yellow-700 dark:text-yellow-200'
