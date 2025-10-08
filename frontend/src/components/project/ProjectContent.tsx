@@ -36,6 +36,9 @@ import {
   Package,
   type LucideIcon,
 } from "lucide-react";
+import { ProjectInfo } from "@/types/store";
+import { TimelineItem } from "@/types/timeline";
+import { useExecuteCode } from "@/hooks/useExecuteCode";
 
 interface MobileNavigationData {
   activeSection: string
@@ -47,23 +50,11 @@ interface ProjectContentProps {
     id: string;
     name: string;
     description: string;
-    techStack: string;
-    projectType: string;
-    monthlyPV: string;
-    developmentPeriod: string;
-    uiLibrary?: string;
-    componentLibrary?: string;
-    status: "active" | "archived" | "maintained";
-    previewImage?: string;
+    status: "active" | "archived" | "maintained" | "building";
     previewUrl?: string;
+    sourceUrl?: string;
     longDescription?: string;
-    displayData?: Array<{
-      key: string;
-      label: string;
-      value: string;
-      icon?: string;
-      type?: string;
-    }>;
+    homeAttributes?: ProjectInfo[];
     images?: Array<{
       src: string;
       alt: string;
@@ -88,16 +79,8 @@ interface ProjectContentProps {
         description?: string;
       }>;
     }>;
-    timeline?: {
-      [year: string]: {
-        [month: string]: Array<{
-          title: string;
-          date: string;
-          status: string;
-        }>;
-      };
-    };
   };
+  timelineItems?: TimelineItem[];
   username?: string;
   mobileNavigation?: MobileNavigationData;
 }
@@ -170,20 +153,25 @@ const getColorTheme = (index: number): string => {
   return colorThemes[index % colorThemes.length];
 };
 
-export default function ProjectContent({ project, username, mobileNavigation }: ProjectContentProps) {
-  // 从displayData动态生成项目统计信息
-  const projectStats = (project.displayData || []).map((item, index) => {
-    return {
-      label: item.label,
-      value: item.value,
-      iconName: item.icon || 'lucide:code',
-      color: getColorTheme(index),
-    };
-  });
+const ProjectStatItem = ({ attribute, colorClass }: { attribute: ProjectInfo; colorClass: string }) => {
+  const { value, loading } = useExecuteCode(attribute.valueCode, attribute.value ?? "")
+  const displayValue = attribute.valueCode ? (loading ? "计算中..." : value) : (attribute.value ?? "")
 
-  // 调试信息
-  console.log('ProjectContent - project.displayData:', project.displayData);
-  console.log('ProjectContent - projectStats.length:', projectStats.length);
+  return (
+    <div className="space-y-2">
+      <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border ${colorClass}`}>
+        {renderIcon(attribute.icon || "lucide:code")}
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground font-medium">{attribute.label}</p>
+        <p className="text-sm font-semibold text-foreground">{displayValue || "-"}</p>
+      </div>
+    </div>
+  )
+}
+
+export default function ProjectContent({ project, username, mobileNavigation, timelineItems }: ProjectContentProps) {
+  const statsAttributes = (project.homeAttributes || []).slice(0, 12)
 
   return (
     <div className="space-y-8">
@@ -223,38 +211,38 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">项目信息</CardTitle>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <GitBranch className="w-4 h-4 mr-2" />
-                    源码
-                  </Button>
-                  <Button size="sm">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    在线预览
-                  </Button>
+                  {project.sourceUrl && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(project.sourceUrl!, "_blank")}
+                    >
+                      <GitBranch className="w-4 h-4 mr-2" />
+                      源码
+                    </Button>
+                  )}
+                  {project.previewUrl && (
+                    <Button size="sm" onClick={() => window.open(project.previewUrl!, "_blank")}>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      在线预览
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="py-4 lg:py-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4 w-full">
-                  {projectStats.map((stat, index) => {
-                    return (
-                      <div key={index} className="space-y-2">
-                        <div
-                          className={`inline-flex items-center justify-center w-8 h-8 rounded-lg border ${stat.color}`}
-                        >
-                          {renderIcon(stat.iconName)}
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium">
-                            {stat.label}
-                          </p>
-                          <p className="text-sm font-semibold text-foreground">
-                            {stat.value}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                {statsAttributes.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4 w-full">
+                    {statsAttributes.map((attribute, index) => (
+                      <ProjectStatItem
+                        key={attribute.id}
+                        attribute={attribute}
+                        colorClass={attribute.color || getColorTheme(index)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">暂无项目信息。</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -411,6 +399,7 @@ export default function ProjectContent({ project, username, mobileNavigation }: 
         <DevelopmentTimelineSection
           projectId={project.id}
           username={username || 'zkeq'}
+          initialTimelineItems={timelineItems}
         />
       </section>
     </div>

@@ -40,8 +40,10 @@ export interface ProjectInfo {
   valueCode: string;
   showInHomepage: boolean;
   showInSidebar: boolean;
+  showInHero?: boolean;
   color: string;
   order: number;
+  value?: string;
 }
 
 // 项目数据类型
@@ -61,6 +63,8 @@ export interface Project {
   homeAttributes?: ProjectInfo[]
   // 侧边栏展示的属性
   sidebarAttributes?: ProjectInfo[]
+  // Hero 展示的属性
+  heroAttributes?: ProjectInfo[]
   // 截图列表
   screenshots?: Array<{
     id: string

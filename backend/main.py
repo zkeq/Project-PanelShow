@@ -351,6 +351,7 @@ async def get_projects(username: str):
             project_infos = project.get("projectInfos", [])
             home_attributes = []
             sidebar_attributes = []
+            hero_attributes = []
 
             for info in project_infos:
                 if isinstance(info, dict):
@@ -358,9 +359,12 @@ async def get_projects(username: str):
                         home_attributes.append(info)
                     if info.get("showInSidebar"):
                         sidebar_attributes.append(info)
+                    if info.get("showInHero"):
+                        hero_attributes.append(info)
 
             project["homeAttributes"] = home_attributes
             project["sidebarAttributes"] = sidebar_attributes
+            project["heroAttributes"] = hero_attributes[:3]
 
     return {"success": True, "data": projects, "total": len(projects)}
 
@@ -385,6 +389,7 @@ async def get_project(username: str, project_id: str):
     project_infos = project.get("projectInfos", [])
     home_attributes = []
     sidebar_attributes = []
+    hero_attributes = []
 
     for info in project_infos:
         if isinstance(info, dict):
@@ -392,9 +397,12 @@ async def get_project(username: str, project_id: str):
                 home_attributes.append(info)
             if info.get("showInSidebar"):
                 sidebar_attributes.append(info)
+            if info.get("showInHero"):
+                hero_attributes.append(info)
 
     project["homeAttributes"] = home_attributes
     project["sidebarAttributes"] = sidebar_attributes
+    project["heroAttributes"] = hero_attributes[:3]
 
     return {"success": True, "data": project}
 

@@ -11,208 +11,22 @@ import { Calendar, ChevronDown, ChevronUp, Activity } from "lucide-react";
 interface DevelopmentTimelineSectionProps {
   projectId: string;
   username: string;
+  initialTimelineItems?: TimelineItem[];
 }
 
 export default function DevelopmentTimelineSection({
   projectId,
   username,
+  initialTimelineItems,
 }: DevelopmentTimelineSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(Array.isArray(initialTimelineItems) ? initialTimelineItems : []);
   const [loading, setLoading] = useState(true);
 
-  // 模拟获取该项目的动态数据
   useEffect(() => {
-    const fetchProjectTimeline = async () => {
-      setLoading(true);
-      
-      // 这里应该是真实的API调用，根据projectId和username获取项目动态
-      // 暂时使用模拟数据，过滤出与当前项目相关的动态
-      const mockTimelineData: TimelineItem[] = [
-        {
-          id: 'timeline-project-1',
-          project_id: projectId,
-          publishedAt: '2024-08-22T10:30:00Z',
-          author: {
-            name: 'Zkeq',
-            avatar: 'https://avatars.githubusercontent.com/u/62864752',
-            username: 'zkeq'
-          },
-          project: {
-            id: projectId,
-            name: 'E-Commerce Platform',
-            logo: 'https://avatars.githubusercontent.com/u/62864752',
-            description: '完成了用户认证模块的开发，包括登录、注册、密码重置等功能。优化了前端登录表单的用户体验，增加了输入验证和错误提示。',
-            techStack: ['Vue', 'Python', 'Django', 'PostgreSQL'],
-            readme: `## 🔐 用户认证模块完成
-
-### ✅ 完成的功能
-- 用户注册与邮箱验证
-- 安全登录与会话管理
-- 密码重置功能
-- JWT Token 认证
-- 角色权限管理
-
-### 🎨 前端优化
-- 响应式登录表单设计
-- 实时输入验证
-- 友好的错误提示
-- 加载状态指示器
-- 暗色模式支持
-
-### 🔒 安全特性
-- 密码哈希存储
-- 防止暴力破解
-- CSRF 保护
-- XSS 防护
-- 会话过期管理`,
-            previewImages: [
-              '/Snipaste_2025-08-23_22-52-13.png',
-              '/Snipaste_2025-08-23_22-52-25.png'
-            ],
-            repositoryUrl: 'https://github.com/zkeq/e-commerce-platform',
-            liveUrl: 'http://localhost:3000/project/zkeq/1'
-          },
-          updateType: 'feature',
-          updateTypeMeta: {
-            id: 'feature',
-            label: '新功能',
-            color: '#3b82f6'
-          },
-          changelog: '完成用户认证模块开发',
-          createdAt: '2024-08-22T10:30:00Z',
-          likes: 18,
-          comments: 5,
-          isLiked: false
-        },
-        {
-          id: 'timeline-project-2',
-          project_id: projectId,
-          publishedAt: '2024-08-18T15:45:00Z',
-          author: {
-            name: 'Zkeq',
-            avatar: 'https://avatars.githubusercontent.com/u/62864752',
-            username: 'zkeq'
-          },
-          project: {
-            id: projectId,
-            name: 'E-Commerce Platform',
-            logo: 'https://avatars.githubusercontent.com/u/62864752',
-            description: '搭建了项目的基础架构，包括前后端环境配置、数据库设计、API路由规划等。选择了Vue 3 + Django的技术方案。',
-            techStack: ['Vue', 'Python', 'Django', 'PostgreSQL', 'Redis'],
-            readme: `## 🏗️ 项目架构搭建
-
-### 🎯 技术选型
-- **前端**: Vue 3 + TypeScript + Vite
-- **后端**: Django + Django REST Framework
-- **数据库**: PostgreSQL + Redis
-- **部署**: Docker + Docker Compose
-
-### 📋 数据库设计
-- 用户表设计
-- 商品分类表
-- 订单管理表
-- 支付记录表
-- 库存管理表
-
-### 🚀 开发环境
-- 配置开发环境
-- 设置 CI/CD 流程
-- API 文档规划
-- 代码规范制定
-
-### 📦 项目结构
-\`\`\`
-ecommerce-platform/
-├── frontend/          # Vue 3 前端
-├── backend/           # Django 后端
-├── docker/           # Docker 配置
-└── docs/            # 项目文档
-\`\`\``,
-            previewImages: [
-              '/Snipaste_2025-08-23_22-52-25.png'
-            ],
-            repositoryUrl: 'https://github.com/zkeq/e-commerce-platform'
-          },
-          updateType: 'new',
-          updateTypeMeta: {
-            id: 'new',
-            label: '新项目',
-            color: '#10b981'
-          },
-          changelog: '项目架构搭建完成',
-          createdAt: '2024-08-18T15:45:00Z',
-          likes: 12,
-          comments: 8,
-          isLiked: true
-        },
-        {
-          id: 'timeline-project-3',
-          project_id: projectId,
-          publishedAt: '2024-08-15T09:20:00Z',
-          author: {
-            name: 'Zkeq',
-            avatar: 'https://avatars.githubusercontent.com/u/62864752',
-            username: 'zkeq'
-          },
-          project: {
-            id: projectId,
-            name: 'E-Commerce Platform',
-            logo: 'https://avatars.githubusercontent.com/u/62864752',
-            description: '完成了商品管理模块的开发，包括商品的增删改查、分类管理、库存管理等核心功能。',
-            techStack: ['Vue', 'Python', 'Django', 'PostgreSQL'],
-            readme: `## 🛍️ 商品管理模块
-
-### 📦 核心功能
-- 商品信息管理
-- 商品分类体系
-- 库存实时监控
-- 商品图片上传
-- 规格属性管理
-
-### 🎯 功能特点
-- 支持多规格商品
-- 批量商品导入
-- 商品状态管理
-- 价格策略配置
-- SEO优化设置
-
-### 🔧 技术实现
-- RESTful API 设计
-- 图片上传与处理
-- 数据库索引优化
-- 缓存策略应用
-- 搜索功能集成`,
-            previewImages: [
-              '/Snipaste_2025-08-23_22-52-13.png',
-              '/Snipaste_2025-08-23_22-52-25.png'
-            ],
-            repositoryUrl: 'https://github.com/zkeq/e-commerce-platform',
-            liveUrl: 'http://localhost:3000/project/zkeq/1'
-          },
-          updateType: 'feature',
-          updateTypeMeta: {
-            id: 'feature',
-            label: '新功能',
-            color: '#3b82f6'
-          },
-          changelog: '商品管理模块开发完成',
-          createdAt: '2024-08-15T09:20:00Z',
-          likes: 25,
-          comments: 7,
-          isLiked: false
-        }
-      ];
-
-      // 模拟异步请求延迟
-      setTimeout(() => {
-        setTimelineItems(mockTimelineData);
-        setLoading(false);
-      }, 1000);
-    };
-
-    fetchProjectTimeline();
-  }, [projectId, username]);
+    setTimelineItems(Array.isArray(initialTimelineItems) ? initialTimelineItems : []);
+    setLoading(false);
+  }, [initialTimelineItems, projectId, username]);
 
   // 计算显示的动态数量
   const displayCount = isExpanded ? timelineItems.length : Math.min(timelineItems.length, 2);
