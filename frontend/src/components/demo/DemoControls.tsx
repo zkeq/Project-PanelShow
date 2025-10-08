@@ -3,27 +3,37 @@
 import { Button } from "@/components/ui/button"
 import { Monitor, Smartphone, ExternalLink, ArrowLeft, RotateCcw } from "lucide-react"
 import Link from "next/link"
-import { type Project } from "@/app/project/[username]/[projectId]/demo/[demoId]/projects-data"
 
 interface DemoControlsProps {
-  project: Project
+  title: string
   username: string
   projectId: string
   viewMode: "desktop" | "mobile"
   onViewModeChange: (mode: "desktop" | "mobile") => void
   onRefresh: () => void
-  demoType?: "main" | "feature" // 新增：演示类型
+  previewUrl?: string
+  mobilePreviewUrl?: string
+  demoType?: "main" | "feature"
 }
 
 export default function DemoControls({
-  project,
+  title,
   username,
   projectId,
   viewMode,
   onViewModeChange,
   onRefresh,
+  previewUrl,
+  mobilePreviewUrl,
   demoType = "feature", // 默认为功能演示
 }: DemoControlsProps) {
+  const currentPreviewUrl =
+    viewMode === "mobile"
+      ? mobilePreviewUrl || previewUrl
+      : previewUrl
+
+  const hasPreview = Boolean(currentPreviewUrl)
+
   return (
     <div className="sticky top-14 z-40 border-b bg-background/80 backdrop-blur-sm">
       <div className="mx-auto px-4 py-4 max-w-[1440px]">
@@ -36,7 +46,7 @@ export default function DemoControls({
               </Button>
             </Link>
             <div>
-              <h1 className="text-xl font-bold">{project.title}</h1>
+              <h1 className="text-xl font-bold">{title}</h1>
               <p className="text-sm text-muted-foreground">
                 {demoType === "main" ? "项目首页演示" : "实时演示"}
               </p>
@@ -72,11 +82,17 @@ export default function DemoControls({
             </Button>
 
             {/* External Link */}
-            <Button variant="outline" size="sm" asChild>
-              <a href={project.embedUrl} target="_blank" rel="noopener noreferrer">
+            {hasPreview ? (
+              <Button variant="outline" size="sm" asChild>
+                <a href={currentPreviewUrl ?? "#"} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" disabled>
                 <ExternalLink className="w-4 h-4" />
-              </a>
-            </Button>
+              </Button>
+            )}
           </div>
         </div>
       </div>

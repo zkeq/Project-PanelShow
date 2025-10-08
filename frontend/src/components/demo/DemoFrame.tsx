@@ -3,10 +3,11 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ExternalLink } from "lucide-react"
-import { type Project } from "@/app/project/[username]/[projectId]/demo/[demoId]/projects-data"
 
 interface DemoFrameProps {
-  project: Project
+  title: string
+  previewUrl?: string
+  mobilePreviewUrl?: string
   viewMode: "desktop" | "mobile"
   isLoading: boolean
   error: boolean
@@ -15,13 +16,22 @@ interface DemoFrameProps {
 }
 
 export default function DemoFrame({
-  project,
+  title,
+  previewUrl,
+  mobilePreviewUrl,
   viewMode,
   isLoading,
   error,
   onLoad,
   onError,
 }: DemoFrameProps) {
+  const iframeSrc =
+    viewMode === "mobile"
+      ? mobilePreviewUrl || previewUrl
+      : previewUrl
+
+  const hasIframeSrc = Boolean(iframeSrc)
+
   return (
     <div className="relative">
       <div
@@ -46,7 +56,7 @@ export default function DemoFrame({
         )}
 
         {/* Error State */}
-        {error && (
+        {error && hasIframeSrc && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
             <div className="text-center">
               <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
@@ -54,7 +64,7 @@ export default function DemoFrame({
               </div>
               <p className="text-sm text-muted-foreground mb-4">无法在 iframe 中加载演示</p>
               <Button variant="outline" size="sm" asChild>
-                <a href={project.embedUrl} target="_blank" rel="noopener noreferrer">
+                <a href={iframeSrc ?? "#"} target="_blank" rel="noopener noreferrer">
                   在新标签页中打开
                   <ExternalLink className="w-4 h-4 ml-2" />
                 </a>
@@ -64,15 +74,25 @@ export default function DemoFrame({
         )}
 
         {/* Iframe */}
-        {project.allowIframe && (
+        {hasIframeSrc ? (
           <iframe
-            src={project.embedUrl}
+            id="demo-preview-frame"
+            src={iframeSrc}
             className="w-full h-full border-0"
             onLoad={onLoad}
             onError={onError}
-            title={`${project.title} Demo`}
+            title={`${title} Demo`}
             sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
           />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                <ExternalLink className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">暂无可用的演示地址</p>
+            </div>
+          </div>
         )}
 
         {/* Mobile Frame Decoration */}

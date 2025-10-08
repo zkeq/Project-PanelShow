@@ -1,21 +1,27 @@
 import { Badge } from "@/components/ui/badge"
-import { type Project } from "@/app/project/[username]/[projectId]/demo/[demoId]/projects-data"
+import type { ProjectOverview } from "@/types/demo"
 
 interface ProjectInfoProps {
-  project: Project
+  project: ProjectOverview
 }
 
 export default function ProjectInfo({ project }: ProjectInfoProps) {
+  const tags = project.tags?.filter(Boolean) ?? []
+
   return (
     <div className="w-full max-w-[1440px] mb-6">
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        {project.technologies.map((tech: string) => (
-          <Badge key={tech} variant="secondary" className="text-xs">
-            {tech}
-          </Badge>
-        ))}
-      </div>
-      <p className="text-muted-foreground">{project.description}</p>
+      {tags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {tags.map((tag) => (
+            <Badge key={tag} variant="secondary" className="text-xs">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      )}
+      <p className="text-muted-foreground whitespace-pre-line">
+        {project.description || "暂无项目描述"}
+      </p>
     </div>
   )
 }
