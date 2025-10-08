@@ -4,6 +4,7 @@ import React from 'react';
 import { BarChart3 } from 'lucide-react';
 import { Project } from '@/types/store';
 import { useGlobalStore } from '@/store/useGlobalStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { AdminProjectCard } from './AdminProjectCard';
 import { useRouter } from 'next/navigation';
 
@@ -15,6 +16,7 @@ interface ProjectManagementListProps {
 export function ProjectManagementList({ projects, searchQuery }: ProjectManagementListProps) {
   const { deleteProject } = useGlobalStore();
   const router = useRouter();
+  const boundUsername = useAuthStore((state) => state.user?.bound_username ?? '');
 
   const handleEditProject = (projectId: string) => {
     router.push(`/admin/projects/${projectId}/edit`);
@@ -48,6 +50,7 @@ export function ProjectManagementList({ projects, searchQuery }: ProjectManageme
             index={index}
             onEdit={handleEditProject}
             onDelete={handleDeleteProject}
+            username={boundUsername || undefined}
           />
         ))}
       </div>

@@ -170,6 +170,7 @@ export default function ContentRenderer({
           projects={projects}
           expandedProjects={expandedProjects}
           onToggleExpand={onToggleExpand}
+          username={username}
           userProfile={userProfile}
         />
       </div>
@@ -203,6 +204,7 @@ export default function ContentRenderer({
           expandedProjects={expandedProjects}
           onToggleExpand={onToggleExpand}
           categoryLabel={categoryLabel || '未知'}
+          username={username}
         />
       </div>
     )

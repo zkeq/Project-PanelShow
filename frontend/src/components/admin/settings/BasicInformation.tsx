@@ -15,6 +15,7 @@ import {
   API_BASE_URL,
   checkUsernameAvailability,
   getProfileSection,
+  renameUser,
   syncGithubProfile,
   updateProfileSection,
   uploadImage,
@@ -92,8 +93,9 @@ const normalizeImageUrl = (value: string): string => {
 
 export function BasicInformation() {
   const { user, token } = useAuthStore();
+  const fetchUser = useAuthStore((state) => state.fetchUser);
   const boundUsername = user?.bound_username ?? "";
-  const effectiveUsername = boundUsername;
+  const [effectiveUsername, setEffectiveUsername] = useState(boundUsername);
 
   const [form, setForm] = useState<BasicProfileForm>(defaultForm);
   const [rawProfile, setRawProfile] = useState<Record<string, unknown>>({});
@@ -180,6 +182,10 @@ export function BasicInformation() {
   }, [token, effectiveUsername]);
 
   useEffect(() => {
+    setEffectiveUsername(boundUsername);
+  }, [boundUsername]);
+
+  useEffect(() => {
     loadProfile();
   }, [loadProfile]);
 
@@ -194,10 +200,20 @@ export function BasicInformation() {
       clearTimeout(siteAddressCheckRef.current);
     }
 
+    const trimmedValue = form.siteAddress.trim().toLowerCase();
+
+    if (effectiveUsername && trimmedValue === effectiveUsername.toLowerCase()) {
+      setSiteAddressStatus("available");
+      setSiteAddressMessage(
+        `你的站点将在 https://${typeof window !== "undefined" ? window.location.host : "localhost"}/project/${trimmedValue} 生效`
+      );
+      return;
+    }
+
     setSiteAddressStatus("checking");
     setSiteAddressMessage("正在检查站点地址...");
 
-    const currentValue = form.siteAddress.trim().toLowerCase();
+    const currentValue = trimmedValue;
     siteAddressCheckRef.current = setTimeout(async () => {
       try {
         const result = await checkUsernameAvailability(currentValue, token ?? undefined);
@@ -225,7 +241,7 @@ export function BasicInformation() {
         siteAddressCheckRef.current = null;
       }
     };
-  }, [form.siteAddress]);
+  }, [form.siteAddress, effectiveUsername, token]);
 
   const handleInputChange = <K extends keyof BasicProfileForm>(key: K, value: BasicProfileForm[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -247,11 +263,39 @@ export function BasicInformation() {
 
     setIsSaving(true);
     try {
+      const normalizedSiteAddress = form.siteAddress.trim().toLowerCase();
+      const currentUsername = effectiveUsername;
+      const targetUsername = normalizedSiteAddress || currentUsername;
+
+      if (!targetUsername) {
+        setStatusBanner({ type: "error", message: "请填写站点地址" });
+        setIsSaving(false);
+        return;
+      }
+
+      if (
+        token &&
+        currentUsername &&
+        normalizedSiteAddress &&
+        normalizedSiteAddress !== currentUsername.toLowerCase()
+      ) {
+        try {
+          await renameUser(currentUsername, normalizedSiteAddress, token);
+          setEffectiveUsername(normalizedSiteAddress);
+          await fetchUser();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "站点地址重命名失败";
+          setStatusBanner({ type: "error", message });
+          setIsSaving(false);
+          return;
+        }
+      }
+
       const payload = {
         ...rawProfile,
-        username: form.profileUsername || effectiveUsername,
+        username: form.profileUsername || targetUsername,
         siteTitle: `${form.siteTitleBase}${SITE_SUFFIX}`.trim(),
-        siteAddress: form.siteAddress,
+        siteAddress: normalizedSiteAddress || currentUsername,
         avatar: form.avatar,
         name: form.authorName,
         name_slug: form.githubUsername,
@@ -271,8 +315,13 @@ export function BasicInformation() {
         updatedAt: new Date().toISOString(),
       };
 
-      await updateProfileSection(effectiveUsername, "profile", payload, token);
+      await updateProfileSection(targetUsername, "profile", payload, token);
       setRawProfile(payload);
+      setForm((prev) => ({ ...prev, siteAddress: targetUsername }));
+      setSiteAddressStatus("available");
+      setSiteAddressMessage(
+        `你的站点将在 https://${typeof window !== "undefined" ? window.location.host : "localhost"}/project/${targetUsername} 生效`
+      );
       setStatusBanner({ type: "success", message: "基本信息已保存" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "保存失败，请稍后重试";

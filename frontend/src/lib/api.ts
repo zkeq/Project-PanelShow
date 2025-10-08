@@ -128,6 +128,17 @@ export function bindUsername(username: string, token: string) {
   });
 }
 
+export function renameUser(username: string, newUsername: string, token: string) {
+  return request<{ message: string }>(
+    `/api/users/${encodeURIComponent(username)}/rename`,
+    {
+      method: 'PUT',
+      token,
+      body: JSON.stringify({ new_username: newUsername }),
+    }
+  );
+}
+
 export function checkUsernameAvailability(username: string, token?: string) {
   return request<UsernameAvailabilityResponse>(
     `/api/auth/check-username/${encodeURIComponent(username)}`,

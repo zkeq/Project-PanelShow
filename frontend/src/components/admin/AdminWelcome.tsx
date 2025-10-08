@@ -136,8 +136,15 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetUsername = username.trim();
+    const targetSiteAddress = siteAddress.trim().toLowerCase();
+
     if (!targetUsername) {
       setLocalError('请输入要绑定的用户名');
+      return;
+    }
+
+    if (!targetSiteAddress) {
+      setLocalError('请输入站点地址');
       return;
     }
 
@@ -158,12 +165,14 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
     setProfileUpdating(true);
 
     try {
-      await bindUsername(targetUsername);
+      const bindingIdentifier = targetSiteAddress;
+
+      await bindUsername(bindingIdentifier);
 
       let currentProfile: Record<string, unknown> = {};
       try {
         const profileResult = await getProfileSection<Record<string, unknown>>(
-          targetUsername,
+          bindingIdentifier,
           'profile'
         );
         if (profileResult.success && profileResult.data) {
@@ -175,14 +184,14 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
 
       const mergedProfile = {
         ...currentProfile,
-        username: targetUsername,
-        name: siteTitle.trim() || currentProfile.name || targetUsername,
-        siteTitle: siteTitle.trim() || currentProfile.siteTitle || targetUsername,
-        siteAddress: siteAddress.trim() || currentProfile.siteAddress || targetUsername,
+        username: targetUsername || bindingIdentifier,
+        name: siteTitle.trim() || currentProfile.name || targetUsername || bindingIdentifier,
+        siteTitle: siteTitle.trim() || currentProfile.siteTitle || targetUsername || bindingIdentifier,
+        siteAddress: bindingIdentifier,
         updatedAt: new Date().toISOString(),
       } as Record<string, unknown>;
 
-      await updateProfileSection(targetUsername, 'profile', mergedProfile, token);
+      await updateProfileSection(bindingIdentifier, 'profile', mergedProfile, token);
 
       setSuccessMessage('绑定成功并已更新站点信息，正在进入管理后台...');
       setProfileUpdating(false);
