@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, OctagonX } from "lucide-react";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/useAuthStore";
 
-export default function GithubCallbackPage() {
+function GithubCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
@@ -112,5 +112,26 @@ export default function GithubCallbackPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function GithubCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-sm">
+          <CardHeader className="text-center space-y-2">
+            <CardTitle className="text-xl">GitHub 授权登录</CardTitle>
+            <CardDescription>请稍候，我们正在完成登录流程</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground text-center">正在加载...</p>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <GithubCallbackContent />
+    </Suspense>
   );
 }
