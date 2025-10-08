@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import TimelineCard from "@/components/TimelineCard";
 import { TimelineItem } from "@/types/timeline";
 import { Calendar, ChevronDown, ChevronUp, Activity } from "lucide-react";
+import { getProfile } from "@/lib/api";
 
 interface DevelopmentTimelineSectionProps {
   projectId: string;
@@ -22,11 +23,31 @@ export default function DevelopmentTimelineSection({
   const [isExpanded, setIsExpanded] = useState(false);
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(Array.isArray(initialTimelineItems) ? initialTimelineItems : []);
   const [loading, setLoading] = useState(true);
+  const [userAvatar, setUserAvatar] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
     setTimelineItems(Array.isArray(initialTimelineItems) ? initialTimelineItems : []);
     setLoading(false);
   }, [initialTimelineItems, projectId, username]);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await getProfile(username);
+        if (response.success && response.data) {
+          setUserAvatar(response.data.avatar || "");
+          setUserName(response.data.name || response.data.username || "");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+      }
+    };
+
+    if (username) {
+      fetchUserProfile();
+    }
+  }, [username]);
 
   // 计算显示的动态数量
   const displayCount = isExpanded ? timelineItems.length : Math.min(timelineItems.length, 2);
@@ -83,7 +104,12 @@ export default function DevelopmentTimelineSection({
               <div className="space-y-6">
                 {displayItems.map((item) => (
                   <div key={item.id}>
-                    <TimelineCard item={item} />
+                    <TimelineCard
+                      item={item}
+                      authorAvatar={userAvatar}
+                      authorName={userName}
+                      username={username}
+                    />
                   </div>
                 ))}
 

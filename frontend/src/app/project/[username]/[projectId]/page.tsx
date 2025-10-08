@@ -154,9 +154,9 @@ const mapFeatures = (source: unknown): ProjectFeature[] => {
         icon,
         techStack,
         images: images.length > 0 ? images : undefined
-      }
+      } as ProjectFeature
     })
-    .filter((feature): feature is ProjectFeature => feature !== null)
+    .filter((feature): feature is NonNullable<typeof feature> => feature !== null)
 }
 
 const mapTimelineItems = (source: unknown): TimelineItem[] => {
