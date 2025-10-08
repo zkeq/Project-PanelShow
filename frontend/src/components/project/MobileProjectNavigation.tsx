@@ -22,7 +22,7 @@ import {
 interface MobileProjectNavigationProps {
   project: {
     name: string
-    status: 'active' | 'archived' | 'maintained'
+    status: 'active' | 'archived' | 'maintained' | 'building'
   }
   activeSection: string
   onSectionChange: (section: string) => void
@@ -78,6 +78,18 @@ export default function MobileProjectNavigation({
                   <Badge variant="secondary" className="bg-blue-500/10 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-800">
                     <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5" />
                     维护中
+                  </Badge>
+                )}
+                {project.status === 'building' && (
+                  <Badge variant="secondary" className="bg-orange-500/10 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:border-orange-800">
+                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5" />
+                    开发中
+                  </Badge>
+                )}
+                {project.status === 'archived' && (
+                  <Badge variant="secondary" className="bg-gray-500/10 text-gray-700 border-gray-200 dark:bg-gray-500/20 dark:text-gray-400 dark:border-gray-800">
+                    <div className="w-1.5 h-1.5 bg-gray-500 rounded-full mr-1.5" />
+                    已归档
                   </Badge>
                 )}
               </div>
