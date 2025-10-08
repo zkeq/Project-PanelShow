@@ -162,7 +162,98 @@ const mapFeatures = (source: unknown): ProjectFeature[] => {
 const mapTimelineItems = (source: unknown): TimelineItem[] => {
   if (!Array.isArray(source)) return []
 
-  return source.filter(isRecord).map((item) => item as TimelineItem)
+  return source
+    .filter(isRecord)
+    .map((item) => {
+      // Validate and extract required fields
+      const id = typeof item.id === 'string' ? item.id : ''
+      const project_id = typeof item.project_id === 'string' ? item.project_id : ''
+      const publishedAt = typeof item.publishedAt === 'string' ? item.publishedAt : new Date().toISOString()
+      const createdAt = typeof item.createdAt === 'string' ? item.createdAt : publishedAt
+      const updateType = typeof item.updateType === 'string' ? item.updateType : 'update'
+      const changelog = typeof item.changelog === 'string' ? item.changelog : ''
+      const likes = typeof item.likes === 'number' ? item.likes : 0
+
+      // Author
+      const authorRaw = isRecord(item.author) ? item.author : {}
+      const author = {
+        name: typeof authorRaw.name === 'string' ? authorRaw.name : '',
+        avatar: typeof authorRaw.avatar === 'string' ? authorRaw.avatar : '',
+        username: typeof authorRaw.username === 'string' ? authorRaw.username : ''
+      }
+
+      // Project
+      const projectRaw = isRecord(item.project) ? item.project : {}
+      const project = {
+        id: typeof projectRaw.id === 'string' ? projectRaw.id : project_id,
+        name: typeof projectRaw.name === 'string' ? projectRaw.name : '',
+        logo: typeof projectRaw.logo === 'string' ? projectRaw.logo : '',
+        description: typeof projectRaw.description === 'string' ? projectRaw.description : '',
+        techStack: Array.isArray(projectRaw.techStack)
+          ? projectRaw.techStack.filter((tech): tech is string => typeof tech === 'string')
+          : [],
+        readme: typeof projectRaw.readme === 'string' ? projectRaw.readme : '',
+        previewImages: Array.isArray(projectRaw.previewImages)
+          ? projectRaw.previewImages.filter((img): img is string => typeof img === 'string')
+          : [],
+        repositoryUrl: typeof projectRaw.repositoryUrl === 'string' ? projectRaw.repositoryUrl : '',
+        liveUrl: typeof projectRaw.liveUrl === 'string' ? projectRaw.liveUrl : undefined,
+        mobileUrl: typeof projectRaw.mobileUrl === 'string' ? projectRaw.mobileUrl : undefined
+      }
+
+      // UpdateTypeMeta
+      const updateTypeMetaRaw = isRecord(item.updateTypeMeta) ? item.updateTypeMeta : {}
+      const updateTypeMeta = {
+        id: typeof updateTypeMetaRaw.id === 'string' ? updateTypeMetaRaw.id : updateType,
+        label: typeof updateTypeMetaRaw.label === 'string' ? updateTypeMetaRaw.label : updateType,
+        color: typeof updateTypeMetaRaw.color === 'string' ? updateTypeMetaRaw.color : '#3b82f6'
+      }
+
+      // Tags
+      const tagsRaw = Array.isArray(item.tags) ? item.tags : []
+      const tags = tagsRaw
+        .filter(isRecord)
+        .map((tag) => ({
+          id: typeof tag.id === 'string' ? tag.id : '',
+          label: typeof tag.label === 'string' ? tag.label : '',
+          icon: typeof tag.icon === 'string' ? tag.icon : ''
+        }))
+        .filter((tag) => tag.id && tag.label)
+
+      // Assets
+      const assetsRaw = isRecord(item.assets) ? item.assets : {}
+      const imagesRaw = Array.isArray(assetsRaw.images) ? assetsRaw.images : []
+      const images = imagesRaw
+        .filter(isRecord)
+        .map((img) => ({
+          id: typeof img.id === 'string' ? img.id : '',
+          url: typeof img.url === 'string' ? img.url : '',
+          filename: typeof img.filename === 'string' ? img.filename : '',
+          contentType: typeof img.contentType === 'string' ? img.contentType : '',
+          size: typeof img.size === 'number' ? img.size : 0
+        }))
+        .filter((img) => img.url)
+
+      return {
+        id,
+        project_id,
+        publishedAt,
+        author,
+        project,
+        updateType,
+        updateTypeMeta,
+        changelog,
+        tags: tags.length > 0 ? tags : undefined,
+        details: typeof item.details === 'string' ? item.details : undefined,
+        assets: images.length > 0 ? { images } : undefined,
+        createdAt,
+        updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
+        likes,
+        comments: typeof item.comments === 'number' ? item.comments : undefined,
+        isLiked: typeof item.isLiked === 'boolean' ? item.isLiked : undefined
+      } as TimelineItem
+    })
+    .filter((item) => item.id && item.project.name)
 }
 
 const normalizeStatus = (source: unknown): { id: ProjectStatus; label?: string } => {
