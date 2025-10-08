@@ -9,6 +9,7 @@ import ProjectHero from '@/components/project/ProjectHero'
 import ProjectContent from '@/components/project/ProjectContent'
 import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
 import { fetchProject } from '@/lib/api'
+import { parseFeatureChipAppearance, type FeatureChipAppearance } from '@/lib/feature-chips'
 import type { ProjectInfo } from '@/types/store'
 import type { TimelineItem } from '@/types/timeline'
 
@@ -40,6 +41,7 @@ interface ProjectFeatureChip {
   label: string
   color?: string
   icon?: string
+  appearance?: FeatureChipAppearance
 }
 
 interface ProjectDetailViewModel {

@@ -18,6 +18,11 @@ import { Icon } from '@iconify/react'
 import { ProjectInfo } from '@/types/store'
 import { useExecuteCode } from '@/hooks/useExecuteCode'
 import { cn } from '@/lib/utils'
+import {
+  computeFeatureChipVisuals,
+  DEFAULT_FEATURE_CHIP_PRESET_ID,
+  type FeatureChipAppearance
+} from '@/lib/feature-chips'
 
 interface HeroProjectData {
   name: string
@@ -44,6 +49,7 @@ interface FeatureChip {
   label: string
   color?: string
   icon?: string
+  appearance?: FeatureChipAppearance
 }
 
 const HeroStatItem = ({ attribute }: { attribute: ProjectInfo }) => {
@@ -162,9 +168,24 @@ export default function ProjectHero({ project, username, projectId }: ProjectHer
   const statsToRender = hasHeroAttributes ? heroAttributes! : fallbackStats
 
   const defaultFeatureChips: FeatureChip[] = [
-    { id: 'default-performance', label: '高性能', color: 'bg-yellow-500', icon: 'Zap' },
-    { id: 'default-security', label: '安全可靠', color: 'bg-emerald-500', icon: 'Shield' },
-    { id: 'default-modern', label: '现代化', color: 'bg-sky-500', icon: 'Sparkles' }
+    {
+      id: 'default-performance',
+      label: '高性能',
+      icon: 'Zap',
+      appearance: { presetId: DEFAULT_FEATURE_CHIP_PRESET_ID }
+    },
+    {
+      id: 'default-security',
+      label: '安全可靠',
+      icon: 'Shield',
+      appearance: { presetId: 'forest-breeze' }
+    },
+    {
+      id: 'default-modern',
+      label: '现代化',
+      icon: 'Sparkles',
+      appearance: { presetId: 'skyline' }
+    }
   ]
 
   const resolveFeatureChips = () => {
@@ -187,40 +208,33 @@ export default function ProjectHero({ project, username, projectId }: ProjectHer
     ExternalLink
   }
 
-  const renderFeatureIcon = (iconName?: string) => {
+  const renderFeatureIcon = (iconName?: string, className?: string) => {
     if (!iconName) {
-      return <Sparkles className="w-4 h-4" />
+      return <Sparkles className={cn('w-4 h-4', className)} />
     }
 
     if (iconName.includes(':')) {
-      return <Icon icon={iconName} className="w-4 h-4" />
+      return <Icon icon={iconName} className={cn('w-4 h-4', className)} />
     }
 
     const IconComponent = featureIconMap[iconName as keyof typeof featureIconMap]
     if (IconComponent) {
-      return <IconComponent className="w-4 h-4" />
+      return <IconComponent className={cn('w-4 h-4', className)} />
     }
 
-    return <Sparkles className="w-4 h-4" />
+    return <Sparkles className={cn('w-4 h-4', className)} />
   }
+  const buildFeatureChipStyles = (chip: FeatureChip) => {
+    const visuals = computeFeatureChipVisuals(chip)
 
-  const buildFeatureChipClasses = (chip: FeatureChip) => {
-    if (!chip.color) {
-      return 'flex items-center gap-2 px-3 py-2 rounded-lg border border-yellow-200/50 dark:border-yellow-800/40 bg-yellow-50/50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-300 text-sm font-medium shadow-sm'
+    return {
+      container: cn(
+        'flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium shadow-sm transition-all backdrop-blur-sm',
+        visuals.containerClass
+      ),
+      icon: visuals.iconClass,
+      label: cn('text-sm font-medium', visuals.labelClass)
     }
-
-    const classes = chip.color.split(/\s+/).filter(Boolean)
-    const hasBackground = classes.some((cls) => cls.startsWith('bg-') || cls.startsWith('bg-[') || cls.startsWith('bg-gradient'))
-    const hasText = classes.some((cls) => cls.startsWith('text-'))
-    const hasBorder = classes.some((cls) => cls.startsWith('border-'))
-
-    return cn(
-      'flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium shadow-sm transition-colors',
-      chip.color,
-      hasBackground ? '' : 'bg-yellow-50/50 dark:bg-yellow-950/20',
-      hasText ? '' : hasBackground ? 'text-white' : 'text-yellow-700 dark:text-yellow-300',
-      hasBorder ? '' : hasBackground ? 'border-transparent' : 'border-yellow-200/50 dark:border-yellow-800/40'
-    )
   }
 
   return (
@@ -331,12 +345,15 @@ export default function ProjectHero({ project, username, projectId }: ProjectHer
         {/* 特色标签 */}
         {featureChips.length > 0 && (
           <div className="flex flex-wrap gap-3">
-            {featureChips.map((chip) => (
-              <div key={chip.id} className={buildFeatureChipClasses(chip)}>
-                {renderFeatureIcon(chip.icon)}
-                <span>{chip.label}</span>
-              </div>
-            ))}
+            {featureChips.map((chip) => {
+              const classes = buildFeatureChipStyles(chip)
+              return (
+                <div key={chip.id} className={classes.container}>
+                  {renderFeatureIcon(chip.icon, classes.icon)}
+                  <span className={classes.label}>{chip.label}</span>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

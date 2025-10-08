@@ -47,6 +47,11 @@ import {
   Send
 } from 'lucide-react';
 import { StatusToast, type StatusToastState } from '@/components/admin/settings/StatusToast';
+import {
+  DEFAULT_FEATURE_CHIP_PRESET_ID,
+  parseFeatureChipAppearance,
+  type FeatureChipPresetId
+} from '@/lib/feature-chips';
 
 const DEFAULT_STATUS_OPTIONS: ProjectStatus[] = [
   { id: 'active', label: '活跃项目', color: 'bg-green-500' },
@@ -62,9 +67,9 @@ const DEFAULT_TYPE_OPTIONS: ProjectType[] = [
 ];
 
 const DEFAULT_FEATURE_OPTIONS: ProjectFeature[] = [
-  { id: 'performance', label: '高性能', color: 'bg-green-500', icon: 'Zap' },
-  { id: 'security', label: '安全可靠', color: 'bg-blue-500', icon: 'Shield' },
-  { id: 'modern', label: '现代化', color: 'bg-purple-500', icon: 'Sparkles' },
+  { id: 'performance', label: '高性能', icon: 'Zap', appearance: { presetId: 'golden-glow' } },
+  { id: 'security', label: '安全可靠', icon: 'Shield', appearance: { presetId: 'forest-breeze' } },
+  { id: 'modern', label: '现代化', icon: 'Sparkles', appearance: { presetId: 'skyline' } },
 ];
 
 const SETTINGS_KEYS = {
@@ -168,8 +173,8 @@ function normalizeFeatureOptions(data: unknown): ProjectFeature[] {
     const label = typeof rawLabel === 'string' ? rawLabel.trim() : '';
     if (!label) return;
 
-    const color = typeof record.color === 'string' ? record.color : 'bg-blue-500';
-    const icon = typeof record.icon === 'string' ? record.icon : 'Zap';
+    const color = typeof record.color === 'string' ? record.color : undefined;
+    const icon = typeof record.icon === 'string' ? record.icon : 'Sparkles';
     const providedId = typeof record.id === 'string' ? record.id.trim() : '';
     const baseId = providedId || slugify(label) || `feature-${index + 1}`;
     let uniqueId = baseId;
@@ -179,7 +184,18 @@ function normalizeFeatureOptions(data: unknown): ProjectFeature[] {
     }
     seen.add(uniqueId);
 
-    sanitized.push({ id: uniqueId, label, color, icon });
+    const appearance =
+      parseFeatureChipAppearance(record.appearance) ??
+      parseFeatureChipAppearance(record.style) ??
+      parseFeatureChipAppearance(record.visuals);
+
+    sanitized.push({
+      id: uniqueId,
+      label,
+      icon,
+      color,
+      appearance: appearance ?? (!color ? { presetId: DEFAULT_FEATURE_CHIP_PRESET_ID } : undefined),
+    });
   });
 
   return sanitized.length > 0 ? sanitized : DEFAULT_FEATURE_OPTIONS;
@@ -305,16 +321,16 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
 
   const handleCreateFeatureOption = async ({
     label,
-    color,
+    presetId,
     icon,
   }: {
     label: string;
-    color: string;
+    presetId: FeatureChipPresetId;
     icon: string;
   }) => {
     const { username, authToken } = requireAuthContext();
     const id = createUniqueId(label, featureOptions.map((option) => option.id), 'feature');
-    const newFeature: ProjectFeature = { id, label, color, icon };
+    const newFeature: ProjectFeature = { id, label, icon, appearance: { presetId } };
     const updated = [...featureOptions, newFeature];
     await updateSettings(username, SETTINGS_KEYS.features, updated, authToken);
     setFeatureOptions(updated);
@@ -405,9 +421,19 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
           id = `${slug}-${counter++}`;
         }
         usedIds.add(id);
-        const color = typeof record.color === 'string' ? record.color : 'bg-blue-500';
+        const color = typeof record.color === 'string' ? record.color : undefined;
         const icon = typeof record.icon === 'string' ? record.icon : 'Sparkles';
-        return { id, label, color, icon };
+        const appearance =
+          parseFeatureChipAppearance(record.appearance) ??
+          parseFeatureChipAppearance(record.style) ??
+          parseFeatureChipAppearance(record.visuals);
+        return {
+          id,
+          label,
+          color,
+          icon,
+          appearance: appearance ?? (!color ? { presetId: DEFAULT_FEATURE_CHIP_PRESET_ID } : undefined),
+        };
       })
       .filter((item): item is ProjectFeature => item !== null);
   }, []);

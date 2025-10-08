@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -28,44 +27,31 @@ import {
   Settings,
   TrendingUp,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  computeFeatureChipVisuals,
+  DEFAULT_FEATURE_CHIP_PRESET_ID,
+  FEATURE_CHIP_PRESET_LIST,
+  type FeatureChipAppearance,
+  type FeatureChipPresetId,
+} from '@/lib/feature-chips';
 
 export interface ProjectFeature {
   id: string;
   label: string;
-  color: string;
   icon: string;
+  color?: string;
+  appearance?: FeatureChipAppearance;
 }
-
 
 interface ProjectFeatureSelectorProps {
   features: ProjectFeature[];
   options: ProjectFeature[];
   onChange: (features: ProjectFeature[]) => void;
   onCreateOption?: (
-    input: { label: string; color: string; icon: string }
+    input: { label: string; presetId: FeatureChipPresetId; icon: string }
   ) => Promise<ProjectFeature> | ProjectFeature;
 }
-
-const colorOptions = [
-  'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500',
-  'bg-blue-500', 'bg-indigo-500', 'bg-purple-500', 'bg-pink-500',
-  'bg-gray-500', 'bg-cyan-500', 'bg-teal-500', 'bg-emerald-500'
-];
-
-const colorHexMap: Record<string, string> = {
-  'bg-red-500': '#ef4444',
-  'bg-orange-500': '#f97316',
-  'bg-yellow-500': '#eab308',
-  'bg-green-500': '#22c55e',
-  'bg-blue-500': '#3b82f6',
-  'bg-indigo-500': '#6366f1',
-  'bg-purple-500': '#a855f7',
-  'bg-pink-500': '#ec4899',
-  'bg-gray-500': '#6b7280',
-  'bg-cyan-500': '#06b6d4',
-  'bg-teal-500': '#14b8a6',
-  'bg-emerald-500': '#10b981',
-};
 
 const iconOptions = [
   { name: 'Zap', component: Zap, label: '闪电' },
@@ -87,16 +73,42 @@ function getIconComponent(iconName: string) {
   return icon?.component || Zap;
 }
 
-function getColorHex(color: string) {
-  return colorHexMap[color] ?? '#3b82f6';
+function FeatureChipPreview({
+  feature,
+  placeholderLabel = '特性预览',
+  className,
+  iconSize = 'h-3.5 w-3.5',
+}: {
+  feature: ProjectFeature;
+  placeholderLabel?: string;
+  className?: string;
+  iconSize?: string;
+}) {
+  const IconComponent = getIconComponent(feature.icon);
+  const visuals = computeFeatureChipVisuals(feature);
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium shadow-sm transition-all backdrop-blur-sm',
+        visuals.containerClass,
+        className,
+      )}
+    >
+      <IconComponent className={cn(iconSize, visuals.iconClass)} />
+      <span className={cn('leading-none', visuals.labelClass)}>
+        {feature.label || placeholderLabel}
+      </span>
+    </span>
+  );
 }
 
 export function ProjectFeatureSelector({ features, options, onChange, onCreateOption }: ProjectFeatureSelectorProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newFeature, setNewFeature] = useState({
     label: '',
-    color: 'bg-blue-500',
-    icon: 'Zap',
+    presetId: DEFAULT_FEATURE_CHIP_PRESET_ID as FeatureChipPresetId,
+    icon: 'Sparkles',
   });
   const [adding, setAdding] = useState(false);
 
@@ -126,7 +138,7 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
       if (onCreateOption) {
         const result = await Promise.resolve(onCreateOption({
           label: trimmedLabel,
-          color: newFeature.color,
+          presetId: newFeature.presetId,
           icon: newFeature.icon,
         }));
 
@@ -139,13 +151,13 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
         created = {
           id: `custom-${Date.now()}`,
           label: trimmedLabel,
-          color: newFeature.color,
           icon: newFeature.icon,
+          appearance: { presetId: newFeature.presetId },
         };
       }
 
       addFeature(created);
-      setNewFeature({ label: '', color: 'bg-blue-500', icon: 'Zap' });
+      setNewFeature({ label: '', presetId: DEFAULT_FEATURE_CHIP_PRESET_ID, icon: 'Sparkles' });
       setIsAddDialogOpen(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : '添加特性失败，请稍后重试';
@@ -159,27 +171,30 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
     <div className="space-y-4">
       {features.length > 0 && (
         <div className="space-y-2">
+          <Label className="text-sm font-medium text-muted-foreground">已选特性</Label>
           <div className="flex flex-wrap gap-2">
             {features.map((feature) => {
               const IconComponent = getIconComponent(feature.icon);
-              const backgroundColor = getColorHex(feature.color);
+              const visuals = computeFeatureChipVisuals(feature);
               return (
-                <Badge
+                <span
                   key={feature.id}
-                  className="flex items-center gap-1 px-2 py-1 text-white"
-                  style={{ backgroundColor }}
+                  className={cn(
+                    'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium shadow-sm transition-all backdrop-blur-sm',
+                    visuals.containerClass,
+                  )}
                 >
-                  <IconComponent className="h-3 w-3" />
-                  {feature.label}
+                  <IconComponent className={cn('h-3.5 w-3.5', visuals.iconClass)} />
+                  <span className={cn('leading-none', visuals.labelClass)}>{feature.label}</span>
                   <button
                     type="button"
                     onClick={() => removeFeature(feature.id)}
-                    className="ml-1 hover:text-red-200 transition-colors"
+                    className="ml-1 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-destructive"
                     aria-label={`删除特性 ${feature.label}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
-                </Badge>
+                </span>
               );
             })}
           </div>
@@ -188,27 +203,31 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
 
       {unselectedFeatures.length > 0 && (
         <div className="space-y-2">
-          <div className="flex flex-wrap gap-2">
+          <Label className="text-sm font-medium text-muted-foreground">可选特性</Label>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {unselectedFeatures.map((feature) => {
               const IconComponent = getIconComponent(feature.icon);
-              const backgroundColor = getColorHex(feature.color);
+              const visuals = computeFeatureChipVisuals(feature);
               return (
-                <Button
+                <button
                   key={feature.id}
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={() => addFeature(feature)}
-                  className="flex items-center gap-1"
+                  className="group flex items-center justify-between rounded-2xl border border-dashed border-muted-foreground/30 p-3 text-left transition-all hover:border-primary/50 hover:bg-muted/40"
                 >
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor }}
-                  />
-                  <IconComponent className="h-3 w-3" />
-                  {feature.label}
-                  <Plus className="h-3 w-3" />
-                </Button>
+                  <span className="flex items-center gap-3">
+                    <span
+                      className={cn(
+                        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium shadow-sm transition-all backdrop-blur-sm',
+                        visuals.containerClass,
+                      )}
+                    >
+                      <IconComponent className={cn('h-3.5 w-3.5', visuals.iconClass)} />
+                      <span className={cn('leading-none', visuals.labelClass)}>{feature.label}</span>
+                    </span>
+                  </span>
+                  <Plus className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                </button>
               );
             })}
           </div>
@@ -238,18 +257,37 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
             </div>
 
             <div className="space-y-2">
-              <Label>选择颜色</Label>
-              <div className="grid grid-cols-6 gap-2">
-                {colorOptions.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    className={`w-8 h-8 rounded-full ${color} border-2 ${
-                      newFeature.color === color ? 'border-foreground' : 'border-border'
-                    }`}
-                    onClick={() => setNewFeature((prev) => ({ ...prev, color }))}
-                  />
-                ))}
+              <Label>选择配色风格</Label>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {FEATURE_CHIP_PRESET_LIST.map((preset) => {
+                  const previewFeature: ProjectFeature = {
+                    id: preset.id,
+                    label: newFeature.label,
+                    icon: newFeature.icon,
+                    appearance: { presetId: preset.id },
+                  };
+
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setNewFeature((prev) => ({ ...prev, presetId: preset.id }))}
+                      className={cn(
+                        'flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition-all',
+                        newFeature.presetId === preset.id
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-transparent bg-muted/20 hover:border-primary/40 hover:bg-muted/40',
+                      )}
+                    >
+                      <FeatureChipPreview
+                        feature={previewFeature}
+                        placeholderLabel={preset.label}
+                        className="text-[0.8rem]"
+                      />
+                      <span className="text-xs text-muted-foreground">{preset.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -262,31 +300,35 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
                     <button
                       key={icon.name}
                       type="button"
-                      className={`flex flex-col items-center gap-1 p-2 rounded-md border-2 ${
+                      className={cn(
+                        'flex flex-col items-center gap-1 rounded-md border-2 p-2 text-xs transition-colors',
                         newFeature.icon === icon.name
                           ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
+                          : 'border-border hover:border-primary/40',
+                      )}
                       onClick={() => setNewFeature((prev) => ({ ...prev, icon: icon.name }))}
                     >
                       <IconComponent className="w-4 h-4" />
-                      <span className="text-xs text-center">{icon.label}</span>
+                      <span className="text-xs text-muted-foreground">{icon.label}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30">
-              <span
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: getColorHex(newFeature.color) }}
+            <div className="space-y-2">
+              <Label>预览效果</Label>
+              <FeatureChipPreview
+                feature={{
+                  id: 'preview',
+                  label: newFeature.label,
+                  icon: newFeature.icon,
+                  appearance: { presetId: newFeature.presetId },
+                }}
+                placeholderLabel="特性预览"
+                className="text-sm"
+                iconSize="h-4 w-4"
               />
-              {(() => {
-                const IconComponent = getIconComponent(newFeature.icon);
-                return <IconComponent className="w-4 h-4" />;
-              })()}
-              <span className="text-sm font-medium">{newFeature.label || '预览特性'}</span>
             </div>
 
             <div className="flex justify-end gap-2">
