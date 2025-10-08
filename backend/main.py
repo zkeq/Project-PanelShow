@@ -840,7 +840,7 @@ async def execute_js_code(code: str = Body(..., embed=True)):
 
     # 创建临时文件执行代码
     try:
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False, encoding='utf-8') as f:
             # 使用 vm2 模块（如果可用）或 vm 模块执行代码
             # vm2 更安全但需要额外安装，vm 是 Node.js 内置的
             js_code = f'''
@@ -896,6 +896,7 @@ try {{
             ['node', temp_file],
             capture_output=True,
             text=True,
+            encoding='utf-8',
             timeout=30  # 30 秒总超时（留一些余量）
         )
 
