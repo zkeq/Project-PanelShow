@@ -18,13 +18,15 @@ interface FeatureGalleryProps {
   previewUrl?: string;
   className?: string;
   variant?: "grid" | "compact" | "carousel"; // grid: 9张图片带背景, compact: 6张图片无背景, carousel: 轮播图
+  onPreviewClick?: () => void;
 }
 
-export default function FeatureGallery({ 
-  images, 
-  previewUrl, 
+export default function FeatureGallery({
+  images,
+  previewUrl,
   className = "",
-  variant = "grid"
+  variant = "grid",
+  onPreviewClick
 }: FeatureGalleryProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -334,13 +336,22 @@ export default function FeatureGallery({
       )}
 
       {/* 在线预览按钮 */}
-      {previewUrl && (
+      {(previewUrl || onPreviewClick) && (
         <div className="mt-3 flex justify-center">
-          <Button 
+          <Button
             variant="outline"
-            size="sm" 
-            className="text-xs w-full" 
-            onClick={() => window.open(previewUrl, '_blank')}
+            size="sm"
+            className="text-xs w-full"
+            onClick={() => {
+              if (onPreviewClick) {
+                onPreviewClick()
+                return
+              }
+
+              if (previewUrl) {
+                window.open(previewUrl, '_blank')
+              }
+            }}
           >
             <ExternalLink className="w-3 h-3 mr-1" />
             在线预览

@@ -1,7 +1,8 @@
-'use client'
+"use client";
 
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,30 +10,36 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { 
-  ChevronDown, 
+} from "@/components/ui/dropdown-menu";
+import {
+  ChevronDown,
   Eye,
   FileText,
   Sparkles,
   Clock,
   ExternalLink
-} from 'lucide-react'
+} from "lucide-react";
 
 interface MobileProjectNavigationProps {
   project: {
     name: string
-    status: 'active' | 'archived' | 'maintained' | 'building'
+    status: "active" | "archived" | "maintained" | "building"
+    previewUrl?: string
   }
   activeSection: string
   onSectionChange: (section: string) => void
+  username?: string
+  projectId?: string
 }
 
 export default function MobileProjectNavigation({
   project,
   activeSection,
-  onSectionChange
+  onSectionChange,
+  username,
+  projectId
 }: MobileProjectNavigationProps) {
+  const router = useRouter();
   
   const navigationItems = [
     { id: 'overview', label: '项目概览', icon: Eye },
@@ -43,14 +50,20 @@ export default function MobileProjectNavigation({
 
   // 获取当前选中项的显示名称
   const getCurrentSectionLabel = () => {
-    const currentItem = navigationItems.find(item => item.id === activeSection)
-    return currentItem ? currentItem.label : '选择内容'
-  }
+    const currentItem = navigationItems.find(item => item.id === activeSection);
+    return currentItem ? currentItem.label : '选择内容';
+  };
 
   const handlePreview = () => {
-    const previewUrl = 'https://example.com'
-    window.open(previewUrl, '_blank')
-  }
+    if (username && projectId) {
+      router.push(`/project/${username}/${projectId}/demo`);
+      return;
+    }
+
+    if (project.previewUrl) {
+      window.open(project.previewUrl, "_blank");
+    }
+  };
 
   return (
     <div className="relative overflow-hidden rounded-xl bg-card border border-border/50 shadow-lg">

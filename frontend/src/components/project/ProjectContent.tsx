@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -78,6 +79,8 @@ interface ProjectContentProps {
         label: string;
         description?: string;
       }>;
+      previewUrl?: string;
+      demoId?: string | number;
     }>;
   };
   timelineItems?: TimelineItem[];
@@ -171,7 +174,32 @@ const ProjectStatItem = ({ attribute, colorClass }: { attribute: ProjectInfo; co
 }
 
 export default function ProjectContent({ project, username, mobileNavigation, timelineItems }: ProjectContentProps) {
-  const statsAttributes = (project.homeAttributes || []).slice(0, 12)
+  const router = useRouter();
+  const statsAttributes = (project.homeAttributes || []).slice(0, 12);
+  const demoBasePath = username ? `/project/${username}/${project.id}/demo` : null;
+
+  const openDemo = (options?: { demoId?: string | number; fallbackUrl?: string }) => {
+    const demoId = options?.demoId;
+    const fallbackUrl = options?.fallbackUrl;
+
+    if (demoBasePath) {
+      const demoPath =
+        demoId !== undefined && demoId !== null && `${demoId}`.length > 0
+          ? `${demoBasePath}/${demoId}`
+          : demoBasePath;
+      router.push(demoPath);
+      return;
+    }
+
+    if (fallbackUrl) {
+      window.open(fallbackUrl, "_blank");
+      return;
+    }
+
+    if (project.previewUrl) {
+      window.open(project.previewUrl, "_blank");
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -181,10 +209,13 @@ export default function ProjectContent({ project, username, mobileNavigation, ti
           <MobileProjectNavigation
             project={{
               name: project.name,
-              status: project.status
+              status: project.status,
+              previewUrl: project.previewUrl
             }}
             activeSection={mobileNavigation.activeSection}
             onSectionChange={mobileNavigation.onSectionChange}
+            username={username}
+            projectId={project.id}
           />
         </div>
       )}
@@ -222,7 +253,7 @@ export default function ProjectContent({ project, username, mobileNavigation, ti
                     </Button>
                   )}
                   {project.previewUrl && (
-                    <Button size="sm" onClick={() => window.open(project.previewUrl!, "_blank")}>
+                    <Button size="sm" onClick={() => openDemo({ fallbackUrl: project.previewUrl })}>
                       <ExternalLink className="w-4 h-4 mr-2" />
                       在线预览
                     </Button>
@@ -249,10 +280,12 @@ export default function ProjectContent({ project, username, mobileNavigation, ti
 
           {/* 项目图集 - 响应式布局 */}
           <div className="w-full lg:flex-shrink-0 lg:w-[380px]">
-            <FeatureGallery 
+            <FeatureGallery
               images={project.images || []}
               variant="carousel"
               className="w-full"
+              previewUrl={project.previewUrl}
+              onPreviewClick={() => openDemo({ fallbackUrl: project.previewUrl })}
             />
           </div>
         </div>
@@ -378,10 +411,16 @@ export default function ProjectContent({ project, username, mobileNavigation, ti
                   {/* Feature Images */}
                   {feature.images && feature.images.length > 0 && (
                     <div className="mt-4">
-                      <FeatureGallery 
+                      <FeatureGallery
                         images={feature.images}
-                        previewUrl={project.previewUrl}
+                        previewUrl={feature.previewUrl || project.previewUrl}
                         variant="compact"
+                        onPreviewClick={() =>
+                          openDemo({
+                            demoId: feature.demoId ?? index + 1,
+                            fallbackUrl: feature.previewUrl || project.previewUrl,
+                          })
+                        }
                       />
                     </div>
                   )}

@@ -1,5 +1,6 @@
-'use client'
+"use client"
 
+import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,6 +30,7 @@ interface HeroProjectData {
 interface ProjectHeroProps {
   project: HeroProjectData
   username?: string
+  projectId: string
 }
 
 const HeroStatItem = ({ attribute }: { attribute: ProjectInfo }) => {
@@ -45,7 +47,8 @@ const HeroStatItem = ({ attribute }: { attribute: ProjectInfo }) => {
   )
 }
 
-export default function ProjectHero({ project, username }: ProjectHeroProps) {
+export default function ProjectHero({ project, username, projectId }: ProjectHeroProps) {
+  const router = useRouter();
   const getStatusConfig = (status: string, label?: string) => {
     switch (status) {
       case 'active':
@@ -84,6 +87,11 @@ export default function ProjectHero({ project, username }: ProjectHeroProps) {
   const statusConfig = getStatusConfig(project.status, project.statusLabel)
 
   const handlePreview = () => {
+    if (username && projectId) {
+      router.push(`/project/${username}/${projectId}/demo`);
+      return
+    }
+
     if (project.previewUrl) {
       window.open(project.previewUrl, '_blank')
     }
