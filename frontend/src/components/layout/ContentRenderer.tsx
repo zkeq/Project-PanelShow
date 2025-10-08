@@ -141,6 +141,8 @@ export default function ContentRenderer({
           timelineItems={sortedTimeline}
           title={getTimelineTitle()}
           description={getTimelineDescription()}
+          authorAvatar={userProfile.avatar}
+          authorName={userProfile.displayName}
         />
       </div>
     )

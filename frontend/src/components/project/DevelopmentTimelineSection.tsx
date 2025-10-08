@@ -31,6 +31,7 @@ export default function DevelopmentTimelineSection({
       const mockTimelineData: TimelineItem[] = [
         {
           id: 'timeline-project-1',
+          project_id: projectId,
           publishedAt: '2024-08-22T10:30:00Z',
           author: {
             name: 'Zkeq',
@@ -38,6 +39,7 @@ export default function DevelopmentTimelineSection({
             username: 'zkeq'
           },
           project: {
+            id: projectId,
             name: 'E-Commerce Platform',
             logo: 'https://avatars.githubusercontent.com/u/62864752',
             description: '完成了用户认证模块的开发，包括登录、注册、密码重置等功能。优化了前端登录表单的用户体验，增加了输入验证和错误提示。',
@@ -72,13 +74,20 @@ export default function DevelopmentTimelineSection({
             liveUrl: 'http://localhost:3000/project/zkeq/1'
           },
           updateType: 'feature',
+          updateTypeMeta: {
+            id: 'feature',
+            label: '新功能',
+            color: '#3b82f6'
+          },
           changelog: '完成用户认证模块开发',
+          createdAt: '2024-08-22T10:30:00Z',
           likes: 18,
           comments: 5,
           isLiked: false
         },
         {
           id: 'timeline-project-2',
+          project_id: projectId,
           publishedAt: '2024-08-18T15:45:00Z',
           author: {
             name: 'Zkeq',
@@ -86,6 +95,7 @@ export default function DevelopmentTimelineSection({
             username: 'zkeq'
           },
           project: {
+            id: projectId,
             name: 'E-Commerce Platform',
             logo: 'https://avatars.githubusercontent.com/u/62864752',
             description: '搭建了项目的基础架构，包括前后端环境配置、数据库设计、API路由规划等。选择了Vue 3 + Django的技术方案。',
@@ -125,13 +135,20 @@ ecommerce-platform/
             repositoryUrl: 'https://github.com/zkeq/e-commerce-platform'
           },
           updateType: 'new',
+          updateTypeMeta: {
+            id: 'new',
+            label: '新项目',
+            color: '#10b981'
+          },
           changelog: '项目架构搭建完成',
+          createdAt: '2024-08-18T15:45:00Z',
           likes: 12,
           comments: 8,
           isLiked: true
         },
         {
           id: 'timeline-project-3',
+          project_id: projectId,
           publishedAt: '2024-08-15T09:20:00Z',
           author: {
             name: 'Zkeq',
@@ -139,6 +156,7 @@ ecommerce-platform/
             username: 'zkeq'
           },
           project: {
+            id: projectId,
             name: 'E-Commerce Platform',
             logo: 'https://avatars.githubusercontent.com/u/62864752',
             description: '完成了商品管理模块的开发，包括商品的增删改查、分类管理、库存管理等核心功能。',
@@ -173,7 +191,13 @@ ecommerce-platform/
             liveUrl: 'http://localhost:3000/project/zkeq/1'
           },
           updateType: 'feature',
+          updateTypeMeta: {
+            id: 'feature',
+            label: '新功能',
+            color: '#3b82f6'
+          },
           changelog: '商品管理模块开发完成',
+          createdAt: '2024-08-15T09:20:00Z',
           likes: 25,
           comments: 7,
           isLiked: false

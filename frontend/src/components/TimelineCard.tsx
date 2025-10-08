@@ -21,17 +21,24 @@ import {
 } from "lucide-react";
 import { TimelineItem } from "@/types/timeline";
 import Markdown from "@/components/Markdown";
+import ImagePreview from "@/components/ui/image-preview";
 
 interface TimelineCardProps {
   item: TimelineItem;
+  authorAvatar?: string;
+  authorName?: string;
 }
 
-export default function TimelineCard({ item }: TimelineCardProps) {
+export default function TimelineCard({ item, authorAvatar, authorName }: TimelineCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLiked, setIsLiked] = useState(item.isLiked || false);
   const [likes, setLikes] = useState(item.likes);
   const [showAllImages, setShowAllImages] = useState(false);
   const [showExpandButton, setShowExpandButton] = useState(false);
+  const [previewImage, setPreviewImage] = useState<{
+    show: boolean;
+    index: number;
+  }>({ show: false, index: 0 });
 
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -50,16 +57,16 @@ export default function TimelineCard({ item }: TimelineCardProps) {
     setLikes((prev) => (isLiked ? prev - 1 : prev + 1));
   };
 
-  // 更新类型对应的徽章样式
-  const updateTypeBadges = {
-    new: { color: "bg-green-500", label: "新项目" },
-    update: { color: "bg-blue-500", label: "更新" },
-    fix: { color: "bg-orange-500", label: "修复" },
-    feature: { color: "bg-purple-500", label: "新功能" },
-    refactor: { color: "bg-cyan-500", label: "重构" },
-  };
-
-  const updateBadge = updateTypeBadges[item.updateType];
+  // 更新类型对应的徽章样式 - 使用API返回的 updateTypeMeta
+  const updateBadge = item.updateTypeMeta
+    ? {
+        color: `bg-[${item.updateTypeMeta.color}]`,
+        label: item.updateTypeMeta.label,
+      }
+    : {
+        color: "bg-blue-500",
+        label: item.updateType || "更新",
+      };
 
   // 格式化时间
   const timeAgo = formatDistanceToNow(new Date(item.publishedAt), {
@@ -67,11 +74,17 @@ export default function TimelineCard({ item }: TimelineCardProps) {
     locale: zhCN,
   });
 
+  // 获取图片列表 - 优先使用 assets.images，否则使用 previewImages
+  const imageList =
+    item.assets?.images && item.assets.images.length > 0
+      ? item.assets.images.map((img) => img.url)
+      : item.project.previewImages || [];
+
   // 显示的图片数量
   const displayImages = showAllImages
-    ? item.project.previewImages
-    : item.project.previewImages.slice(0, 4);
-  const hasMoreImages = item.project.previewImages.length > 4;
+    ? imageList
+    : imageList.slice(0, 4);
+  const hasMoreImages = imageList.length > 4;
 
   return (
     <Card className="py-0 w-full bg-background border border-border/60 shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -86,15 +99,21 @@ export default function TimelineCard({ item }: TimelineCardProps) {
           </Badge>
         </div>
 
-        {/* 项目信息行：logo + 项目名 */}
+        {/* 项目信息行：网站作者头像 + 项目名 */}
         <div className="flex items-center space-x-3">
           <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted border border-border/60">
-            <Image
-              src={item.project.logo}
-              alt={item.project.name}
-              fill
-              className="object-cover"
-            />
+            {authorAvatar ? (
+              <Image
+                src={authorAvatar}
+                alt={authorName || item.author.name}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-foreground text-sm font-semibold bg-primary/10">
+                {(authorName || item.author.name)?.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
           <div>
             <h3 className="font-semibold text-base text-foreground">
@@ -168,7 +187,7 @@ export default function TimelineCard({ item }: TimelineCardProps) {
         </div>
 
         {/* 预览图片网格 */}
-        {item.project.previewImages.length > 0 && (
+        {imageList.length > 0 && (
           <div className="space-y-3">
             <div
               className={`grid gap-2 ${
@@ -193,6 +212,7 @@ export default function TimelineCard({ item }: TimelineCardProps) {
                           ? "aspect-square"
                           : "aspect-square"
                   }`}
+                  onClick={() => setPreviewImage({ show: true, index })}
                 >
                   <Image
                     src={image}
@@ -217,7 +237,7 @@ export default function TimelineCard({ item }: TimelineCardProps) {
                 onClick={() => setShowAllImages(true)}
                 className="w-full text-sm text-muted-foreground hover:text-foreground border border-dashed border-border"
               >
-                查看全部 {item.project.previewImages.length} 张图片
+                查看全部 {imageList.length} 张图片
               </Button>
             )}
           </div>
@@ -247,7 +267,7 @@ export default function TimelineCard({ item }: TimelineCardProps) {
               className="h-8 px-3 text-muted-foreground hover:text-foreground"
             >
               <MessageCircle className="w-4 h-4 mr-1" />
-              {item.comments > 0 && (
+              {(item.comments || 0) > 0 && (
                 <span className="text-xs">{item.comments}</span>
               )}
             </Button>
@@ -292,6 +312,15 @@ export default function TimelineCard({ item }: TimelineCardProps) {
           </div>
         </div>
       </CardContent>
+
+      {/* 图片预览弹窗 */}
+      {previewImage.show && (
+        <ImagePreview
+          images={imageList}
+          currentIndex={previewImage.index}
+          onClose={() => setPreviewImage({ show: false, index: 0 })}
+        />
+      )}
     </Card>
   );
 }

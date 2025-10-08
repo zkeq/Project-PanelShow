@@ -61,6 +61,12 @@ export interface Project {
   homeAttributes?: ProjectInfo[]
   // 侧边栏展示的属性
   sidebarAttributes?: ProjectInfo[]
+  // 截图列表
+  screenshots?: Array<{
+    id: string
+    url: string
+    alt?: string
+  }>
   // 卡片主题色配置
   themeColor: {
     primary: string

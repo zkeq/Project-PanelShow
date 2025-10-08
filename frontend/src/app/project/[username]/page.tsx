@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { useGlobalStore } from '@/store/useGlobalStore'
 import { checkUsername } from '@/lib/api'
 import { useProfileData } from '@/hooks/useProfileData'
+import { useProjectsAndTimeline } from '@/hooks/useProjectsAndTimeline'
 import { Card, CardContent } from '@/components/ui/card'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -40,10 +40,10 @@ export default function UserProjectPage() {
     error: null
   })
 
-  // 从 Zustand store 获取数据
-  const { getTimelineItems, getProjectsByUsername } = useGlobalStore()
-  const timelineItems = getTimelineItems()
-  const projects = getProjectsByUsername(username)
+  // 从 API 获取项目和时间线数据
+  const projectsAndTimeline = useProjectsAndTimeline(username)
+  const projects = projectsAndTimeline.projects
+  const timelineItems = projectsAndTimeline.timelineItems
 
   // 获取profile数据
   const profileData = useProfileData(username)
@@ -84,28 +84,25 @@ export default function UserProjectPage() {
   }, [username])
 
   // 显示加载状态
-  if (userStatus.loading || profileData.loading) {
+  if (userStatus.loading || profileData.loading || projectsAndTimeline.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center gap-4 py-8">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="text-lg text-muted-foreground">正在加载站点数据...</p>
-          </CardContent>
-        </Card>
       </div>
     )
   }
 
   // 显示错误状态
-  if (userStatus.error || profileData.error) {
+  if (userStatus.error || profileData.error || projectsAndTimeline.error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center gap-4 py-8">
             <AlertCircle className="h-12 w-12 text-destructive" />
             <h2 className="text-xl font-semibold">访问受限</h2>
-            <p className="text-muted-foreground text-center">{userStatus.error || profileData.error}</p>
+            <p className="text-muted-foreground text-center">
+              {userStatus.error || profileData.error || projectsAndTimeline.error}
+            </p>
             <div className="flex gap-2 mt-4">
               <Button asChild>
                 <Link href="/">返回首页</Link>
