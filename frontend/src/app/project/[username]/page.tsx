@@ -97,7 +97,9 @@ export default function UserProjectPage() {
 
   useEffect(() => {
     if (activeTab !== 'projects') return
-    if (activeSection === 'all-projects') return
+
+    const staticProjectSections = new Set(['all-projects', 'experience', 'about'])
+    if (staticProjectSections.has(activeSection)) return
 
     const allChildIds = techStackStructure.flatMap(category => category.children?.map(child => child.id) ?? [])
     if (!allChildIds.includes(activeSection)) {
