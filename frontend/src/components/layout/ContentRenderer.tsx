@@ -143,6 +143,7 @@ export default function ContentRenderer({
           description={getTimelineDescription()}
           authorAvatar={userProfile.avatar}
           authorName={userProfile.displayName}
+          username={username}
         />
       </div>
     )

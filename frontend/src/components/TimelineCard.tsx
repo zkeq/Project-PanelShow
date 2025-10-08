@@ -18,18 +18,22 @@ import {
   ChevronUp,
   Code2,
   Zap,
+  Flame,
+  Bug,
 } from "lucide-react";
 import { TimelineItem } from "@/types/timeline";
 import Markdown from "@/components/Markdown";
 import ImagePreview from "@/components/ui/image-preview";
+import { likeTimeline } from "@/lib/api";
 
 interface TimelineCardProps {
   item: TimelineItem;
   authorAvatar?: string;
   authorName?: string;
+  username?: string;
 }
 
-export default function TimelineCard({ item, authorAvatar, authorName }: TimelineCardProps) {
+export default function TimelineCard({ item, authorAvatar, authorName, username }: TimelineCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLiked, setIsLiked] = useState(item.isLiked || false);
   const [likes, setLikes] = useState(item.likes);
@@ -51,10 +55,30 @@ export default function TimelineCard({ item, authorAvatar, authorName }: Timelin
     }
   }, [item.project.readme]);
 
-  // 处理点赞
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikes((prev) => (isLiked ? prev - 1 : prev + 1));
+  // 处理点赞 - 每次点击增加一个
+  const handleLike = async () => {
+    if (!username) {
+      // 如果没有 username，回退到本地状态
+      setLikes((prev) => prev + 1);
+      return;
+    }
+
+    try {
+      // 先更新UI，提供即时反馈
+      setLikes((prev) => prev + 1);
+
+      // 调用API
+      const response = await likeTimeline(username, item.id);
+
+      // 使用服务器返回的真实数据更新状态
+      if (response.success) {
+        setLikes(response.data.likes);
+      }
+    } catch (error) {
+      // 如果API调用失败，回滚状态
+      setLikes((prev) => prev - 1);
+      console.error('点赞失败:', error);
+    }
   };
 
   // 更新类型对应的徽章样式 - 使用API返回的 updateTypeMeta
@@ -126,11 +150,11 @@ export default function TimelineCard({ item, authorAvatar, authorName }: Timelin
         <div className="space-y-3">
           <Markdown>{item.project.description}</Markdown>
 
-          {/* 技术栈标签 */}
+          {/* 技术栈标签和动态标签 */}
           <div className="flex flex-wrap gap-2">
             {item.project.techStack.map((tech, index) => (
               <Badge
-                key={index}
+                key={`tech-${index}`}
                 variant="outline"
                 className="text-xs px-2 py-1"
               >
@@ -138,6 +162,20 @@ export default function TimelineCard({ item, authorAvatar, authorName }: Timelin
                 {tech}
               </Badge>
             ))}
+
+            {item.tags && item.tags.map((tag) => {
+              const IconComponent = tag.icon === 'flame' ? Flame : tag.icon === 'bug' ? Bug : Code2;
+              return (
+                <Badge
+                  key={tag.id}
+                  variant="outline"
+                  className="text-xs px-2 py-1"
+                >
+                  <IconComponent className="w-3 h-3 mr-1" />
+                  {tag.label}
+                </Badge>
+              );
+            })}
           </div>
 
           {/* README详情 - 可展开 */}
@@ -253,11 +291,9 @@ export default function TimelineCard({ item, authorAvatar, authorName }: Timelin
               variant="ghost"
               size="sm"
               onClick={handleLike}
-              className={`h-8 px-3 ${isLiked ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-foreground"}`}
+              className="h-8 px-3 text-muted-foreground hover:text-red-500 transition-colors"
             >
-              <Heart
-                className={`w-4 h-4 mr-1 ${isLiked ? "fill-current" : ""}`}
-              />
+              <Heart className="w-4 h-4 mr-1" />
               {likes > 0 && <span className="text-xs">{likes}</span>}
             </Button>
 

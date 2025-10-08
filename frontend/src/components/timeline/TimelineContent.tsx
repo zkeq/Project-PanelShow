@@ -10,6 +10,7 @@ interface TimelineContentProps {
   description: string;
   authorAvatar?: string;
   authorName?: string;
+  username?: string;
 }
 
 export default function TimelineContent({
@@ -18,6 +19,7 @@ export default function TimelineContent({
   description,
   authorAvatar,
   authorName,
+  username,
 }: TimelineContentProps) {
   return (
     <div className="w-full space-y-6 max-w-4xl mx-auto">
@@ -31,7 +33,12 @@ export default function TimelineContent({
       <div className="w-full max-w-none space-y-6">
         {timelineItems.map((item) => (
           <div key={item.id} className="">
-            <TimelineCard item={item} authorAvatar={authorAvatar} authorName={authorName} />
+            <TimelineCard
+              item={item}
+              authorAvatar={authorAvatar}
+              authorName={authorName}
+              username={username}
+            />
           </div>
         ))}
       </div>

@@ -489,3 +489,19 @@ export interface CheckUsernameResponse {
 export function checkUsername(username: string) {
   return request<CheckUsernameResponse>(`/api/auth/check-username/${username}`);
 }
+
+// 时间线点赞
+export interface LikeTimelineResponse {
+  success: boolean;
+  message: string;
+  data: {
+    likes: number;
+    isLiked: boolean;
+  };
+}
+
+export function likeTimeline(username: string, timelineId: string) {
+  return request<LikeTimelineResponse>(`/api/timeline/${username}/${timelineId}/like`, {
+    method: 'POST'
+  });
+}
