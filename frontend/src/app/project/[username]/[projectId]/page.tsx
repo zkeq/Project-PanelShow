@@ -9,6 +9,7 @@ import ProjectHero from '@/components/project/ProjectHero'
 import ProjectContent from '@/components/project/ProjectContent'
 import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
 import { fetchProject } from '@/lib/api'
+import { parseFeatureChipAppearance, type FeatureChipAppearance } from '@/lib/feature-chips'
 import type { ProjectInfo } from '@/types/store'
 import type { TimelineItem } from '@/types/timeline'
 
@@ -40,6 +41,7 @@ interface ProjectFeatureChip {
   label: string
   color?: string
   icon?: string
+  appearance?: FeatureChipAppearance
 }
 
 interface ProjectDetailViewModel {
@@ -194,12 +196,17 @@ const mapFeatureChips = (source: unknown): ProjectFeatureChip[] => {
       const id = typeof idSource === 'string' && idSource.trim() ? idSource.trim() : `feature-chip-${index}`
       const color = typeof item.color === 'string' && item.color.trim() ? item.color.trim() : undefined
       const icon = typeof item.icon === 'string' && item.icon.trim() ? item.icon.trim() : undefined
+      const appearance =
+        parseFeatureChipAppearance(item.appearance) ??
+        parseFeatureChipAppearance(item.style) ??
+        parseFeatureChipAppearance(item.visuals)
 
       return {
         id,
         label,
         color,
-        icon
+        icon,
+        appearance
       } satisfies ProjectFeatureChip
     })
     .filter((chip): chip is ProjectFeatureChip => chip !== null)
