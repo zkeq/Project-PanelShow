@@ -18,8 +18,9 @@ export function ProjectAttributeItem({ attribute, theme }: ProjectAttributeItemP
   const { value, loading } = useExecuteCode(attribute.valueCode, '加载中...');
 
   // 动态获取图标
-  const IconComponent = attribute.icon
-    ? (LucideIcons as Record<string, typeof LucideIcons.Settings>)[attribute.icon] || LucideIcons.Settings
+  const iconMap = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
+  const IconComponent = attribute.icon && iconMap[attribute.icon]
+    ? iconMap[attribute.icon]
     : LucideIcons.Settings;
 
   return (
