@@ -2,12 +2,13 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, User, Briefcase, Phone, Settings, BookOpen } from "lucide-react"
+import { ArrowLeft, User, Briefcase, Phone, Settings, BookOpen, Layers } from "lucide-react"
 import Link from "next/link"
 import { BasicInformation } from "@/components/admin/settings/BasicInformation"
 import { WorkExperience } from "@/components/admin/settings/WorkExperience"
 import { ContactInformation } from "@/components/admin/settings/ContactInformation"
 import { AboutMe } from "@/components/admin/settings/AboutMe"
+import { TechStackSettings } from "@/components/admin/settings/TechStackSettings"
 
 const sidebarSections = [
   {
@@ -17,6 +18,12 @@ const sidebarSections = [
       { id: "about-me", label: "关于我", icon: BookOpen, description: "配置关于我页面内容" },
       { id: "work-experience", label: "工作经历", icon: Briefcase, description: "编辑工作经验和职业历程" },
       { id: "contact-info", label: "联系方式", icon: Phone, description: "更新联系信息和社交链接" },
+    ],
+  },
+  {
+    title: "作品集",
+    items: [
+      { id: "tech-stacks", label: "技术栈分类", icon: Layers, description: "自定义分类与项目关联" },
     ],
   },
 ]
@@ -34,6 +41,8 @@ export default function SettingsPage() {
         return <WorkExperience />
       case "contact-info":
         return <ContactInformation />
+      case "tech-stacks":
+        return <TechStackSettings />
       default:
         return <BasicInformation />
     }

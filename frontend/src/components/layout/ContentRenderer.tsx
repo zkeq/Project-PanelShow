@@ -11,16 +11,10 @@ import TimelineContent from '@/components/timeline/TimelineContent'
 import ExperienceContent from '@/components/experience/ExperienceContent'
 import AboutContent from '@/components/about/AboutContent'
 import MobileNavigation from '@/components/layout/MobileNavigation'
+import type { TechStackCategory } from '@/types/tech-stack'
 
 interface MobileNavigationData {
-  techStackStructure: Array<{
-    id: string
-    label: string
-    children?: Array<{
-      id: string
-      label: string
-    }>
-  }>
+  techStackStructure: TechStackCategory[]
   expandedCategories: string[]
   expandedYears: string[]
   timelineStructure: { [key: string]: { [key: string]: unknown[] } }
@@ -41,6 +35,7 @@ interface ContentRendererProps {
   getMonthName: (month: string) => string
   mobileNavigation?: MobileNavigationData
   profileData: ProfileData
+  techStackStructure: TechStackCategory[]
 }
 
 export default function ContentRenderer({
@@ -53,28 +48,9 @@ export default function ContentRenderer({
   onToggleExpand,
   getMonthName,
   mobileNavigation,
-  profileData
+  profileData,
+  techStackStructure
 }: ContentRendererProps) {
-
-  // 技术栈结构
-  const techStackStructure = [
-    {
-      id: 'backend',
-      label: '技术栈 - 后端',
-      children: [
-        { id: 'backend-python', label: 'Python' },
-        { id: 'backend-go', label: 'Go' }
-      ]
-    },
-    {
-      id: 'frontend',
-      label: '技术栈 - 前端',
-      children: [
-        { id: 'frontend-vue', label: 'Vue' },
-        { id: 'frontend-nextjs', label: 'Next.js' }
-      ]
-    }
-  ]
 
   // 从API数据构建用户资料
   const userProfile = {
@@ -176,8 +152,22 @@ export default function ContentRenderer({
     )
   }
 
-  // 根据当前选中的项目类别过滤项目
-  const filteredProjects = projects.filter(p => p.category === activeSection)
+  const projectMap = new Map<string, Project>()
+  projects.forEach(project => {
+    if (project.id) {
+      projectMap.set(project.id, project)
+    }
+  })
+
+  const activeTechStackChild = techStackStructure
+    .flatMap(category => category.children ?? [])
+    .find(child => child.id === activeSection)
+
+  const filteredProjects = activeTechStackChild
+    ? activeTechStackChild.projectIds
+        .map(projectId => projectMap.get(projectId))
+        .filter((project): project is Project => Boolean(project))
+    : []
   
   if (filteredProjects.length > 0) {
     const categoryLabel = techStackStructure
@@ -258,10 +248,9 @@ export default function ContentRenderer({
     )
   }
 
-  // 默认显示概览
+  // 默认空状态
   return (
     <div className="space-y-6">
-      {/* 移动端导航 */}
       {mobileNavigation && (
         <div className="lg:hidden">
           <MobileNavigation
@@ -273,44 +262,13 @@ export default function ContentRenderer({
         </div>
       )}
 
-      <div>
-        <h1 className="text-3xl font-bold mb-2">欢迎来到 {username} 的作品集</h1>
-        <p className="text-muted-foreground">
-          探索我的项目和技术栈
-        </p>
-      </div>
-
       <Card>
         <CardHeader>
-          <CardTitle>关于我</CardTitle>
+          <CardTitle>暂无项目展示</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-start space-x-4">
-            <div className="w-16 h-16 bg-muted/80 border border-border/60 rounded-full flex items-center justify-center text-foreground text-xl font-semibold">
-              {username?.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-semibold mb-2">@{username}</h3>
-              <p className="text-muted-foreground mb-4">
-                全栈开发者，专注于构建高性能、可扩展的 Web 应用。
-                精通 Python、Go、Vue 和 Next.js 等技术栈。
-              </p>
-              <div className="flex space-x-6 text-sm">
-                <div>
-                  <span className="font-semibold">12</span>
-                  <span className="text-muted-foreground ml-1">项目</span>
-                </div>
-                <div>
-                  <span className="font-semibold">1.2K</span>
-                  <span className="text-muted-foreground ml-1">Stars</span>
-                </div>
-                <div>
-                  <span className="font-semibold">342</span>
-                  <span className="text-muted-foreground ml-1">Forks</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <CardContent className="space-y-2 text-muted-foreground">
+          <p>当前分类下还没有配置项目。请从左侧选择其他分类，或前往管理端的技术栈设置中为该分类添加项目。</p>
+          <p>完成配置后，这里会展示属于该分类的全部项目。</p>
         </CardContent>
       </Card>
     </div>

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { checkUsername } from '@/lib/api'
 import { useProfileData } from '@/hooks/useProfileData'
 import { useProjectsAndTimeline } from '@/hooks/useProjectsAndTimeline'
+import { useTechStackConfig } from '@/hooks/useTechStackConfig'
 import { Card, CardContent } from '@/components/ui/card'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -23,7 +24,7 @@ export default function UserProjectPage() {
   // 所有 hooks 必须在顶部调用
   const [activeTab, setActiveTab] = useState<'projects' | 'timeline'>('projects')
   const [activeSection, setActiveSection] = useState('all-projects')
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(['backend', 'frontend'])
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [expandedYears, setExpandedYears] = useState<string[]>(['2024', '2025'])
   const [expandedProjects, setExpandedProjects] = useState<string[]>([])
@@ -42,8 +43,13 @@ export default function UserProjectPage() {
 
   // 从 API 获取项目和时间线数据
   const projectsAndTimeline = useProjectsAndTimeline(username)
+  const techStackConfig = useTechStackConfig(username)
   const projects = projectsAndTimeline.projects
   const timelineItems = projectsAndTimeline.timelineItems
+  const techStackStructure = useMemo(
+    () => techStackConfig.config?.categories ?? [],
+    [techStackConfig.config]
+  )
 
   // 获取profile数据
   const profileData = useProfileData(username)
@@ -70,7 +76,7 @@ export default function UserProjectPage() {
             error: response.exists ? '该用户还未完成设置' : '该用户不存在'
           })
         }
-      } catch (error) {
+      } catch {
         setUserStatus({
           loading: false,
           exists: false,
@@ -83,8 +89,24 @@ export default function UserProjectPage() {
     checkUser()
   }, [username])
 
+  useEffect(() => {
+    if (techStackStructure.length > 0) {
+      setExpandedCategories(prev => (prev.length > 0 ? prev : techStackStructure.map(category => category.id)))
+    }
+  }, [techStackStructure])
+
+  useEffect(() => {
+    if (activeTab !== 'projects') return
+    if (activeSection === 'all-projects') return
+
+    const allChildIds = techStackStructure.flatMap(category => category.children?.map(child => child.id) ?? [])
+    if (!allChildIds.includes(activeSection)) {
+      setActiveSection('all-projects')
+    }
+  }, [activeTab, activeSection, techStackStructure])
+
   // 显示加载状态
-  if (userStatus.loading || profileData.loading || projectsAndTimeline.loading) {
+  if (userStatus.loading || profileData.loading || projectsAndTimeline.loading || techStackConfig.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -93,7 +115,7 @@ export default function UserProjectPage() {
   }
 
   // 显示错误状态
-  if (userStatus.error || profileData.error || projectsAndTimeline.error) {
+  if (userStatus.error || profileData.error || projectsAndTimeline.error || techStackConfig.error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -101,7 +123,7 @@ export default function UserProjectPage() {
             <AlertCircle className="h-12 w-12 text-destructive" />
             <h2 className="text-xl font-semibold">访问受限</h2>
             <p className="text-muted-foreground text-center">
-              {userStatus.error || profileData.error || projectsAndTimeline.error}
+              {userStatus.error || profileData.error || projectsAndTimeline.error || techStackConfig.error}
             </p>
             <div className="flex gap-2 mt-4">
               <Button asChild>
@@ -175,6 +197,7 @@ export default function UserProjectPage() {
     )
   }
 
+
   const handleYearToggle = (year: string) => {
     setExpandedYears(prev =>
       prev.includes(year)
@@ -203,6 +226,7 @@ export default function UserProjectPage() {
             expandedCategories={expandedCategories}
             expandedYears={expandedYears}
             timelineStructure={timelineStructure}
+            techStackStructure={techStackStructure}
             onTabChange={handleTabChange}
             onSectionChange={handleSectionChange}
             onSidebarToggle={handleSidebarToggle}
@@ -210,7 +234,6 @@ export default function UserProjectPage() {
             onYearToggle={handleYearToggle}
             getMonthName={getMonthName}
             quickLinks={profileData.quickLinks || []}
-            experiences={profileData.experiences || []}
           />
         </div>
 
@@ -231,26 +254,10 @@ export default function UserProjectPage() {
                 onToggleExpand={toggleProjectExpansion}
                 getMonthName={getMonthName}
                 profileData={profileData}
+                techStackStructure={techStackStructure}
                 // 移动端需要的导航控制
                 mobileNavigation={{
-                  techStackStructure: [
-                    {
-                      id: 'backend',
-                      label: '技术栈 - 后端',
-                      children: [
-                        { id: 'backend-python', label: 'Python' },
-                        { id: 'backend-go', label: 'Go' }
-                      ]
-                    },
-                    {
-                      id: 'frontend',
-                      label: '技术栈 - 前端',
-                      children: [
-                        { id: 'frontend-vue', label: 'Vue' },
-                        { id: 'frontend-nextjs', label: 'Next.js' }
-                      ]
-                    }
-                  ],
+                  techStackStructure,
                   expandedCategories,
                   expandedYears,
                   timelineStructure,

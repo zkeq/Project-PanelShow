@@ -3,17 +3,15 @@
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { 
-  ChevronRight, 
-  ChevronDown, 
-  Cpu,
+import {
+  ChevronRight,
+  ChevronDown,
   Layers,
-  Code2,
   Briefcase,
   User
 } from 'lucide-react'
-import { useGlobalStore } from '@/store/useGlobalStore'
 import { Icon } from '@iconify/react'
+import type { TechStackCategory } from '@/types/tech-stack'
 
 interface SidebarNavigationProps {
   activeTab: 'projects' | 'timeline'
@@ -22,6 +20,7 @@ interface SidebarNavigationProps {
   expandedCategories: string[]
   expandedYears: string[]
   timelineStructure: { [key: string]: { [key: string]: unknown[] } }
+  techStackStructure: TechStackCategory[]
   onTabChange: (tab: 'projects' | 'timeline') => void
   onSectionChange: (section: string) => void
   onSidebarToggle: () => void
@@ -35,16 +34,6 @@ interface SidebarNavigationProps {
     icon: string;
     description: string;
   }>
-  experiences?: Array<{
-    id: string;
-    title: string;
-    company: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    period: string;
-    responsibilities: string[];
-  }>
 }
 
 export default function SidebarNavigation({
@@ -54,39 +43,15 @@ export default function SidebarNavigation({
   expandedCategories,
   expandedYears,
   timelineStructure,
+  techStackStructure,
   onTabChange,
   onSectionChange,
   onSidebarToggle,
   onCategoryToggle,
   onYearToggle,
   getMonthName,
-  quickLinks = [],
-  experiences = []
+  quickLinks = []
 }: SidebarNavigationProps) {
-
-  // 技术栈结构
-  const techStackStructure = [
-    {
-      id: 'backend',
-      label: '技术栈 - 后端',
-      icon: Cpu,
-      type: 'category',
-      children: [
-        { id: 'backend-python', label: 'Python', icon: Code2 },
-        { id: 'backend-go', label: 'Go', icon: Code2 }
-      ]
-    },
-    {
-      id: 'frontend',
-      label: '技术栈 - 前端',
-      icon: Layers,
-      type: 'category',
-      children: [
-        { id: 'frontend-vue', label: 'Vue', icon: Code2 },
-        { id: 'frontend-nextjs', label: 'Next.js', icon: Code2 }
-      ]
-    }
-  ]
 
   return (
     <aside className={`border-r bg-muted/10 transition-all duration-300 fixed h-[calc(100vh-3.5rem)] z-40 ${
@@ -147,7 +112,9 @@ export default function SidebarNavigation({
                 <Separator className="my-3" />
 
                 {techStackStructure.map((category) => {
-                  const Icon = category.icon
+                  const iconName = typeof category.icon === 'string' && category.icon.trim().length > 0
+                    ? category.icon
+                    : 'lucide:layers'
                   const isExpanded = expandedCategories.includes(category.id)
 
                   return (
@@ -158,7 +125,7 @@ export default function SidebarNavigation({
                         className="w-full flex items-center justify-between px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
                         <div className="flex items-center space-x-2">
-                          <Icon className="w-4 h-4" />
+                          <Icon icon={iconName} className="w-4 h-4" />
                           {!sidebarCollapsed && <span>{category.label}</span>}
                         </div>
                         {!sidebarCollapsed && (
@@ -172,9 +139,11 @@ export default function SidebarNavigation({
                       {isExpanded && !sidebarCollapsed && category.children && (
                         <div className="ml-6 space-y-1">
                           {category.children.map((child) => {
-                            const ChildIcon = child.icon
+                            const childIconName = typeof child.icon === 'string' && child.icon.trim().length > 0
+                              ? child.icon
+                              : 'lucide:code-2'
                             const isActive = activeSection === child.id
-                            
+
                             return (
                               <button
                                 key={child.id}
@@ -185,7 +154,7 @@ export default function SidebarNavigation({
                                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                 }`}
                               >
-                                <ChildIcon className="w-3 h-3" />
+                                <Icon icon={childIconName} className="w-3 h-3" />
                                 <span>{child.label}</span>
                               </button>
                             )

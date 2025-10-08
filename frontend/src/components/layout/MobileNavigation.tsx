@@ -9,26 +9,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { 
-  ChevronDown, 
+import {
+  ChevronDown,
   Layers,
-  Code2,
   Briefcase,
   User,
   Calendar
 } from 'lucide-react'
+import { Icon } from '@iconify/react'
+import type { TechStackCategory } from '@/types/tech-stack'
 
 interface MobileNavigationProps {
   activeTab: 'projects' | 'timeline'
   activeSection: string
-  techStackStructure: Array<{
-    id: string
-    label: string
-    children?: Array<{
-      id: string
-      label: string
-    }>
-  }>
+  techStackStructure: TechStackCategory[]
   expandedCategories: string[]
   expandedYears: string[]
   timelineStructure: { [key: string]: { [key: string]: unknown[] } }
@@ -156,16 +150,21 @@ export default function MobileNavigation({
                       <DropdownMenuLabel className="text-xs px-3 py-2 text-muted-foreground font-medium uppercase tracking-wide">
                         {category.label}
                       </DropdownMenuLabel>
-                      {category.children?.map((child) => (
-                        <DropdownMenuItem 
-                          key={child.id}
-                          onClick={() => onSectionChange(child.id)}
-                          className={`ml-4 transition-colors ${activeSection === child.id ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
-                        >
-                          <Code2 className="mr-2 h-3 w-3" />
-                          {child.label}
-                        </DropdownMenuItem>
-                      ))}
+                      {category.children?.map((child) => {
+                        const childIconName = typeof child.icon === 'string' && child.icon.trim().length > 0
+                          ? child.icon
+                          : 'lucide:code-2'
+                        return (
+                          <DropdownMenuItem
+                            key={child.id}
+                            onClick={() => onSectionChange(child.id)}
+                            className={`ml-4 transition-colors ${activeSection === child.id ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
+                          >
+                            <Icon icon={childIconName} className="mr-2 h-3 w-3" />
+                            {child.label}
+                          </DropdownMenuItem>
+                        )
+                      })}
                     </div>
                   ))}
                   
