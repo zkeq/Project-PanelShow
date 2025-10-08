@@ -48,8 +48,7 @@ const toOptionalText = (value: unknown) =>
 const normalizeFeatureHighlights = (raw: unknown): FeatureHighlight[] => {
   if (!Array.isArray(raw)) return []
 
-  return raw
-    .map((item, index) => {
+  return raw.map((item, index) => {
       if (!item || typeof item !== "object") return null
 
       const record = item as Record<string, unknown>
