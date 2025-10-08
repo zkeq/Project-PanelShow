@@ -48,38 +48,41 @@ const toOptionalText = (value: unknown) =>
 const normalizeFeatureHighlights = (raw: unknown): FeatureHighlight[] => {
   if (!Array.isArray(raw)) return []
 
-  return raw.map((item, index) => {
-      if (!item || typeof item !== "object") return null
+  const highlights: FeatureHighlight[] = []
 
-      const record = item as Record<string, unknown>
-      const idValue = record.id
-      let id: string | undefined
+  raw.forEach((item, index) => {
+    if (!item || typeof item !== "object") return
 
-      if (typeof idValue === "string" && idValue.trim().length > 0) {
-        id = idValue
-      } else if (typeof idValue === "number") {
-        id = String(idValue)
-      }
+    const record = item as Record<string, unknown>
+    const idValue = record.id
+    let id: string | undefined
 
-      const title = toOptionalText(record.title)
+    if (typeof idValue === "string" && idValue.trim().length > 0) {
+      id = idValue
+    } else if (typeof idValue === "number") {
+      id = String(idValue)
+    }
 
-      if (!id && title) {
-        id = `feature-${index + 1}`
-      }
+    const title = toOptionalText(record.title)
 
-      if (!id) return null
+    if (!id && title) {
+      id = `feature-${index + 1}`
+    }
 
-      return {
-        id,
-        title,
-        description: toOptionalText(record.description),
-        previewUrl: toOptionalUrl(record.previewUrl),
-        mobilePreviewUrl: toOptionalUrl(record.mobilePreviewUrl),
-        leftMarkdown: toOptionalText(record.leftMarkdown),
-        rightMarkdown: toOptionalText(record.rightMarkdown),
-      }
+    if (!id) return
+
+    highlights.push({
+      id,
+      title,
+      description: toOptionalText(record.description),
+      previewUrl: toOptionalUrl(record.previewUrl),
+      mobilePreviewUrl: toOptionalUrl(record.mobilePreviewUrl),
+      leftMarkdown: toOptionalText(record.leftMarkdown),
+      rightMarkdown: toOptionalText(record.rightMarkdown),
     })
-    .filter((item): item is FeatureHighlight => item !== null)
+  })
+
+  return highlights
 }
 
 export default function ProjectDemoPage({ params }: DemoPageProps) {
