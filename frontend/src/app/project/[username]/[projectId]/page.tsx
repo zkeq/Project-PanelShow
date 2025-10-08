@@ -185,31 +185,27 @@ const mapFeatures = (source: unknown): ProjectFeature[] => {
 const mapFeatureChips = (source: unknown): ProjectFeatureChip[] => {
   if (!Array.isArray(source)) return []
 
-  return source
-    .map((item, index) => {
-      if (!isRecord(item)) return null
-      const rawLabel = item.label ?? item.name
-      const label = typeof rawLabel === 'string' && rawLabel.trim() ? rawLabel.trim() : ''
-      if (!label) return null
+  return source.reduce<ProjectFeatureChip[]>((chips, item, index) => {
+    if (!isRecord(item)) return chips
 
-      const idSource = item.id ?? item.slug ?? item.value
-      const id = typeof idSource === 'string' && idSource.trim() ? idSource.trim() : `feature-chip-${index}`
-      const color = typeof item.color === 'string' && item.color.trim() ? item.color.trim() : undefined
-      const icon = typeof item.icon === 'string' && item.icon.trim() ? item.icon.trim() : undefined
-      const appearance =
-        parseFeatureChipAppearance(item.appearance) ??
-        parseFeatureChipAppearance(item.style) ??
-        parseFeatureChipAppearance(item.visuals)
+    const rawLabel = item.label ?? item.name
+    const label = typeof rawLabel === 'string' && rawLabel.trim() ? rawLabel.trim() : ''
+    if (!label) return chips
 
-      return {
-        id,
-        label,
-        color,
-        icon,
-        appearance
-      } satisfies ProjectFeatureChip
+    const idSource = item.id ?? item.slug ?? item.value
+    const id = typeof idSource === 'string' && idSource.trim() ? idSource.trim() : `feature-chip-${index}`
+    const color = typeof item.color === 'string' && item.color.trim() ? item.color.trim() : undefined
+    const icon = typeof item.icon === 'string' && item.icon.trim() ? item.icon.trim() : undefined
+
+    chips.push({
+      id,
+      label,
+      color,
+      icon
     })
-    .filter((chip): chip is ProjectFeatureChip => chip !== null)
+
+    return chips
+  }, [])
 }
 
 const mapTimelineItems = (source: unknown): TimelineItem[] => {
