@@ -36,9 +36,6 @@ export default function HeaderNavigation({
     typeof displayName === 'string' && displayName.trim().length > 0 ? displayName.trim() : undefined
   const resolvedDisplayName = trimmedDisplayName ?? username
   const suffixLabel = '的作品集'
-  const titleText = resolvedDisplayName.endsWith(suffixLabel)
-    ? resolvedDisplayName
-    : `${resolvedDisplayName}${suffixLabel}`
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -70,10 +67,19 @@ export default function HeaderNavigation({
               {username?.charAt(0).toUpperCase()}
             </div>
           )}
-          <Link href={resolvedTitleHref} className="flex items-center space-x-2 min-w-0 group" aria-label="返回作品集主页">
-            <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap group-hover:text-primary transition-colors">
-              {titleText}
-            </span>
+          <Link
+            href={resolvedTitleHref}
+            className="group"
+            aria-label="返回作品集主页"
+          >
+            <div className="flex items-center space-x-2 min-w-0">
+              <h1 className="text-base sm:text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                {resolvedDisplayName}
+              </h1>
+              <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap hidden sm:inline">
+                {suffixLabel}
+              </span>
+            </div>
           </Link>
         </div>
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
