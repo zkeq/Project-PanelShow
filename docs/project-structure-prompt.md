@@ -1,77 +1,92 @@
 # Project 项目信息结构体提示词说明
 
-本文档用于为 AI 生成 Project-PanelShow 项目信息时提供统一的字段说明与取值约束，可直接复制为提示词使用。
+本文档用于指导 AI 生成可直接提交到「新建/编辑作品集」页面的项目数据（对应 `CreateProjectForm` 的 `ProjectFormData` 结构）。请严格按照字段约束与枚举说明组织提示词内容，确保生成的数据可以无缝写入仓库。所有字段除特别说明外均为可选，但缺失核心字段会导致表单校验失败。
 
-## 顶层 `Project` 结构
-- `id`：项目唯一标识，使用短横线或驼峰的英文字符串。
-- `name`：项目名称，建议控制在 2~12 个字符内。
-- `description`：一句话简介，突出项目亮点或价值，60 字以内。
-- `status`：项目当前状态，枚举值：
-  - `"active"`：持续迭代中的核心项目。
-  - `"maintained"`：进入维护期，主要处理缺陷和小幅更新。
-  - `"completed"`：已完成的历史项目，仅做展示。
-  - `"building"`：正在建设或规划阶段的项目。
-- `category`：自定义分类标签，例如 "Web"、"AI"、"Tools"。
-- `techStacks`：技术栈标签数组，按先后重要程度排序。
-- `previewImage`：项目主视觉图 URL，需为可访问的网络地址。
-- `updatedAt`：最后更新时间，ISO 8601 字符串。
-- `attributes`：可自定义属性列表，详见下文 `ProjectAttribute`。
-- `projectInfos`：项目信息项原始列表，详见 `ProjectInfo`。
-- `homeAttributes` / `sidebarAttributes` / `heroAttributes`：用于首页、侧边栏、详情页 Hero 区的精选信息集合，元素同样遵循 `ProjectInfo` 结构。
-- `screenshots`：项目截图数组，元素包含 `id`、`url`、`alt` 描述。
-- `themeColor`：卡片主题色配置，包含 `primary`、`secondary`、`background`、`text`、`border` 五个 16 进制颜色值。
+## 顶层字段 (`ProjectFormData`)
+- `id` *(string)*：项目唯一标识。推荐使用 UUID 或基于名称的 slug。
+- `name` *(string, 必填)*：项目名称，建议 2~20 字。
+- `description` *(string, 必填)*：项目一句话简介，用于卡片与详情页摘要。
+- `tags` *(string[])*：项目标签列表，建议 0~6 项，内容需为简短词语。
+- `status` *(ProjectStatus \| null)*：项目状态对象，详见下文。若提供该对象需同步填写 `statusId`。
+- `statusId` *(string \| null)*：提交给后端的状态 ID。常用枚举：
+  - `active`（活跃项目）
+  - `building`（施工中）
+  - `iterated`（已迭代）
+  - `archived`（已归档）
+  可根据设置中心新增自定义 ID。
+- `type` *(ProjectType \| null)*：项目类型对象，详见下文。若提供需同步填写 `typeId`。
+- `typeId` *(string \| null)*：项目类型 ID。默认枚举：`company`、`personal`、`startup`，亦可使用自定义 slug。
+- `features` *(ProjectFeature[])*：用于首页徽章的项目特色标签。每项需至少包含 `id`、`label`、`icon`，并可指定 `appearance` 预设。
+- `previewUrl` *(string)*：PC 端在线预览地址，需为完整 URL。
+- `mobilePreviewUrl` *(string)*：移动端预览地址，选填。
+- `sourceUrl` *(string)*：源码仓库地址。若 `isOpenSource` 为 `true` 则必填。
+- `leftSidebarMarkdown` / `rightSidebarMarkdown` *(string)*：项目详情页左右侧附加信息的 Markdown 文本。
+- `isOpenSource` *(boolean)*：是否开源。为 `true` 时必须提供 `sourceUrl`。
+- `readme` *(string)*：自定义 README Markdown 内容。
+- `screenshots` *(Screenshot[])*：项目截图集合，详见下文。
+- `projectInfos` *(ProjectInfo[])*：信息项配置，用于首页卡片、侧栏与 Hero 区展示。
+- `projectIntroduction` *(string)*：长描述 Markdown。提交时会映射到 `longDescription`。
+- `featureHighlights` *(FeatureHighlight[])*：项目亮点/演示配置，详见下文。
+- `createdAt` / `updatedAt` *(ISO 8601 字符串，可选)*：创建与更新时间，不提供时前端会自动生成。
+- `longDescription` *(string, 可选)*：若已提供 `projectIntroduction` 可保持为空，由表单写入。
 
-## `ProjectAttribute` 自定义属性
-- `key`：英文唯一键，例如 `deployTime`。
-- `label`：展示名称，例如 "部署用时"。
-- `value`：静态展示值，字符串。
-- `icon`：可选的图标标识，使用 `iconify` 图标名。
+## 嵌套结构说明
 
-## `ProjectInfo` 信息项
-- `id`：唯一标识。
-- `icon`：`iconify` 图标名称，例如 `lucide:rocket`。
-- `label`：字段名称，例如 "技术栈"。
-- `valueCode`：用于实时计算展示值的 JavaScript 表达式字符串。可读取上下文中的变量，返回字符串。
-- `value`：可选的静态兜底值，当 `valueCode` 不存在或执行失败时使用。
-- `showInHomepage` / `showInSidebar` / `showInHero`：布尔值，控制信息出现的位置。
-- `color`：前景色（16 进制）。
-- `order`：排序权重，数值越小越靠前。
+### ProjectStatus
+- `id` *(string)*：状态 ID，应与 `statusId` 保持一致。
+- `label` *(string)*：展示名称，例如「施工中」。
+- `color` *(string)*：Tailwind 背景色类名，例如 `bg-green-500`。
 
-## `DisplayDataItem`（详情页自定义展示）
-- `key`：唯一键。
-- `label`：展示名称。
-- `value`：展示内容。
-- `icon`：可选 `iconify` 图标名称。
-- `color` / `bgColor` / `textColor` / `borderColor`：可选色彩定制。
-- `type`：展示类型，枚举值：
-  - `"text"`：普通文本。
-  - `"badge"`：徽章展示。
-  - `"progress"`：进度条。
-  - `"link"`：可点击链接。
+### ProjectType
+- `id` *(string)*：类型 ID，应与 `typeId` 一致。
+- `label` *(string)*：展示名称，例如「个人项目」。
+- `icon` *(string)*：`lucide-react` 图标名称（不含前缀），如 `Rocket`、`Building2`。
 
-## `ProjectDetail` 详情结构
-- `id` / `name` / `description`：与 `Project` 对应。
-- `status`：同上。
-- `previewImage`：详情主图。
-- `previewUrl`：在线预览链接。
-- `longDescription`：详细描述，可多段文本。
-- `displayData`：数组，成员为 `DisplayDataItem`。
-- `images`：图文介绍数组，每项包含 `src`、`alt`、`label`、`description`。
-- `features`：功能亮点列表，每项包含：
-  - `title`、`description`、`icon`。
-  - `techStack`：技术标签数组，元素含 `name`、`color`、`bgColor`、`textColor`、`borderColor`。
-  - `images`：与上文结构一致的配图列表。
-- `timeline`：项目里程碑对象，以年份和月份组织，叶子节点数组包含：
-  - `title`：事件标题。
-  - `date`：日期字符串。
-  - `status`：枚举值 `"completed"`（已完成）、`"in_progress"`（进行中）、`"planned"`（计划中）。
-- `themeColor`：与 `Project` 相同的主题色对象。
+### ProjectFeature（首页徽章）
+- `id` *(string)*：唯一标识，建议使用 slug。
+- `label` *(string)*：徽章标题。
+- `icon` *(string)*：`lucide-react` 图标名称，例如 `Sparkles`。
+- `appearance` *(object 可选)*：
+  - `presetId`：特效预设，枚举值：`golden-glow`、`forest-breeze`、`skyline`、`violet-dream`、`rose-quartz`、`midnight`、`aurora`、`citrus-spark`、`lavender-mist`、`ember`、`azure-wave`、`slate-focus`。
+  - 可额外提供 `containerClassName`、`iconClassName` 等自定义类名。
+- `color` *(string，可选)*：兼容旧数据的颜色类，当前前端优先使用 `appearance`。
 
-## 提示词编写建议
-1. 先告知 AI 输出必须符合上述字段与枚举限制。
-2. 明确每个字段的语言风格，例如描述使用中文、技术栈使用英文缩写。
-3. 如果需要 `valueCode`，请描述其业务逻辑，例如基于 `attributes` 计算。
-4. 对截图、配图和链接字段，要求 AI 使用占位符或可替换的示例 URL。
-5. 强调颜色值使用 `#RRGGBB` 格式，避免透明度。
+### Screenshot
+- `id` *(string)*：截图唯一 ID。
+- `name` *(string)*：文件名或展示名称。
+- `description` *(string)*：图片说明。
+- `url` *(string)*：截图访问地址，需为完整 URL 或可用静态路径。
 
-使用本说明，可快速生成满足前端与后端约束的项目信息 JSON。
+### ProjectInfo（信息项）
+- `id` *(string)*：唯一标识。
+- `icon` *(string)*：`iconify` 图标名称，例如 `lucide:rocket`。
+- `label` *(string)*：展示标题，如「技术栈」。
+- `valueCode` *(string)*：用于运行时生成展示值的表达式，可返回字符串或数值。
+- `value` *(string，可选)*：当 `valueCode` 为空或执行失败时使用的兜底文本。
+- `showInHomepage` / `showInSidebar` *(boolean)*：是否在首页卡片、项目侧栏展示。
+- `showInHero` *(boolean，可选)*：是否在详情页 Hero 区展示。
+- `color` *(string)*：Tailwind 类组合，控制文本/背景/边框颜色，例如 `text-blue-600 bg-blue-50 border-blue-200`。
+- `order` *(number)*：排序权重，值越小越靠前。
+
+### FeatureHighlight（项目亮点/演示）
+- `id` *(string)*：唯一标识，常用 `feature-${slug}` 格式。
+- `title` *(string)*：亮点标题。
+- `description` *(string)*：亮点详情，可为多行文本。
+- `techStack` *(ColorfulTag[])*：技术标签，元素结构：
+  - `id` *(string)*：标签 ID。
+  - `name` *(string)*：标签名称。
+  - `color` / `bgColor` / `textColor` / `borderColor` *(string)*：Tailwind 渐变或颜色类，用于自定义样式。
+- `screenshots` *(Screenshot[])*：与上文一致的截图结构。
+- `previewUrl` *(string)*：该亮点的桌面演示地址。
+- `mobilePreviewUrl` *(string, 可选)*：移动端演示地址。
+- `leftMarkdown` / `rightMarkdown` *(string)*：亮点详情页左右栏 Markdown 文本。
+
+## 生成提示词建议
+1. 明确告知 AI：必须生成完整的 JSON/对象结构，字段名与上述说明完全一致。
+2. 对必填字段（`name`、`description`、`statusId`、`typeId`、`projectInfos` 等）给出具体的长度、语气和语言要求，例如「保持中文描述」「控制在 60 字以内」。
+3. 若需要 `valueCode` 计算值，请描述其逻辑来源，例如 `return '50w'` 或基于已有属性拼接。
+4. URL 字段须提供合法可替换的占位符（如 `https://example.com/demo`），截图可使用可访问的静态路径或自定义上传地址。
+5. 颜色类需使用 Tailwind 语法（如 `bg-blue-50`、`from-sky-500 to-indigo-600`），避免使用十六进制。
+6. 如果项目包含开源要求，请提醒 AI 在 `isOpenSource=true` 时同步生成有效的 `sourceUrl`。
+
+按照上述结构撰写提示词，可确保自动化生成的项目数据符合前端与后端的字段约束，并能直接用于项目创建与展示。

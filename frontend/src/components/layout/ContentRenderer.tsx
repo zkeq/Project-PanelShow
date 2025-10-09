@@ -94,7 +94,8 @@ export default function ContentRenderer({
       getString(profileData.profile?.avatar) ||
       `https://avatars.githubusercontent.com/u/0`,
     wechatQr: getString(profileData.profile?.wechatQr),
-    wechatDescription: getString(profileData.profile?.notes)
+    wechatDescription: getString(profileData.profile?.notes),
+    subDescription: getString(profileData.profile?.subDescription)
   }
 
   // 时间线模式处理

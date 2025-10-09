@@ -20,6 +20,7 @@ import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
 export default function UserProjectPage() {
   const params = useParams()
   const username = params.username as string
+  const encodedUsername = encodeURIComponent(username)
 
   // 所有 hooks 必须在顶部调用
   const [activeTab, setActiveTab] = useState<'projects' | 'timeline'>('projects')
@@ -215,6 +216,7 @@ export default function UserProjectPage() {
         username={username}
         avatar={profileData.profile?.avatar}
         displayName={profileData.profile?.name}
+        titleHref={`/project/${encodedUsername}`}
       />
 
       {/* 主体内容区 */}

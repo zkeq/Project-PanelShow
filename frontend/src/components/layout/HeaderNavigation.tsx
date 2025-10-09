@@ -11,13 +11,17 @@ interface HeaderNavigationProps {
   showManageButton?: boolean
   avatar?: string
   displayName?: string
+  backHref?: string | null
+  titleHref?: string
 }
 
 export default function HeaderNavigation({
   username,
   showManageButton = true,
   avatar,
-  displayName
+  displayName,
+  backHref,
+  titleHref
 }: HeaderNavigationProps) {
   const router = useRouter()
 
@@ -25,25 +29,31 @@ export default function HeaderNavigation({
     router.push('/admin')
   }
 
+  const hasBackButton = typeof backHref === 'string' && backHref.trim().length > 0
+  const resolvedTitleHref = titleHref ?? `/project/${encodeURIComponent(username)}`
+  const trimmedAvatar = typeof avatar === 'string' && avatar.trim().length > 0 ? avatar.trim() : undefined
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6 mx-auto">
         <div className="flex items-center space-x-2 min-w-0 flex-1">
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground"
-            aria-label="返回首页"
-          >
-            <Link href="/">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          {avatar ? (
+          {hasBackButton && backHref && (
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="返回上一页"
+            >
+              <Link href={backHref}>
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+          )}
+          {trimmedAvatar ? (
             <div className="w-7 h-7 rounded-md overflow-hidden flex-shrink-0 border border-border/60">
               <img
-                src={avatar}
+                src={trimmedAvatar}
                 alt={displayName || username}
                 className="w-full h-full object-cover"
               />
@@ -53,7 +63,7 @@ export default function HeaderNavigation({
               {username?.charAt(0).toUpperCase()}
             </div>
           )}
-          <Link href="/" className="flex items-center space-x-2 min-w-0 group" aria-label="返回首页">
+          <Link href={resolvedTitleHref} className="flex items-center space-x-2 min-w-0 group" aria-label="返回作品集主页">
             <h1 className="text-base sm:text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
               {displayName || username}
             </h1>

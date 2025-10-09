@@ -12,6 +12,7 @@ import { fetchProject } from '@/lib/api'
 import { parseFeatureChipAppearance, type FeatureChipAppearance } from '@/lib/feature-chips'
 import type { ProjectInfo } from '@/types/store'
 import type { TimelineItem } from '@/types/timeline'
+import { useProfileData } from '@/hooks/useProfileData'
 
 type ProjectStatus = 'active' | 'maintained' | 'archived' | 'building'
 
@@ -425,10 +426,28 @@ export default function ProjectDetailPage() {
   const params = useParams()
   const username = params.username as string
   const projectId = params.projectId as string
+  const encodedUsername = encodeURIComponent(username)
   const [activeSection, setActiveSection] = useState('overview')
   const [projectData, setProjectData] = useState<ProjectDetailViewModel | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const profileData = useProfileData(username)
+  const headerAvatar =
+    typeof profileData.profile?.avatar === 'string' && profileData.profile.avatar.trim().length > 0
+      ? profileData.profile.avatar
+      : undefined
+  const headerDisplayName = (() => {
+    const siteTitle =
+      typeof profileData.profile?.siteTitle === 'string' && profileData.profile.siteTitle.trim().length > 0
+        ? profileData.profile.siteTitle.trim()
+        : undefined
+    if (siteTitle) return siteTitle
+    const name =
+      typeof profileData.profile?.name === 'string' && profileData.profile.name.trim().length > 0
+        ? profileData.profile.name.trim()
+        : undefined
+    return name
+  })()
 
   useEffect(() => {
     let cancelled = false
@@ -532,7 +551,13 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <HeaderNavigation username={username} />
+      <HeaderNavigation
+        username={username}
+        avatar={headerAvatar}
+        displayName={headerDisplayName}
+        backHref={`/project/${encodedUsername}`}
+        titleHref={`/project/${encodedUsername}`}
+      />
 
       <div className="flex">
         <div className="hidden lg:block">
