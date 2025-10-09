@@ -101,36 +101,30 @@ export default function UserProfileCard({
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                 {website && (
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">网址</span>
-                    <a
-                      href={website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-1 min-w-0"
-                    >
-                      <Globe className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate max-w-[12rem]" title={website}>
-                        {websiteLabel}
-                      </span>
-                    </a>
-                  </div>
+                  <a
+                    href={website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                  >
+                    <Globe className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate max-w-[12rem]" title={website}>
+                      {websiteLabel}
+                    </span>
+                  </a>
                 )}
                 {githubUrl && (
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">GitHub</span>
-                    <a
-                      href={githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-1 min-w-0"
-                    >
-                      <Github className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate max-w-[12rem]" title={githubUrl}>
-                        {githubLabel || `github.com/${username}`}
-                      </span>
-                    </a>
-                  </div>
+                  <a
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                  >
+                    <Github className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate max-w-[12rem]" title={githubUrl}>
+                      {githubLabel || `github.com/${username}`}
+                    </span>
+                  </a>
                 )}
               </div>
             </div>

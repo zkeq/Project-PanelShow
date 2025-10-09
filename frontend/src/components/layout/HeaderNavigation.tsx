@@ -32,6 +32,11 @@ export default function HeaderNavigation({
   const hasBackButton = typeof backHref === 'string' && backHref.trim().length > 0
   const resolvedTitleHref = titleHref ?? `/project/${encodeURIComponent(username)}`
   const trimmedAvatar = typeof avatar === 'string' && avatar.trim().length > 0 ? avatar.trim() : undefined
+  const trimmedDisplayName =
+    typeof displayName === 'string' && displayName.trim().length > 0 ? displayName.trim() : undefined
+  const resolvedDisplayName = trimmedDisplayName ?? username
+  const suffixLabel = '的作品集'
+  const shouldShowSuffix = !resolvedDisplayName.endsWith(suffixLabel)
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -65,11 +70,13 @@ export default function HeaderNavigation({
           )}
           <Link href={resolvedTitleHref} className="flex items-center space-x-2 min-w-0 group" aria-label="返回作品集主页">
             <h1 className="text-base sm:text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-              {displayName || username}
+              {resolvedDisplayName}
             </h1>
-            <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap hidden sm:inline group-hover:text-primary transition-colors">
-              的作品集
-            </span>
+            {shouldShowSuffix && (
+              <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap hidden sm:inline group-hover:text-primary transition-colors">
+                {suffixLabel}
+              </span>
+            )}
           </Link>
         </div>
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
