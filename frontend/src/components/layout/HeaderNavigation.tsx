@@ -1,7 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Settings } from 'lucide-react'
+import { Settings, ArrowLeft } from 'lucide-react'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { useRouter } from 'next/navigation'
 
@@ -10,13 +11,17 @@ interface HeaderNavigationProps {
   showManageButton?: boolean
   avatar?: string
   displayName?: string
+  backHref?: string | null
+  titleHref?: string
 }
 
 export default function HeaderNavigation({
   username,
   showManageButton = true,
   avatar,
-  displayName
+  displayName,
+  backHref,
+  titleHref
 }: HeaderNavigationProps) {
   const router = useRouter()
 
@@ -24,14 +29,35 @@ export default function HeaderNavigation({
     router.push('/admin')
   }
 
+  const hasBackButton = typeof backHref === 'string' && backHref.trim().length > 0
+  const resolvedTitleHref = titleHref ?? `/project/${encodeURIComponent(username)}`
+  const trimmedAvatar = typeof avatar === 'string' && avatar.trim().length > 0 ? avatar.trim() : undefined
+  const trimmedDisplayName =
+    typeof displayName === 'string' && displayName.trim().length > 0 ? displayName.trim() : undefined
+  const resolvedDisplayName = trimmedDisplayName ?? username
+  const suffixLabel = '的作品集'
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6 mx-auto">
         <div className="flex items-center space-x-2 min-w-0 flex-1">
-          {avatar ? (
+          {hasBackButton && backHref && (
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label="返回上一页"
+            >
+              <Link href={backHref}>
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+          )}
+          {trimmedAvatar ? (
             <div className="w-7 h-7 rounded-md overflow-hidden flex-shrink-0 border border-border/60">
               <img
-                src={avatar}
+                src={trimmedAvatar}
                 alt={displayName || username}
                 className="w-full h-full object-cover"
               />
@@ -41,12 +67,20 @@ export default function HeaderNavigation({
               {username?.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="flex items-center space-x-2 min-w-0">
-            <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">
-              {displayName || username}
-            </h1>
-            <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap hidden sm:inline">的作品集</span>
-          </div>
+          <Link
+            href={resolvedTitleHref}
+            className="group"
+            aria-label="返回作品集主页"
+          >
+            <div className="flex items-center space-x-2 min-w-0">
+              <h1 className="text-base sm:text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                {resolvedDisplayName}
+              </h1>
+              <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap hidden sm:inline">
+                {suffixLabel}
+              </span>
+            </div>
+          </Link>
         </div>
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
           <ThemeSwitch />

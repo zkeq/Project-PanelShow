@@ -53,16 +53,49 @@ export default function ContentRenderer({
 }: ContentRendererProps) {
 
   // 从API数据构建用户资料
+  const getString = (value: unknown) =>
+    typeof value === 'string' && value.trim().length > 0 ? value : undefined
+
+  const getNumber = (value: unknown) => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value
+    }
+    if (typeof value === 'string') {
+      const parsed = Number(value)
+      return Number.isFinite(parsed) ? parsed : undefined
+    }
+    return undefined
+  }
+
+  const website =
+    getString(profileData.profile?.personalWebsite) ||
+    getString(profileData.profile?.github_blog) ||
+    getString(profileData.profile?.website)
+
+  const githubHandle = getString(profileData.profile?.github)
+  const githubUrl =
+    getString(profileData.profile?.github_profile_url) ||
+    (githubHandle ? `https://github.com/${githubHandle}` : undefined)
+
   const userProfile = {
-    username: profileData.profile?.username || username,
-    displayName: profileData.profile?.name || username,
-    bio: String(profileData.profile?.github_bio || profileData.profile?.bio || ''),
-    followers: profileData.profile?.github_followers || 0,
-    following: profileData.profile?.github_following || 0,
-    company: profileData.profile?.github_company || '',
-    website: profileData.profile?.github_blog || '',
-    stars: profileData.profile?.github_total_stars || 0,
-    avatar: profileData.profile?.avatar || `https://avatars.githubusercontent.com/u/0`
+    username: getString(profileData.profile?.username) || username,
+    displayName: getString(profileData.profile?.name) || username,
+    bio:
+      getString(profileData.profile?.github_bio) ||
+      getString(profileData.profile?.bio) ||
+      '',
+    followers: getNumber(profileData.profile?.github_followers) || 0,
+    following: getNumber(profileData.profile?.github_following) || 0,
+    company: getString(profileData.profile?.github_company),
+    website,
+    githubUrl,
+    stars: getNumber(profileData.profile?.github_total_stars),
+    avatar:
+      getString(profileData.profile?.avatar) ||
+      `https://avatars.githubusercontent.com/u/0`,
+    wechatQr: getString(profileData.profile?.wechatQr),
+    wechatDescription: getString(profileData.profile?.notes),
+    subDescription: getString(profileData.profile?.subDescription)
   }
 
   // 时间线模式处理

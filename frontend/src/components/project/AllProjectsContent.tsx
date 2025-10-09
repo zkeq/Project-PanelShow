@@ -17,9 +17,13 @@ interface AllProjectsContentProps {
     following: number
     company?: string
     website?: string
-    stars?: number
-    avatar?: string
-  }
+    githubUrl?: string
+  stars?: number
+  avatar?: string
+  wechatQr?: string
+  wechatDescription?: string
+  subDescription?: string
+}
 }
 
 export default function AllProjectsContent({

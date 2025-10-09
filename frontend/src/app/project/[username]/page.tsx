@@ -20,6 +20,7 @@ import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
 export default function UserProjectPage() {
   const params = useParams()
   const username = params.username as string
+  const encodedUsername = encodeURIComponent(username)
 
   // 所有 hooks 必须在顶部调用
   const [activeTab, setActiveTab] = useState<'projects' | 'timeline'>('projects')
@@ -53,6 +54,27 @@ export default function UserProjectPage() {
 
   // 获取profile数据
   const profileData = useProfileData(username)
+  const headerAvatar = useMemo(() => {
+    const rawAvatar = profileData.profile?.avatar
+    if (typeof rawAvatar === 'string') {
+      const trimmed = rawAvatar.trim()
+      if (trimmed.length > 0) return trimmed
+    }
+    return undefined
+  }, [profileData.profile?.avatar])
+  const headerDisplayName = useMemo(() => {
+    const rawSiteTitle = profileData.profile?.siteTitle
+    if (typeof rawSiteTitle === 'string') {
+      const trimmed = rawSiteTitle.trim()
+      if (trimmed.length > 0) return trimmed
+    }
+    const rawName = profileData.profile?.name
+    if (typeof rawName === 'string') {
+      const trimmed = rawName.trim()
+      if (trimmed.length > 0) return trimmed
+    }
+    return undefined
+  }, [profileData.profile?.siteTitle, profileData.profile?.name])
 
   // 检查用户名是否存在和被绑定
   useEffect(() => {
@@ -213,8 +235,9 @@ export default function UserProjectPage() {
       {/* 顶部导航栏 */}
       <HeaderNavigation
         username={username}
-        avatar={profileData.profile?.avatar}
-        displayName={profileData.profile?.name}
+        avatar={headerAvatar}
+        displayName={headerDisplayName}
+        titleHref={`/project/${encodedUsername}`}
       />
 
       {/* 主体内容区 */}
