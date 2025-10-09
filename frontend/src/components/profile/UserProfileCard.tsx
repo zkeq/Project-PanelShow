@@ -67,12 +67,6 @@ export default function UserProfileCard({
                 <span className="text-muted-foreground text-base">{username}</span>
               </div>
 
-              {subtitle && (
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {subtitle}
-                </p>
-              )}
-
               <p className="text-muted-foreground text-sm leading-relaxed break-words">
                 {bio}
               </p>
@@ -99,33 +93,40 @@ export default function UserProfileCard({
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                {website && (
-                  <a
-                    href={website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                  >
-                    <Globe className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate max-w-[12rem]" title={website}>
-                      {websiteLabel}
-                    </span>
-                  </a>
+              <div className="flex flex-wrap items-center gap-4">
+                {subtitle && (
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {subtitle}
+                  </p>
                 )}
-                {githubUrl && (
-                  <a
-                    href={githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                  >
-                    <Github className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate max-w-[12rem]" title={githubUrl}>
-                      {githubLabel || `github.com/${username}`}
-                    </span>
-                  </a>
-                )}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                  {website && (
+                    <a
+                      href={website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    >
+                      <Globe className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate max-w-[12rem]" title={website}>
+                        {websiteLabel}
+                      </span>
+                    </a>
+                  )}
+                  {githubUrl && (
+                    <a
+                      href={githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                    >
+                      <Github className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate max-w-[12rem]" title={githubUrl}>
+                        {githubLabel || `github.com/${username}`}
+                      </span>
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>
