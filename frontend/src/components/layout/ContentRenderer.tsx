@@ -53,6 +53,17 @@ export default function ContentRenderer({
 }: ContentRendererProps) {
 
   // 从API数据构建用户资料
+  const website =
+    profileData.profile?.personalWebsite ||
+    profileData.profile?.github_blog ||
+    profileData.profile?.website ||
+    ''
+
+  const githubUrl = profileData.profile?.github_profile_url
+    || (profileData.profile?.github
+      ? `https://github.com/${profileData.profile.github}`
+      : '')
+
   const userProfile = {
     username: profileData.profile?.username || username,
     displayName: profileData.profile?.name || username,
@@ -60,9 +71,12 @@ export default function ContentRenderer({
     followers: profileData.profile?.github_followers || 0,
     following: profileData.profile?.github_following || 0,
     company: profileData.profile?.github_company || '',
-    website: profileData.profile?.github_blog || '',
+    website,
+    githubUrl,
     stars: profileData.profile?.github_total_stars || 0,
-    avatar: profileData.profile?.avatar || `https://avatars.githubusercontent.com/u/0`
+    avatar: profileData.profile?.avatar || `https://avatars.githubusercontent.com/u/0`,
+    wechatQr: profileData.profile?.wechatQr || '',
+    wechatDescription: profileData.profile?.notes || ''
   }
 
   // 时间线模式处理

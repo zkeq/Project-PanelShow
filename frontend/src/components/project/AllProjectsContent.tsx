@@ -17,8 +17,11 @@ interface AllProjectsContentProps {
     following: number
     company?: string
     website?: string
+    githubUrl?: string
     stars?: number
     avatar?: string
+    wechatQr?: string
+    wechatDescription?: string
   }
 }
 
