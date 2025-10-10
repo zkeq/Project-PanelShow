@@ -50,8 +50,8 @@ export default function UserProfileCard({
     <div className="w-full bg-background border border-border/40 rounded-lg">
       <div className="p-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
-          <div className="flex-1 min-w-0 space-y-4">
-            <div className="flex items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="grid grid-cols-[auto,1fr] gap-4 lg:gap-6">
               {/* 头像 */}
               <div className="flex-shrink-0">
                 <img
@@ -62,7 +62,7 @@ export default function UserProfileCard({
               </div>
 
               {/* 用户基础信息 */}
-              <div className="flex-1 min-w-0 space-y-3">
+              <div className="flex flex-col gap-3 min-w-0">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <h1 className="text-xl font-bold text-foreground">{displayName}</h1>
                   <span className="text-muted-foreground text-base">{username}</span>
@@ -83,55 +83,55 @@ export default function UserProfileCard({
                   )}
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-3 text-left">
-              {bio && (
-                <p className="text-muted-foreground text-sm leading-relaxed break-words">
-                  {bio}
-                </p>
-              )}
+              <div className="col-span-2 space-y-3 text-left lg:col-span-1 lg:col-start-2 lg:min-w-0">
+                {bio && (
+                  <p className="text-muted-foreground text-sm leading-relaxed break-words">
+                    {bio}
+                  </p>
+                )}
 
-              {company && (
-                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                  <Briefcase className="w-4 h-4" />
-                  <span>{company}</span>
+                {company && (
+                  <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                    <Briefcase className="w-4 h-4" />
+                    <span>{company}</span>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3 text-sm lg:flex-row lg:flex-wrap lg:items-center lg:gap-4">
+                  {subtitle && (
+                    <p className="text-muted-foreground leading-relaxed">{subtitle}</p>
+                  )}
+
+                  <div className="flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
+                    {website && (
+                      <a
+                        href={website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                      >
+                        <Globe className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate max-w-[12rem]" title={website}>
+                          {websiteLabel}
+                        </span>
+                      </a>
+                    )}
+                    {githubUrl && (
+                      <a
+                        href={githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                      >
+                        <Github className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate max-w-[12rem]" title={githubUrl}>
+                          {githubLabel || `github.com/${username}`}
+                        </span>
+                      </a>
+                    )}
+                  </div>
                 </div>
-              )}
-
-              {subtitle && (
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {subtitle}
-                </p>
-              )}
-
-              <div className="flex flex-col items-start gap-2 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
-                {website && (
-                  <a
-                    href={website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                  >
-                    <Globe className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate max-w-[12rem]" title={website}>
-                      {websiteLabel}
-                    </span>
-                  </a>
-                )}
-                {githubUrl && (
-                  <a
-                    href={githubUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                  >
-                    <Github className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate max-w-[12rem]" title={githubUrl}>
-                      {githubLabel || `github.com/${username}`}
-                    </span>
-                  </a>
-                )}
               </div>
             </div>
           </div>
