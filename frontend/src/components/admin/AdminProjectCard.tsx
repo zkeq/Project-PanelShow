@@ -34,6 +34,7 @@ import {
   Edit,
   Trash2,
   MoreVertical,
+  Loader2,
   type LucideIcon,
 } from "lucide-react";
 import NextLink from "next/link";
@@ -56,6 +57,11 @@ interface AdminProjectCardProps {
   onDelete?: (projectId: string) => void;
   index?: number;
   username?: string;
+  onMoveUp?: (projectId: string) => void;
+  onMoveDown?: (projectId: string) => void;
+  disableMoveUp?: boolean;
+  disableMoveDown?: boolean;
+  isReordering?: boolean;
 }
 
 // 图标映射函数
@@ -95,6 +101,11 @@ export function AdminProjectCard({
   onDelete,
   index = 0,
   username,
+  onMoveUp,
+  onMoveDown,
+  disableMoveUp = false,
+  disableMoveDown = false,
+  isReordering = false,
 }: AdminProjectCardProps) {
   const [localExpanded, setLocalExpanded] = useState(false);
 
@@ -117,9 +128,14 @@ export function AdminProjectCard({
     "/Snipaste_2025-08-23_22-52-25.png",
   ];
 
-  // 根据项目ID选择图片
-  const imageIndex = parseInt(project.id) % defaultImages.length;
-  const imageSrc = project.previewImage || defaultImages[imageIndex];
+  const fallbackImages =
+    project.previewImages && project.previewImages.length > 0
+      ? project.previewImages
+      : defaultImages;
+  const fallbackImage =
+    fallbackImages[(index % fallbackImages.length + fallbackImages.length) % fallbackImages.length] ||
+    defaultImages[0];
+  const imageSrc = project.previewImage || fallbackImage;
 
   // 颜色主题数组 - 根据首页核心优势卡片样式
   const colorThemes = [
@@ -429,9 +445,45 @@ export function AdminProjectCard({
             {/* 管理操作按钮 */}
             <div className="flex items-center justify-between pt-2 border-t">
               <div className="text-xs text-muted-foreground">
-                ID: {project.id} • 更新于 {new Date(project.updatedAt).toLocaleDateString()}
+                ID: {project.id} • 排序权重 {typeof project.order === 'number' ? project.order : index} • 更新于 {new Date(project.updatedAt).toLocaleDateString()}
               </div>
               <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0"
+                    disabled={disableMoveUp || !onMoveUp || isReordering}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMoveUp?.(project.id);
+                    }}
+                    title={disableMoveUp ? '已在最前或不可调整' : '向前移动'}
+                  >
+                    {isReordering ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <ChevronUp className="h-3 w-3" />
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0"
+                    disabled={disableMoveDown || !onMoveDown || isReordering}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMoveDown?.(project.id);
+                    }}
+                    title={disableMoveDown ? '已在最后或不可调整' : '向后移动'}
+                  >
+                    {isReordering ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
                 <Button
                   size="sm"
                   variant="outline"

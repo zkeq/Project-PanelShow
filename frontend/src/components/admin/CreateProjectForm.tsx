@@ -44,7 +44,8 @@ import {
   Layers,
   Sparkles,
   Save,
-  Send
+  Send,
+  ListOrdered
 } from 'lucide-react';
 import { StatusToast, type StatusToastState } from '@/components/admin/settings/StatusToast';
 import {
@@ -84,6 +85,22 @@ const slugify = (value: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const ensureOrderValue = (value: unknown, fallback = 0): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseFloat(value);
+    if (Number.isFinite(parsed)) {
+      return Math.trunc(parsed);
+    }
+  }
+  return fallback;
+};
 
 function createUniqueId(label: string, existing: string[], fallbackPrefix: string) {
   const base = slugify(label) || `${fallbackPrefix}-${Date.now()}`;
@@ -225,6 +242,7 @@ interface ProjectFormData {
   projectInfos: ProjectInfo[];
   projectIntroduction: string;
   featureHighlights: FeatureHighlight[];
+  order: number;
   createdAt?: string;
   updatedAt?: string;
   statusId?: string | null;
@@ -251,6 +269,7 @@ const INITIAL_FORM_DATA: ProjectFormData = {
   projectInfos: [],
   projectIntroduction: '',
   featureHighlights: [],
+  order: 0,
   createdAt: undefined,
   updatedAt: undefined,
   statusId: null,
@@ -269,6 +288,9 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
   const [formData, setFormData] = useState<ProjectFormData>(() => ({
     ...INITIAL_FORM_DATA,
   }));
+  const [jsonEditorValue, setJsonEditorValue] = useState(() => JSON.stringify(INITIAL_FORM_DATA, null, 2));
+  const [jsonEditorDirty, setJsonEditorDirty] = useState(false);
+  const [jsonEditorError, setJsonEditorError] = useState<string | null>(null);
   const { token, boundUsername } = useAuthStore(
     useShallow((state) => ({
       token: state.token,
@@ -521,6 +543,83 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       .filter((item): item is FeatureHighlight => item !== null);
   }, [ensureScreenshots]);
 
+  const mapProjectRecordToFormData = useCallback(
+    (projectRecord: Record<string, unknown>, fallbackId?: string): ProjectFormData => {
+      const statusCandidate = projectRecord.status ?? projectRecord.statusId;
+      const typeCandidate = projectRecord.type ?? projectRecord.typeId;
+      const status = ensureStatusValue(statusCandidate);
+      const type = ensureTypeValue(typeCandidate);
+      const features = ensureFeatureList(projectRecord.features);
+      const screenshots = ensureScreenshots(projectRecord.screenshots, projectRecord.images);
+      const featureHighlights = ensureFeatureHighlights(projectRecord.featureHighlights);
+      const projectInfos = Array.isArray(projectRecord.projectInfos)
+        ? (projectRecord.projectInfos as ProjectInfo[])
+        : [];
+      const tags = Array.isArray(projectRecord.tags)
+        ? (projectRecord.tags as unknown[])
+            .map((tag) => (typeof tag === 'string' ? tag.trim() : ''))
+            .filter((tag) => tag.length > 0)
+        : [];
+
+      const previewUrl = typeof projectRecord.previewUrl === 'string' ? projectRecord.previewUrl : '';
+      const mobilePreviewUrl =
+        typeof projectRecord.mobilePreviewUrl === 'string' ? projectRecord.mobilePreviewUrl : '';
+      const sourceUrl = typeof projectRecord.sourceUrl === 'string' ? projectRecord.sourceUrl : '';
+      const leftSidebarMarkdown =
+        typeof projectRecord.leftSidebarMarkdown === 'string' ? projectRecord.leftSidebarMarkdown : '';
+      const rightSidebarMarkdown =
+        typeof projectRecord.rightSidebarMarkdown === 'string' ? projectRecord.rightSidebarMarkdown : '';
+      const readme = typeof projectRecord.readme === 'string' ? projectRecord.readme : '';
+      const projectIntroduction =
+        typeof projectRecord.projectIntroduction === 'string'
+          ? projectRecord.projectIntroduction
+          : typeof projectRecord.longDescription === 'string'
+            ? projectRecord.longDescription
+            : '';
+
+      const mapped: ProjectFormData = {
+        ...INITIAL_FORM_DATA,
+        id: typeof projectRecord.id === 'string' ? projectRecord.id : fallbackId,
+        name: typeof projectRecord.name === 'string' ? projectRecord.name : '',
+        description: typeof projectRecord.description === 'string' ? projectRecord.description : '',
+        tags,
+        status,
+        type,
+        features,
+        previewUrl,
+        mobilePreviewUrl,
+        sourceUrl,
+        leftSidebarMarkdown,
+        rightSidebarMarkdown,
+        isOpenSource: typeof projectRecord.isOpenSource === 'boolean'
+          ? projectRecord.isOpenSource
+          : Boolean(sourceUrl),
+        readme,
+        screenshots,
+        projectInfos,
+        projectIntroduction,
+        featureHighlights,
+        order: ensureOrderValue(projectRecord.order, ensureOrderValue(projectRecord.sortOrder)),
+        createdAt: typeof projectRecord.createdAt === 'string' ? projectRecord.createdAt : undefined,
+        updatedAt: typeof projectRecord.updatedAt === 'string' ? projectRecord.updatedAt : undefined,
+        statusId:
+          typeof projectRecord.statusId === 'string' || projectRecord.statusId === null
+            ? (projectRecord.statusId as string | null)
+            : status?.id ?? null,
+        typeId:
+          typeof projectRecord.typeId === 'string' || projectRecord.typeId === null
+            ? (projectRecord.typeId as string | null)
+            : type?.id ?? null,
+        longDescription: typeof projectRecord.longDescription === 'string'
+          ? projectRecord.longDescription
+          : undefined,
+      };
+
+      return mapped;
+    },
+    [ensureFeatureHighlights, ensureFeatureList, ensureScreenshots, ensureStatusValue, ensureTypeValue]
+  );
+
   const handleSaveDraft = () => {
     if (!canUseDraft) {
       return;
@@ -533,6 +632,33 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
     
     localStorage.setItem('project-draft', JSON.stringify(draftData));
     setStatusToast({ type: 'success', message: '草稿已保存到本地' });
+  };
+
+  useEffect(() => {
+    if (!jsonEditorDirty) {
+      setJsonEditorValue(JSON.stringify(formData, null, 2));
+    }
+  }, [formData, jsonEditorDirty]);
+
+  const handleRefreshJson = () => {
+    setJsonEditorValue(JSON.stringify(formData, null, 2));
+    setJsonEditorDirty(false);
+    setJsonEditorError(null);
+  };
+
+  const handleApplyJson = () => {
+    try {
+      const parsed = JSON.parse(jsonEditorValue);
+      if (!isRecord(parsed)) {
+        throw new Error('JSON 必须是对象');
+      }
+      const mapped = mapProjectRecordToFormData(parsed as Record<string, unknown>, formData.id);
+      setFormData(mapped);
+      setJsonEditorDirty(false);
+      setJsonEditorError(null);
+    } catch (error) {
+      setJsonEditorError(error instanceof Error ? error.message : 'JSON 解析失败');
+    }
   };
 
   // 在组件挂载时尝试恢复草稿（仅创建模式）
@@ -666,63 +792,19 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
         if (cancelled) return;
         if (response?.success && response.data) {
           const projectRecord = response.data as Record<string, unknown>;
-          const status = ensureStatusValue(projectRecord.status);
-          const type = ensureTypeValue(projectRecord.type);
-          const features = ensureFeatureList(projectRecord.features);
-          const screenshots = ensureScreenshots(projectRecord.screenshots, projectRecord.images);
-          const featureHighlights = ensureFeatureHighlights(projectRecord.featureHighlights);
-          const projectInfos = Array.isArray(projectRecord.projectInfos)
-            ? (projectRecord.projectInfos as ProjectInfo[])
-            : [];
-          const tags = Array.isArray(projectRecord.tags)
-            ? (projectRecord.tags as unknown[]).filter((tag): tag is string => typeof tag === 'string')
-            : [];
-
-          const mapped: ProjectFormData = {
-            ...INITIAL_FORM_DATA,
-            ...projectRecord,
-            id: typeof projectRecord.id === 'string' ? projectRecord.id : projectId,
-            name: typeof projectRecord.name === 'string' ? projectRecord.name : '',
-            description: typeof projectRecord.description === 'string' ? projectRecord.description : '',
-            tags,
-            status,
-            type,
-            features,
-            previewUrl: typeof projectRecord.previewUrl === 'string' ? projectRecord.previewUrl : '',
-            mobilePreviewUrl: typeof projectRecord.mobilePreviewUrl === 'string' ? projectRecord.mobilePreviewUrl : '',
-            sourceUrl: typeof projectRecord.sourceUrl === 'string' ? projectRecord.sourceUrl : '',
-            leftSidebarMarkdown: typeof projectRecord.leftSidebarMarkdown === 'string' ? projectRecord.leftSidebarMarkdown : '',
-            rightSidebarMarkdown: typeof projectRecord.rightSidebarMarkdown === 'string' ? projectRecord.rightSidebarMarkdown : '',
-            isOpenSource: typeof projectRecord.isOpenSource === 'boolean' ? projectRecord.isOpenSource : Boolean(projectRecord.sourceUrl),
-            readme: typeof projectRecord.readme === 'string' ? projectRecord.readme : '',
-            screenshots,
-            projectInfos,
-            projectIntroduction:
-              typeof projectRecord.projectIntroduction === 'string'
-                ? projectRecord.projectIntroduction
-                : typeof projectRecord.longDescription === 'string'
-                  ? projectRecord.longDescription
-                  : '',
-            featureHighlights,
-            createdAt: typeof projectRecord.createdAt === 'string' ? projectRecord.createdAt : undefined,
-            updatedAt: typeof projectRecord.updatedAt === 'string' ? projectRecord.updatedAt : undefined,
-            statusId: typeof projectRecord.statusId === 'string' || projectRecord.statusId === null ? (projectRecord.statusId as string | null) : null,
-            typeId: typeof projectRecord.typeId === 'string' || projectRecord.typeId === null ? (projectRecord.typeId as string | null) : null,
-            longDescription: typeof projectRecord.longDescription === 'string' ? projectRecord.longDescription : undefined,
-          };
-
+          const mapped = mapProjectRecordToFormData(projectRecord, projectId);
           setFormData(mapped);
           setDraftRestoredAt(null);
 
-          if (status) {
+          if (mapped.status) {
             setStatusOptions((prev) =>
-              prev.some((item) => item.id === status.id) ? prev : [...prev, status]
+              prev.some((item) => item.id === mapped.status?.id) ? prev : [...prev, mapped.status!]
             );
           }
 
-          if (type) {
+          if (mapped.type) {
             setTypeOptions((prev) =>
-              prev.some((item) => item.id === type.id) ? prev : [...prev, type]
+              prev.some((item) => item.id === mapped.type?.id) ? prev : [...prev, mapped.type!]
             );
           }
         } else {
@@ -745,7 +827,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
     return () => {
       cancelled = true;
     };
-  }, [isEditMode, token, boundUsername, projectId, ensureStatusValue, ensureTypeValue, ensureFeatureList, ensureScreenshots, ensureFeatureHighlights]);
+  }, [isEditMode, token, boundUsername, projectId, mapProjectRecordToFormData]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -798,6 +880,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
         typeId: formData.type?.id ?? null,
         updatedAt: now,
         longDescription: formData.projectIntroduction,
+        order: ensureOrderValue(formData.order, 0),
       };
 
       if (!isEditMode) {
@@ -805,9 +888,15 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
         await createProject(authContext.username, payload as unknown as Record<string, unknown>, authContext.authToken);
         localStorage.removeItem('project-draft');
         setFormData({ ...INITIAL_FORM_DATA });
+        setJsonEditorValue(JSON.stringify(INITIAL_FORM_DATA, null, 2));
+        setJsonEditorDirty(false);
+        setJsonEditorError(null);
         setStatusToast({ type: 'success', message: '作品集创建成功！' });
       } else if (projectId) {
         await updateProject(authContext.username, projectId, payload as unknown as Record<string, unknown>, authContext.authToken);
+        setJsonEditorValue(JSON.stringify(payload, null, 2));
+        setJsonEditorDirty(false);
+        setJsonEditorError(null);
         setStatusToast({ type: 'success', message: '作品集更新成功！' });
       }
 
@@ -978,6 +1067,27 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="order">
+                <ListOrdered className="inline h-4 w-4 mr-1" />
+                展示顺序
+              </Label>
+              <Input
+                id="order"
+                type="number"
+                value={formData.order}
+                onChange={(e) => {
+                  const value = ensureOrderValue(e.target.value, 0);
+                  setFormData((prev) => ({ ...prev, order: value }));
+                }}
+                min={0}
+                step={1}
+              />
+              <p className="text-xs text-muted-foreground">
+                数值越小越靠前，保存后也可以在项目列表中通过按钮快速调整顺序。
+              </p>
+            </div>
+
             <Separator />
 
             {/* URL 信息 */}
@@ -1143,6 +1253,46 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
               onChange={(features) => setFormData(prev => ({ ...prev, featureHighlights: features }))}
               onUploadScreenshot={canUploadAssets ? uploadFeatureScreenshot : undefined}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <FileCode className="inline h-5 w-5 mr-2" />
+              JSON 数据预览与编辑
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              在提交前可直接调整底部的 JSON 数据，方便批量修改和快速复制配置。
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Textarea
+              value={jsonEditorValue}
+              onChange={(event) => {
+                setJsonEditorValue(event.target.value);
+                setJsonEditorDirty(true);
+              }}
+              className="font-mono text-xs md:text-sm min-h-[260px]"
+            />
+            {jsonEditorError && (
+              <p className="text-xs text-destructive">{jsonEditorError}</p>
+            )}
+            <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-muted-foreground">
+                {jsonEditorDirty
+                  ? 'JSON 已修改，点击“应用到表单”后将覆盖上方表单数据。'
+                  : '该 JSON 与上方表单保持同步，可直接复制或在此基础上修改。'}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleRefreshJson}>
+                  重置 JSON
+                </Button>
+                <Button type="button" size="sm" onClick={handleApplyJson}>
+                  应用到表单
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

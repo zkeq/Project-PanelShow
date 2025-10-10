@@ -211,6 +211,21 @@ export function fetchProjects(username: string, token: string) {
   );
 }
 
+export function reorderProjects(
+  username: string,
+  order: Array<{ id: string; order: number }>,
+  token: string
+) {
+  return request<{ success: boolean; data: unknown }>(
+    `/api/projects/${encodeURIComponent(username)}/reorder`,
+    {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ order }),
+    }
+  );
+}
+
 export interface TechStackListResponse {
   success: boolean;
   data: TechStackResponseData;
