@@ -58,7 +58,7 @@ const normalizeImageSrc = (value: string | undefined | null, fallback = FALLBACK
   return `/${trimmed.replace(/^\/+/, '')}`;
 };
 
-const mapProjectFromApi = (raw: unknown): Project => {
+const mapProjectFromApi = (raw: unknown, fallbackIndex = 0): Project => {
   if (!isRecord(raw)) {
     return {
       id: `${Date.now()}`,
@@ -130,6 +130,20 @@ const mapProjectFromApi = (raw: unknown): Project => {
     .filter((item): item is string => typeof item === 'string')
     .map((item) => normalizeImageSrc(item, FALLBACK_PREVIEW_IMAGE));
 
+  const previewUrlValue = pickString(raw['previewUrl'], pickString(raw['preview_url']));
+  const mobilePreviewUrlValue = pickString(
+    raw['mobilePreviewUrl'],
+    pickString(raw['mobile_preview_url'])
+  );
+  const sourceUrlValue = pickString(raw['sourceUrl'], pickString(raw['repositoryUrl']));
+  const tagsSource = raw['tags'];
+  const tags = Array.isArray(tagsSource)
+    ? tagsSource
+        .map((tag) => (typeof tag === 'string' ? tag.trim() : ''))
+        .filter((tag) => tag.length > 0)
+    : [];
+  const order = pickNumber(raw['order'], fallbackIndex);
+
   // 解析 homeAttributes 和 sidebarAttributes
   const homeAttributesSource = raw['homeAttributes'];
   const homeAttributes = Array.isArray(homeAttributesSource)
@@ -166,6 +180,12 @@ const mapProjectFromApi = (raw: unknown): Project => {
     status,
     category: pickString(raw['category'], 'general'),
     previewImage: previewFallback,
+    previewImages: previewImages.length > 0 ? previewImages : undefined,
+    previewUrl: previewUrlValue || undefined,
+    mobilePreviewUrl: mobilePreviewUrlValue || undefined,
+    sourceUrl: sourceUrlValue || undefined,
+    tags: tags.length > 0 ? tags : undefined,
+    order,
     updatedAt: pickString(raw['updatedAt'], pickString(raw['updated_at'], new Date().toISOString().split('T')[0])),
     attributes,
     homeAttributes,
@@ -328,7 +348,9 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
         const projectData = projectsRes && projectsRes.success && Array.isArray(projectsRes.data)
           ? projectsRes.data
           : [];
-        const mappedProjects: Project[] = projectData.map((item: unknown) => mapProjectFromApi(item));
+        const mappedProjects: Project[] = projectData.map((item: unknown, index) =>
+          mapProjectFromApi(item, index)
+        );
         setProjects(mappedProjects);
 
         const timelineData = timelineRes && timelineRes.success && Array.isArray(timelineRes.data)
@@ -418,6 +440,12 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
       return matchesSearch && matchesStatus && matchesCategory;
     });
   }, [projects, searchQuery, statusFilter, categoryFilter]);
+
+  const isProjectListFiltered =
+    filteredProjects.length !== projects.length ||
+    searchQuery.trim().length > 0 ||
+    statusFilter !== 'all' ||
+    categoryFilter !== 'all';
 
   const filteredTimelineItems = useMemo(() => {
     return timelineItems.filter(item => {
@@ -571,10 +599,11 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
             
             <CardContent className="p-0">
               <TabsContent value="projects" className="m-0">
-                <ProjectManagementList 
-                  projects={filteredProjects}
-                  searchQuery={searchQuery}
-                />
+          <ProjectManagementList
+            projects={filteredProjects}
+            searchQuery={searchQuery}
+            isFiltered={isProjectListFiltered}
+          />
               </TabsContent>
               
               <TabsContent value="timeline" className="m-0">

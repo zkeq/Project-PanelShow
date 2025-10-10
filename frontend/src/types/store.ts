@@ -55,6 +55,12 @@ export interface Project {
   category: string
   techStacks?: string[]
   previewImage: string
+  previewImages?: string[]
+  previewUrl?: string
+  mobilePreviewUrl?: string
+  sourceUrl?: string
+  tags?: string[]
+  order?: number
   updatedAt: string
   // 可自定义属性列表
   attributes: ProjectAttribute[]

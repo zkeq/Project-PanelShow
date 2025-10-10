@@ -1,6 +1,25 @@
 import { create } from 'zustand'
 import { GlobalState, TimelineItem, Project, ProjectDetail, DemoProject, User, ProfileInfo, Experience, QuickLink } from '@/types/store'
 
+const normalizeProjectOrder = (projects: Project[]): Project[] => {
+  return projects
+    .map((project, index) => {
+      const rawOrder = project.order;
+      let orderValue: number;
+      if (typeof rawOrder === 'number' && Number.isFinite(rawOrder)) {
+        orderValue = Math.trunc(rawOrder);
+      } else if (typeof rawOrder === 'string') {
+        const parsed = Number.parseInt(rawOrder, 10);
+        orderValue = Number.isFinite(parsed) ? parsed : index;
+      } else {
+        orderValue = index;
+      }
+      return { project, orderValue, index };
+    })
+    .sort((a, b) => (a.orderValue - b.orderValue) || (a.index - b.index))
+    .map((item) => ({ ...item.project, order: item.orderValue }));
+};
+
 // Mock 用户数据
 const mockUsers: Record<string, User> = {
   'zkeq': {
@@ -153,7 +172,7 @@ const mockTimelineItems: TimelineItem[] = [
 ]
 
 // Mock 项目列表数据
-const mockProjects: Project[] = [
+const mockProjects: Project[] = normalizeProjectOrder([
   {
     id: '1',
     name: 'E-Commerce Platform',
@@ -322,7 +341,7 @@ const mockProjects: Project[] = [
       border: 'border-slate-200'
     }
   }
-]
+])
 
 // Mock 项目详情数据
 const mockProjectDetails: Record<string, ProjectDetail> = {
@@ -1044,7 +1063,7 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
   },
 
   setProjects: (projects: Project[]) => {
-    set(() => ({ projects }));
+    set(() => ({ projects: normalizeProjectOrder(projects) }));
   },
 
   setTimelineItems: (items: TimelineItem[]) => {
@@ -1067,30 +1086,42 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
 
   // 项目 CRUD 操作
   createProject: (project: Omit<Project, 'id' | 'updatedAt'>) => {
-    const newProject: Project = {
-      ...project,
-      id: Date.now().toString(),
-      updatedAt: new Date().toISOString().split('T')[0]
-    }
-    set((state) => ({
-      projects: [...state.projects, newProject]
-    }))
-    return newProject
+    let createdProject: Project | null = null;
+    const updatedAt = new Date().toISOString().split('T')[0];
+    set((state) => {
+      const nextOrder =
+        typeof project.order === 'number' && Number.isFinite(project.order)
+          ? Math.trunc(project.order)
+          : state.projects.length;
+      const candidate: Project = {
+        ...project,
+        id: Date.now().toString(),
+        order: nextOrder,
+        updatedAt,
+      };
+      const projects = normalizeProjectOrder([...state.projects, candidate]);
+      createdProject = projects.find((item) => item.id === candidate.id) ?? candidate;
+      return { projects };
+    });
+    return createdProject!;
   },
 
   updateProject: (id: string, updates: Partial<Project>) => {
+    const updatedAt = new Date().toISOString().split('T')[0];
     set((state) => ({
-      projects: state.projects.map(project =>
-        project.id === id 
-          ? { ...project, ...updates, updatedAt: new Date().toISOString().split('T')[0] }
-          : project
+      projects: normalizeProjectOrder(
+        state.projects.map(project =>
+          project.id === id
+            ? { ...project, ...updates, updatedAt }
+            : project
+        )
       )
     }))
   },
 
   deleteProject: (id: string) => {
     set((state) => ({
-      projects: state.projects.filter(project => project.id !== id),
+      projects: normalizeProjectOrder(state.projects.filter(project => project.id !== id)),
       // 同时删除相关的项目详情
       projectDetails: Object.fromEntries(
         Object.entries(state.projectDetails).filter(([key]) => !key.endsWith(`-${id}`))
