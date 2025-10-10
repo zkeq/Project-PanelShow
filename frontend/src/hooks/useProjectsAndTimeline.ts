@@ -29,8 +29,17 @@ export function useProjectsAndTimeline(username: string) {
           fetchTimeline(username, token)
         ]);
 
+        // Sort projects by order field (ascending)
+        const sortedProjects = Array.isArray(projectsRes.data)
+          ? [...projectsRes.data].sort((a, b) => {
+              const orderA = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+              const orderB = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+              return orderA - orderB;
+            })
+          : [];
+
         setData({
-          projects: Array.isArray(projectsRes.data) ? projectsRes.data : [],
+          projects: sortedProjects,
           timelineItems: Array.isArray(timelineRes.data) ? timelineRes.data : [],
           loading: false,
           error: null
