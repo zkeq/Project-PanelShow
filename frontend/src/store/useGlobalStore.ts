@@ -1019,7 +1019,7 @@ export const useGlobalStore = create<GlobalState>((set, get) => ({
     return get().timelineItems
   },
 
-  getProjectsByUsername: (_username: string) => {
+  getProjectsByUsername: () => {
     // 假设所有项目都属于指定用户
     return get().projects
   },

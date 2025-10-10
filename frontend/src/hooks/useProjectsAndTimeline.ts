@@ -32,7 +32,7 @@ export function useProjectsAndTimeline(username: string) {
         // Sort projects by order field (ascending)
         const projectsArray = Array.isArray(projectsRes.data) ? projectsRes.data : [];
 
-        const sortedProjects = [...projectsArray].sort((a: any, b: any) => {
+        const sortedProjects = [...projectsArray].sort((a, b) => {
           // Handle missing order field - projects without order go to the end
           const orderA = (typeof a.order === 'number' && !isNaN(a.order))
             ? a.order
