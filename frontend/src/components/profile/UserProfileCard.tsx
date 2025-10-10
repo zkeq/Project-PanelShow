@@ -50,41 +50,47 @@ export default function UserProfileCard({
     <div className="w-full bg-background border border-border/40 rounded-lg">
       <div className="p-6">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
-          <div className="flex items-start space-x-4 flex-1 min-w-0">
-            {/* 头像 */}
-            <div className="flex-shrink-0">
-              <img
-                src={avatar || 'https://avatars.githubusercontent.com/u/62864752'}
-                alt={displayName}
-                className="w-16 h-16 rounded-full border-2 border-border/60"
-              />
+          <div className="flex-1 min-w-0 space-y-4">
+            <div className="flex items-start gap-4">
+              {/* 头像 */}
+              <div className="flex-shrink-0">
+                <img
+                  src={avatar || 'https://avatars.githubusercontent.com/u/62864752'}
+                  alt={displayName}
+                  className="w-16 h-16 rounded-full border-2 border-border/60"
+                />
+              </div>
+
+              {/* 用户基础信息 */}
+              <div className="flex-1 min-w-0 space-y-3">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <h1 className="text-xl font-bold text-foreground">{displayName}</h1>
+                  <span className="text-muted-foreground text-base">{username}</span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                  <span>{followers} followers</span>
+                  <span>·</span>
+                  <span>{following} following</span>
+                  {hasStars && (
+                    <>
+                      <span>·</span>
+                      <span className="inline-flex items-center gap-1">
+                        {stars}
+                        <Star className="w-4 h-4" />
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* 用户信息 */}
-            <div className="flex-1 min-w-0 space-y-3">
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <h1 className="text-xl font-bold text-foreground">{displayName}</h1>
-                <span className="text-muted-foreground text-base">{username}</span>
-              </div>
-
-              <p className="text-muted-foreground text-sm leading-relaxed break-words">
-                {bio}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-                <span>{followers} followers</span>
-                <span>·</span>
-                <span>{following} following</span>
-                {hasStars && (
-                  <>
-                    <span>·</span>
-                    <span className="inline-flex items-center gap-1">
-                      {stars}
-                      <Star className="w-4 h-4" />
-                    </span>
-                  </>
-                )}
-              </div>
+            <div className="space-y-3 text-left">
+              {bio && (
+                <p className="text-muted-foreground text-sm leading-relaxed break-words">
+                  {bio}
+                </p>
+              )}
 
               {company && (
                 <div className="flex items-center space-x-1 text-sm text-muted-foreground">
@@ -93,40 +99,39 @@ export default function UserProfileCard({
                 </div>
               )}
 
-              <div className="flex flex-wrap items-center gap-4">
-                {subtitle && (
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {subtitle}
-                  </p>
+              {subtitle && (
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {subtitle}
+                </p>
+              )}
+
+              <div className="flex flex-col items-start gap-2 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
+                {website && (
+                  <a
+                    href={website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                  >
+                    <Globe className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate max-w-[12rem]" title={website}>
+                      {websiteLabel}
+                    </span>
+                  </a>
                 )}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                  {website && (
-                    <a
-                      href={website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                    >
-                      <Globe className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate max-w-[12rem]" title={website}>
-                        {websiteLabel}
-                      </span>
-                    </a>
-                  )}
-                  {githubUrl && (
-                    <a
-                      href={githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                    >
-                      <Github className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate max-w-[12rem]" title={githubUrl}>
-                        {githubLabel || `github.com/${username}`}
-                      </span>
-                    </a>
-                  )}
-                </div>
+                {githubUrl && (
+                  <a
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 min-w-0 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                  >
+                    <Github className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate max-w-[12rem]" title={githubUrl}>
+                      {githubLabel || `github.com/${username}`}
+                    </span>
+                  </a>
+                )}
               </div>
             </div>
           </div>

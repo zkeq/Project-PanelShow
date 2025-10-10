@@ -21,38 +21,49 @@ export function useExecuteCode(code: string | undefined, fallback: string = ''):
   useEffect(() => {
     if (!code || code.trim() === '') {
       setValue(fallback);
+      setLoading(false);
+      setError(null);
       return;
     }
 
     let cancelled = false;
 
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
     const execute = async () => {
       setLoading(true);
       setError(null);
 
-      try {
-        const response = await executeJsCode(code);
+      const maxRetries = 2;
 
-        if (cancelled) return;
+      for (let attempt = 0; attempt <= maxRetries && !cancelled; attempt++) {
+        try {
+          const response = await executeJsCode(code);
 
-        if (response.success) {
-          // 将结果转换为字符串
-          const resultStr = response.result !== null && response.result !== undefined
-            ? String(response.result)
-            : fallback;
-          setValue(resultStr);
-        } else {
-          setError('执行失败');
-          setValue(fallback);
-        }
-      } catch (err) {
-        if (cancelled) return;
+          if (cancelled) return;
 
-        setError(err instanceof Error ? err.message : '执行出错');
-        setValue(fallback);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
+          if (response.success) {
+            const resultStr = response.result !== null && response.result !== undefined
+              ? String(response.result)
+              : fallback;
+            setValue(resultStr);
+            setLoading(false);
+            setError(null);
+            return;
+          }
+
+          throw new Error('执行失败');
+        } catch (err) {
+          if (cancelled) return;
+
+          const isLastAttempt = attempt === maxRetries;
+          if (isLastAttempt) {
+            setError(err instanceof Error ? err.message : '执行出错');
+            setValue(fallback);
+            setLoading(false);
+          } else {
+            await delay(500 * (attempt + 1));
+          }
         }
       }
     };
