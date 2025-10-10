@@ -395,7 +395,7 @@ export default function AdminDynamicPage() {
     }
 
     return value
-      .map((item, index) => {
+      .map((item, index): DynamicImageAsset | null => {
         if (typeof item === 'string') {
           const url = item.trim();
           if (!url) {
