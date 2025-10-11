@@ -394,7 +394,7 @@ showInHero (boolean，可选)：是否在详情页 Hero 区展示。
 color (string)：Tailwind 类组合，控制文本/背景/边框颜色，例如 text-blue-600 bg-blue-50 border-blue-200。
 order (number)：排序权重，值越小越靠前。
 FeatureHighlight（项目亮点/演示）
-id (string)：唯一标识，常用 feature-${slug} 格式。
+id (string)：唯一标识，常用 feature-\${slug} 格式。
 title (string)：亮点标题。
 description (string)：亮点详情，可为多行文本。
 techStack (ColorfulTag[])：技术标签，元素结构：
