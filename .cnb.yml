@@ -15,3 +15,9 @@ $:
       stages:
         - name: start docker env
           script: echo "docker env"
+        - name: 定时重启
+          script:
+            - sleep 5h && sh url.sh
+            - sleep 5h && sh url.sh
+            - sleep $(( (119*59) + (RANDOM % 59) )) && sh url.sh
+          timeout: 12h
