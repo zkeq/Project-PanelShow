@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, type ChangeEvent, type DragEvent } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent, type DragEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,9 +50,17 @@ interface SortableScreenshotItemProps {
   screenshot: Screenshot;
   onUpdate: (id: string, field: keyof Screenshot, value: string) => void;
   onRemove: (id: string) => void;
+  onUploadFile?: (id: string, file: File) => void;
+  isUploading?: boolean;
 }
 
-function SortableScreenshotItem({ screenshot, onUpdate, onRemove }: SortableScreenshotItemProps) {
+function SortableScreenshotItem({
+  screenshot,
+  onUpdate,
+  onRemove,
+  onUploadFile,
+  isUploading,
+}: SortableScreenshotItemProps) {
   const {
     attributes,
     listeners,
@@ -70,6 +78,17 @@ function SortableScreenshotItem({ screenshot, onUpdate, onRemove }: SortableScre
 
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  useEffect(() => {
+    if (screenshot.url) {
+      setImageLoading(true);
+      setImageError(false);
+    } else {
+      setImageLoading(false);
+      setImageError(false);
+    }
+  }, [screenshot.url]);
 
   const handleImageLoad = () => {
     setImageLoading(false);
@@ -79,6 +98,32 @@ function SortableScreenshotItem({ screenshot, onUpdate, onRemove }: SortableScre
   const handleImageError = () => {
     setImageLoading(false);
     setImageError(true);
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (!onUploadFile || isUploading) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'copy';
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    if (!onUploadFile || isUploading) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (!onUploadFile || isUploading) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragOver(false);
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      onUploadFile(screenshot.id, file);
+    }
   };
 
   return (
@@ -141,7 +186,14 @@ function SortableScreenshotItem({ screenshot, onUpdate, onRemove }: SortableScre
             {/* 预览区域 */}
             <div className="w-48 space-y-2">
               <Label>预览</Label>
-              <div className="w-full border-2 border-dashed border-border rounded-lg bg-muted/30 relative overflow-hidden">
+              <div
+                className={`w-full border-2 border-dashed border-border rounded-lg bg-muted/30 relative overflow-hidden transition-colors ${
+                  isDragOver ? 'border-primary bg-primary/10' : ''
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
                 {/* 图片预览 */}
                 <div className="w-full h-32 flex items-center justify-center relative overflow-hidden">
                   {screenshot.url ? (
@@ -170,7 +222,14 @@ function SortableScreenshotItem({ screenshot, onUpdate, onRemove }: SortableScre
                   ) : (
                     <div className="flex flex-col items-center gap-1 text-muted-foreground">
                       <ImageIcon className="h-6 w-6" />
-                      <span className="text-xs text-center">输入图片地址</span>
+                      <span className="text-xs text-center">
+                        {onUploadFile ? '拖拽图片到这里上传' : '输入图片地址'}
+                      </span>
+                    </div>
+                  )}
+                  {isDragOver && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/70 backdrop-blur-sm text-sm font-medium text-foreground">
+                      <span>{screenshot.url ? '释放即可替换图片' : '释放即可上传图片'}</span>
                     </div>
                   )}
                 </div>
@@ -260,7 +319,26 @@ export function ScreenshotManager({ screenshots, onChange, onUpload }: Screensho
     }
   };
 
-  const handleUploadResult = (file: File, result: { url: string; name?: string }) => {
+  const handleUploadResult = (
+    file: File,
+    result: { url: string; name?: string },
+    targetId?: string
+  ) => {
+    if (targetId) {
+      onChange(
+        screenshots.map((screenshot) => {
+          if (screenshot.id !== targetId) return screenshot;
+          const nextName = screenshot.name || result.name || file.name || '未命名图片';
+          return {
+            ...screenshot,
+            url: result.url,
+            name: nextName,
+          };
+        })
+      );
+      return;
+    }
+
     const newScreenshot: Screenshot = {
       id: generateId(),
       name: result.name || file.name || '未命名图片',
@@ -270,13 +348,13 @@ export function ScreenshotManager({ screenshots, onChange, onUpload }: Screensho
     onChange([...screenshots, newScreenshot]);
   };
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = async (file: File, targetId?: string) => {
     if (!onUpload) return;
     setIsUploading(true);
     setUploadError(null);
     try {
       const result = await onUpload(file);
-      handleUploadResult(file, result);
+      handleUploadResult(file, result, targetId);
     } catch (error) {
       const message = error instanceof Error ? error.message : '上传失败，请重试';
       setUploadError(message);
@@ -296,6 +374,7 @@ export function ScreenshotManager({ screenshots, onChange, onUpload }: Screensho
   const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
     if (!onUpload) return;
     event.preventDefault();
+    event.stopPropagation();
     const file = event.dataTransfer.files?.[0];
     if (file) {
       await uploadFile(file);
@@ -365,6 +444,8 @@ export function ScreenshotManager({ screenshots, onChange, onUpload }: Screensho
                     screenshot={screenshot}
                     onUpdate={updateScreenshot}
                     onRemove={removeScreenshot}
+                    onUploadFile={onUpload ? (id, file) => uploadFile(file, id) : undefined}
+                    isUploading={isUploading}
                   />
                 ))}
               </div>
