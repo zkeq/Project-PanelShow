@@ -68,6 +68,10 @@ export default function Home() {
     window.location.href = ADMIN_DASHBOARD_URL;
   };
 
+  const handleStartHome = () => {
+    window.location.href = "/project/zkeq"
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header Navigation */}
@@ -166,11 +170,11 @@ export default function Home() {
               </div>
               
               <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-                <Button size="lg" className="px-8" onClick={handleStartExperience}>
+                <Button size="lg" className="px-8" onClick={handleStartHome}>
                   探索项目展示
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="lg" className="px-8" onClick={handleStartExperience}>
+                <Button variant="outline" size="lg" className="px-8" onClick={handleStartHome}>
                   <Globe className="mr-2 h-4 w-4" />
                   查看演示
                 </Button>
@@ -669,13 +673,9 @@ export default function Home() {
                 立即体验革命性的项目展示平台，重新定义您的作品集展示方式
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
-                <Button size="lg" className="px-8" onClick={handleStartExperience}>
+                <Button size="lg" className="px-8" onClick={handleStartHome}>
                   <Star className="mr-2 h-4 w-4" />
                   立即体验
-                </Button>
-                <Button variant="outline" size="lg" className="px-8">
-                  <Code2 className="mr-2 h-4 w-4" />
-                  查看源码
                 </Button>
               </div>
             </div>
