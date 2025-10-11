@@ -408,7 +408,7 @@ leftMarkdown / rightMarkdown (string)：亮点详情页左右栏 Markdown 文本
 生成提示词建议
 明确告知 AI：必须生成完整的 JSON/对象结构，字段名与上述说明完全一致。
 对必填字段（name、description、statusId、typeId、projectInfos 等）给出具体的长度、语气和语言要求，例如「保持中文描述」「控制在 60 字以内」。
-若需要 valueCode 计算值，请描述其逻辑来源，例如 return '50w' 或基于已有属性拼接。
+若需要 valueCode 计算值，请描述其逻辑来源，例如 '50w' 或基于已有属性拼接。
 URL 字段须提供合法可替换的占位符（如 https://example.com/demo），截图可使用可访问的静态路径或自定义上传地址。
 颜色类需使用 Tailwind 语法（如 bg-blue-50、from-sky-500 to-indigo-600），避免使用十六进制。
 如果项目包含开源要求，请提醒 AI 在 isOpenSource=true 时同步生成有效的 sourceUrl。
@@ -420,3 +420,91 @@ URL 字段须提供合法可替换的占位符（如 https://example.com/demo）
 3. 然后 homeAttributes 最多4个 heroAttributes 最多3个  sidebarAttributes最多8个 "showInHomepage": true,"showInSidebar": true,"showInHero": false 在这里定义
 
 依据以上信息 来帮我生成这个项目的json, 并将生成后的结果写入JSON文件中`;
+
+// JavaScript 代码执行器使用指南 (用于 ProjectInfo 的 valueCode 字段)
+export const JS_CODE_EXECUTOR_GUIDE = `JavaScript 代码执行指南
+
+本字段用于动态计算项目信息的展示值。你的代码将在沙箱环境中执行。
+
+🔧 基础用法
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ 返回简单字符串
+  "Vue 3 + TypeScript"
+
+✓ 返回数值计算结果
+  (2024 - 2020) + "年"
+
+✓ 条件判断
+  new Date().getFullYear() > 2024 ? "最新" : "稳定"
+
+🌐 网络请求
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ 使用 fetch API (推荐)
+  const res = await fetch("https://api.github.com/repos/owner/repo")
+  const data = await res.json()
+  data.stargazers_count + " stars"
+
+📊 数据处理
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ 数组处理
+  const data = [100, 200, 300]
+  data.reduce((a,b) => a+b) + " 次访问"
+
+✓ JSON 解析
+  const jsonStr = '{"views": 50000}'
+  JSON.parse(jsonStr).views + "w"
+
+✓ 日期计算
+  const start = new Date("2024-01-01")
+  const now = new Date()
+  const days = Math.floor((now - start) / (1000*60*60*24))
+  days + " 天"
+
+⚠️ 重要限制
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✗ 不能访问文件系统
+  // ❌ 禁止: fs.readFileSync(...)
+
+✗ 不能访问 DOM
+  // ❌ 禁止: document.getElementById(...)
+
+✗ 执行时间限制 24 秒
+  // 确保请求能在 24 秒内完成
+
+✗ 不能使用 import/require
+  // 可用全局对象: Promise, console, fetch, setTimeout
+
+💡 最佳实践
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 始终返回字符串或数值
+2. 处理可能的错误 (使用 try-catch)
+3. 异步操作使用 async/await
+4. 保持代码简洁，避免复杂逻辑
+5. API 响应会被缓存 6 小时
+
+📝 实用示例
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// GitHub Stars 统计
+const res = await fetch("https://api.github.com/repos/zkeq/Coding")
+const data = await res.json()
+data.stargazers_count + " ⭐"
+
+// 项目运行天数
+const start = new Date("2024-01-15")
+const days = Math.floor((Date.now() - start) / 86400000)
+days + " 天"
+
+// API 状态检测
+try {
+  const res = await fetch("https://pps-backend.onmicrosoft.cn/health")
+  return res.ok ? "✅ 运行中" : "⚠️ 异常"
+} catch {
+  return "❌ 离线"
+}
+
+// 访问量格式化
+const views = 123456
+views > 10000
+  ? (views/10000).toFixed(1) + "w"
+  : views.toString()
+`;

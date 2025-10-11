@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Icon } from '@iconify/react';
 import { IconPicker } from './IconPicker';
 import { useExecuteCode } from '@/hooks/useExecuteCode';
 import { Loader2 } from 'lucide-react';
+import { JS_CODE_EXECUTOR_GUIDE } from '@/constants/projectJsonPrompt';
 import {
   DndContext,
   closestCenter,
@@ -433,10 +433,13 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
               id="valueCode"
               value={formData.valueCode}
               onChange={(e) => setFormData(prev => ({ ...prev, valueCode: e.target.value }))}
-              placeholder={'// 返回要显示的值\n// 可用变量: project\nreturn "Vue 3 + TypeScript"'}
-              rows={4}
-              className="font-mono text-sm"
+              placeholder={JS_CODE_EXECUTOR_GUIDE}
+              rows={12}
+              className="font-mono text-sm overflow-y-auto max-h-[360px]"
             />
+            <p className="text-xs text-muted-foreground">
+              💡 支持 fetch API 网络请求、异步操作、数据计算等。结果会被缓存 6 小时。
+            </p>
           </div>
 
           {/* 展示选项 */}

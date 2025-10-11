@@ -1066,48 +1066,106 @@ async def execute_js_code(code: str = Body(..., embed=True)):
             # vm2 更安全但需要额外安装，vm 是 Node.js 内置的
             js_code = f'''
 const vm = require('vm');
-const https = require('https');
-const http = require('http');
 
 const userCode = `{code}`;
 
-try {{
-    // 创建沙箱环境，允许使用 console 和一些基本功能
-    const sandbox = {{
-        console: console,
-        setTimeout: setTimeout,
-        setInterval: setInterval,
-        clearTimeout: clearTimeout,
-        clearInterval: clearInterval,
-        // 允许使用 Promise
-        Promise: Promise,
-        // 提供 fetch API（Node.js 18+）
-        fetch: typeof fetch !== 'undefined' ? fetch : undefined,
-        // 提供 http/https 模块用于网络请求
-        https: https,
-        http: http,
-        // 可以添加其他允许的全局对象
-    }};
+(async () => {{
+    try {{
+        // 创建沙箱环境
+        const sandbox = {{
+            console: console,
+            setTimeout: setTimeout,
+            setInterval: setInterval,
+            clearTimeout: clearTimeout,
+            clearInterval: clearInterval,
+            Promise: Promise,
+            fetch: typeof fetch !== 'undefined' ? fetch : undefined,
+        }};
 
-    const context = vm.createContext(sandbox);
-    const result = vm.runInContext(userCode, context, {{
-        timeout: 24000,  // 24 秒超时
-        displayErrors: true
-    }});
+        const context = vm.createContext(sandbox);
 
-    // 处理 Promise 结果
-    if (result instanceof Promise) {{
-        result.then(resolved => {{
-            console.log(JSON.stringify({{ success: true, result: resolved }}));
-        }}).catch(error => {{
-            console.log(JSON.stringify({{ success: false, error: error.message }}));
+        // 智能处理用户代码
+        const trimmedCode = userCode.trim();
+
+        // 分析代码结构
+        const lines = trimmedCode.split('\\n').map(l => l.trim()).filter(l => l);
+
+        let wrappedCode;
+
+        // 检查是否已经有 return
+        if (/^return\\s/.test(trimmedCode) || /\\breturn\\s/.test(trimmedCode)) {{
+            // 已有 return，直接执行
+            wrappedCode = `(async () => {{ ${{userCode}} }})()`;
+        }} else if (lines.length === 1) {{
+            // 单行代码
+            const line = lines[0];
+
+            // 检查是否是声明语句
+            if (/^(const|let|var)\\s/.test(line)) {{
+                // 是声明语句，直接执行（不返回值）
+                wrappedCode = `(async () => {{ ${{userCode}} }})()`;
+            }} else {{
+                // 是表达式，返回值
+                wrappedCode = `(async () => {{ return (${{userCode}}) }})()`;
+            }}
+        }} else {{
+            // 多行代码，需要智能分析
+            const lastLine = lines[lines.length - 1];
+
+            // 检查最后一行是否是声明或控制流关键字开头
+            const lastLineIsStatement = /^(const|let|var|if|for|while|do|switch|function|class|import|export)\\s/.test(lastLine);
+
+            // 检查最后一行是否只是块的结束
+            const lastLineIsBlockEnd = lastLine === '}}' || lastLine.startsWith('}} catch') || lastLine.startsWith('}} finally');
+
+            if (lastLineIsStatement || lastLineIsBlockEnd) {{
+                // 最后一行是语句或块结束，不添加 return
+                wrappedCode = `(async () => {{ ${{userCode}} }})()`;
+            }} else {{
+                // 最后一行看起来是表达式，尝试智能添加 return
+                // 找到最后一个完整表达式的开始位置
+                const otherLines = lines.slice(0, -1);
+
+                // 检查倒数第二行等是否也是表达式的一部分（如三元运算符的开始）
+                let expressionStartIndex = lines.length - 1;
+
+                // 向上查找，找到表达式的开始
+                for (let i = lines.length - 2; i >= 0; i--) {{
+                    const line = lines[i];
+                    // 如果这行以声明关键字开头，说明是新语句的开始
+                    if (/^(const|let|var|if|for|while|do|switch|try|function|class|async)\\s/.test(line)) {{
+                        break;
+                    }}
+                    // 如果这行不以 }} 结尾且不是空行，可能是表达式的一部分
+                    if (!line.endsWith('}}') && !line.endsWith('{{')) {{
+                        expressionStartIndex = i;
+                    }} else {{
+                        break;
+                    }}
+                }}
+
+                if (expressionStartIndex === 0) {{
+                    // 整个代码看起来都是一个表达式
+                    wrappedCode = `(async () => {{ return (${{userCode}}) }})()`;
+                }} else {{
+                    // 前面有语句，只对最后的表达式添加 return
+                    const statements = lines.slice(0, expressionStartIndex).join('\\n');
+                    const expression = lines.slice(expressionStartIndex).join('\\n');
+                    wrappedCode = `(async () => {{ ${{statements}}\\nreturn (${{expression}}) }})()`;
+                }}
+            }}
+        }}
+
+        const result = await vm.runInContext(wrappedCode, context, {{
+            timeout: 24000,
+            displayErrors: true
         }});
-    }} else {{
+
         console.log(JSON.stringify({{ success: true, result: result }}));
+    }} catch (error) {{
+        console.log(JSON.stringify({{ success: false, error: error.message }}));
     }}
-}} catch (error) {{
-    console.log(JSON.stringify({{ success: false, error: error.message }}));
-}}
+}})();
 '''
             f.write(js_code)
             temp_file = f.name
