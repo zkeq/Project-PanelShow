@@ -1,4 +1,4 @@
-export const PROJECT_JSON_PROMPT_GUIDE = `整理分析一下我这个项目 然后生成这个项目的JOSN介绍文件 我要放到我的作品集里面
+export const PROJECT_JSON_PROMPT_GUIDE = `整理分析一下我这个项目 然后生成这个项目的JSON介绍文件 我要放到我的作品集里面
 
 {
     "id": "b73d7c5c-9b92-4a55-8f65-f22ed9978a07",
