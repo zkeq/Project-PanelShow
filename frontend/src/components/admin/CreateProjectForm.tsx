@@ -46,7 +46,8 @@ import {
   Sparkles,
   Save,
   Send,
-  ListOrdered
+  ListOrdered,
+  Copy
 } from 'lucide-react';
 import { StatusToast, type StatusToastState } from '@/components/admin/settings/StatusToast';
 import {
@@ -311,6 +312,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
   const canUploadAssets = Boolean(token && boundUsername);
   const canUseDraft = !isEditMode;
   const [statusToast, setStatusToast] = useState<StatusToastState | null>(null);
+  const promptGuideRef = useRef<HTMLPreElement | null>(null);
   const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const requireAuthContext = () => {
@@ -691,6 +693,32 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       setStatusToast({ type: 'error', message });
     }
   };
+
+  const handleCopyPromptGuide = useCallback(async () => {
+    if (typeof window !== 'undefined' && promptGuideRef.current) {
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        const range = document.createRange();
+        range.selectNodeContents(promptGuideRef.current);
+        selection.addRange(range);
+      }
+    }
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(PROJECT_JSON_PROMPT_GUIDE);
+        setStatusToast({ type: 'success', message: '提示词已复制到剪贴板' });
+      } else {
+        throw new Error('当前环境不支持自动复制，请手动复制');
+      }
+    } catch (error) {
+      console.error('复制提示词失败:', error);
+      const message =
+        error instanceof Error ? error.message : '复制提示词失败，请手动复制';
+      setStatusToast({ type: 'error', message });
+    }
+  }, [setStatusToast]);
 
   // 在组件挂载时尝试恢复草稿（仅创建模式）
   useEffect(() => {
@@ -1302,17 +1330,34 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
 
         <Card>
           <CardHeader>
-            <CardTitle>
-              <ListOrdered className="inline h-5 w-5 mr-2" />
-              JSON 提示词信息
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              参考下列结构编写提示词，可快速生成符合表单要求的完整项目 JSON 配置。
-            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <CardTitle>
+                  <ListOrdered className="inline h-5 w-5 mr-2" />
+                  JSON 提示词信息
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  参考下列结构编写提示词，可快速生成符合表单要求的完整项目 JSON 配置。
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={handleCopyPromptGuide}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                复制提示词
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-72 w-full rounded-md border bg-muted/40">
-              <pre className="whitespace-pre-wrap px-4 py-3 text-xs leading-5">
+              <pre
+                ref={promptGuideRef}
+                className="whitespace-pre-wrap px-4 py-3 text-xs leading-5"
+              >
                 {PROJECT_JSON_PROMPT_GUIDE}
               </pre>
             </ScrollArea>
