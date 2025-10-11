@@ -243,14 +243,14 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
     })
   );
 
-  // 只在 infos 真正改变时才调用 onChange
-  useEffect(() => {
-    // 比较新旧数组，避免无限循环
-    const hasChanged = JSON.stringify(infos) !== JSON.stringify(normalizedProjectInfos);
-    if (hasChanged) {
-      onChange(infos);
-    }
-  }, [infos, normalizedProjectInfos, onChange]);
+  // 只在用户操作时才调用 onChange，不要在 useEffect 中自动同步
+  // 这会导致无限循环，因为 onChange 会触发父组件更新，然后又触发这个组件重新渲染
+  // useEffect(() => {
+  //   const hasChanged = JSON.stringify(infos) !== JSON.stringify(normalizedProjectInfos);
+  //   if (hasChanged) {
+  //     onChange(infos);
+  //   }
+  // }, [infos, normalizedProjectInfos, onChange]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -261,7 +261,12 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
         const newIndex = items.findIndex((item) => item.id === over?.id);
 
         const newItems = arrayMove(items, oldIndex, newIndex);
-        return newItems.map((item, index) => ({ ...item, order: index }));
+        const reordered = newItems.map((item, index) => ({ ...item, order: index }));
+
+        // 调用 onChange 通知父组件
+        onChange(reordered);
+
+        return reordered;
       });
     }
   };
@@ -288,11 +293,13 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
 
     if (editingInfo) {
       // 编辑模式
-      setInfos(prev => prev.map(info => 
-        info.id === editingInfo.id 
+      const updated = infos.map(info =>
+        info.id === editingInfo.id
           ? { ...formData, id: info.id, order: info.order }
           : info
-      ));
+      );
+      setInfos(updated);
+      onChange(updated);
       setEditingInfo(null);
     } else {
       // 新增模式
@@ -301,7 +308,9 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
         id: Date.now().toString(),
         order: infos.length,
       };
-      setInfos(prev => [...prev, newInfo]);
+      const updated = [...infos, newInfo];
+      setInfos(updated);
+      onChange(updated);
     }
 
     // 重置表单
@@ -331,7 +340,9 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
   };
 
   const handleDeleteInfo = (id: string) => {
-    setInfos(prev => prev.filter(info => info.id !== id));
+    const updated = infos.filter(info => info.id !== id);
+    setInfos(updated);
+    onChange(updated);
   };
 
   const handleCancelEdit = () => {

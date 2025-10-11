@@ -128,14 +128,29 @@ export function AdminProjectCard({
     "/Snipaste_2025-08-23_22-52-25.png",
   ];
 
-  const fallbackImages =
-    project.previewImages && project.previewImages.length > 0
-      ? project.previewImages
-      : defaultImages;
-  const fallbackImage =
-    fallbackImages[(index % fallbackImages.length + fallbackImages.length) % fallbackImages.length] ||
-    defaultImages[0];
-  const imageSrc = project.previewImage || fallbackImage;
+  // 优先使用 screenshots 的第一张图作为封面
+  const getProjectCoverImage = () => {
+    // 1. 优先使用 screenshots 的第一张图
+    if (project.screenshots && project.screenshots.length > 0 && project.screenshots[0].url) {
+      return project.screenshots[0].url;
+    }
+
+    // 2. 其次使用 previewImages 的第一张图
+    if (project.previewImages && project.previewImages.length > 0) {
+      return project.previewImages[0];
+    }
+
+    // 3. 再次使用 previewImage
+    if (project.previewImage) {
+      return project.previewImage;
+    }
+
+    // 4. 最后使用默认图片
+    const fallbackIndex = (index % defaultImages.length + defaultImages.length) % defaultImages.length;
+    return defaultImages[fallbackIndex] || defaultImages[0];
+  };
+
+  const imageSrc = getProjectCoverImage();
 
   // 颜色主题数组 - 根据首页核心优势卡片样式
   const colorThemes = [

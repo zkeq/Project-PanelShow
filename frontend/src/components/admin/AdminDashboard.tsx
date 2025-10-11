@@ -173,6 +173,22 @@ const mapProjectFromApi = (raw: unknown, fallbackIndex = 0): Project => {
       }))
     : [];
 
+  // 解析 screenshots 字段
+  const screenshotsSource = raw['screenshots'];
+  const screenshots = Array.isArray(screenshotsSource)
+    ? screenshotsSource
+        .filter(isRecord)
+        .map((screenshot) => ({
+          id: pickString(screenshot['id'], `${Date.now()}`),
+          url: normalizeImageSrc(
+            pickString(screenshot['url'], pickString(screenshot['src'])),
+            FALLBACK_PREVIEW_IMAGE
+          ),
+          alt: pickString(screenshot['alt'], pickString(screenshot['name'], pickString(screenshot['description']))),
+        }))
+        .filter((s) => s.url !== FALLBACK_PREVIEW_IMAGE) // 过滤掉无效的截图
+    : undefined;
+
   return {
     id: pickString(raw['id'], pickString(raw['project_id'], `${Date.now()}`)),
     name: pickString(raw['name'], '未命名项目'),
@@ -190,6 +206,7 @@ const mapProjectFromApi = (raw: unknown, fallbackIndex = 0): Project => {
     attributes,
     homeAttributes,
     sidebarAttributes,
+    screenshots,
     themeColor,
   };
 };

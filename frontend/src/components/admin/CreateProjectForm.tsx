@@ -552,9 +552,27 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       const features = ensureFeatureList(projectRecord.features);
       const screenshots = ensureScreenshots(projectRecord.screenshots, projectRecord.images);
       const featureHighlights = ensureFeatureHighlights(projectRecord.featureHighlights);
+
+      // 标准化 projectInfos,确保所有布尔值都是真正的布尔类型
       const projectInfos = Array.isArray(projectRecord.projectInfos)
-        ? (projectRecord.projectInfos as ProjectInfo[])
+        ? (projectRecord.projectInfos as unknown[])
+            .map((info, index) => {
+              if (!isRecord(info)) return null;
+              return {
+                id: typeof info.id === 'string' ? info.id : `info-${Date.now()}-${index}`,
+                icon: typeof info.icon === 'string' ? info.icon : 'lucide:code',
+                label: typeof info.label === 'string' ? info.label : '',
+                valueCode: typeof info.valueCode === 'string' ? info.valueCode : '',
+                showInHomepage: Boolean(info.showInHomepage),
+                showInSidebar: Boolean(info.showInSidebar),
+                showInHero: Boolean(info.showInHero),
+                color: typeof info.color === 'string' ? info.color : '',
+                order: typeof info.order === 'number' ? info.order : index,
+              } as ProjectInfo;
+            })
+            .filter((info): info is ProjectInfo => info !== null)
         : [];
+
       const tags = Array.isArray(projectRecord.tags)
         ? (projectRecord.tags as unknown[])
             .map((tag) => (typeof tag === 'string' ? tag.trim() : ''))
@@ -652,12 +670,23 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       if (!isRecord(parsed)) {
         throw new Error('JSON 必须是对象');
       }
-      const mapped = mapProjectRecordToFormData(parsed as Record<string, unknown>, formData.id);
+
+      // 移除不需要的字段，避免导致问题
+      const cleanedRecord = { ...parsed };
+      delete cleanedRecord.homeAttributes;
+      delete cleanedRecord.sidebarAttributes;
+      delete cleanedRecord.heroAttributes;
+      delete cleanedRecord.timeline_items;
+
+      const mapped = mapProjectRecordToFormData(cleanedRecord as Record<string, unknown>, formData.id);
       setFormData(mapped);
       setJsonEditorDirty(false);
       setJsonEditorError(null);
+      setStatusToast({ type: 'success', message: 'JSON 已成功应用到表单' });
     } catch (error) {
-      setJsonEditorError(error instanceof Error ? error.message : 'JSON 解析失败');
+      const message = error instanceof Error ? error.message : 'JSON 解析失败';
+      setJsonEditorError(message);
+      setStatusToast({ type: 'error', message });
     }
   };
 
