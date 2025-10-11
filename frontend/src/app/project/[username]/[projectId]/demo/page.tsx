@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Loader2 } from "lucide-react"
@@ -48,6 +48,7 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
   const [projectError, setProjectError] = useState<string | null>(null)
   const [projectInfo, setProjectInfo] = useState<ProjectOverview | null>(null)
   const [demoContent, setDemoContent] = useState<DemoContent | null>(null)
+  const lastLoadedPreviewUrlRef = useRef<string | undefined>(undefined)
 
   const { username, projectId } = use(params)
   const encodedUsername = encodeURIComponent(username)
@@ -136,9 +137,15 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
     const previewForView = getPreviewUrlForView(demoContent, viewMode)
 
     if (previewForView) {
-      setIsLoading(true)
-      setError(false)
+      if (lastLoadedPreviewUrlRef.current !== previewForView) {
+        lastLoadedPreviewUrlRef.current = previewForView
+        setIsLoading(true)
+        setError(false)
+      } else {
+        setIsLoading(false)
+      }
     } else {
+      lastLoadedPreviewUrlRef.current = undefined
       setIsLoading(false)
       setError(false)
     }
