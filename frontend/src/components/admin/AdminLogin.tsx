@@ -187,6 +187,16 @@ export function AdminLogin() {
             </span>
           </div>
 
+          <div className="rounded-md border border-emerald-500/30 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100 p-4 text-left text-sm flex gap-2">
+            <Github className="h-4 w-4 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium">快速开始体验</p>
+              <p>
+                无需单独注册，直接点击下方按钮通过 GitHub 登录，即可创建并管理你自己的站点。
+              </p>
+            </div>
+          </div>
+
           <Button
             type="button"
             variant="outline"

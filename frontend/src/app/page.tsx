@@ -60,12 +60,12 @@ function MobileMenu() {
   );
 }
 
-const PROJECT_SHOWCASE_URL = "https://projects.icodeq.com/project/zkeq";
+const ADMIN_DASHBOARD_URL = "/admin";
 
 export default function Home() {
   
   const handleStartExperience = () => {
-    window.location.href = PROJECT_SHOWCASE_URL;
+    window.location.href = ADMIN_DASHBOARD_URL;
   };
 
   return (
