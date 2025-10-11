@@ -127,16 +127,6 @@ export function AdminLogin() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="rounded-md border border-emerald-500/30 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100 p-4 text-left text-sm flex gap-2">
-            <Github className="h-4 w-4 mt-0.5 shrink-0" />
-            <div>
-              <p className="font-medium">快速开始体验</p>
-              <p>
-                无需单独注册，直接点击下方按钮通过 GitHub 登录，即可创建并管理你自己的站点。
-              </p>
-            </div>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2 text-left">
               <Label htmlFor="username">管理员用户名</Label>
@@ -195,6 +185,16 @@ export function AdminLogin() {
             <span className="relative bg-card px-3 text-xs text-muted-foreground">
               或者使用 GitHub 登录
             </span>
+          </div>
+
+          <div className="rounded-md border border-emerald-500/30 bg-emerald-50 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100 p-4 text-left text-sm flex gap-2">
+            <Github className="h-4 w-4 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium">快速开始体验</p>
+              <p>
+                无需单独注册，直接点击下方按钮通过 GitHub 登录，即可创建并管理你自己的站点。
+              </p>
+            </div>
           </div>
 
           <Button
