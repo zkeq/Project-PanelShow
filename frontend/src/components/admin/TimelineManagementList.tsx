@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +25,10 @@ import {
 import { TimelineItem } from '@/types/store';
 import { cn } from '@/lib/utils';
 import { useGlobalStore } from '@/store/useGlobalStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
+import { deleteTimeline as deleteTimelineApi } from '@/lib/api';
+import { useShallow } from 'zustand/react/shallow';
 
 interface TimelineManagementListProps {
   items: TimelineItem[];
@@ -35,14 +38,53 @@ interface TimelineManagementListProps {
 export function TimelineManagementList({ items, searchQuery }: TimelineManagementListProps) {
   const { deleteTimelineItem } = useGlobalStore();
   const router = useRouter();
+  const { boundUsername, token } = useAuthStore(
+    useShallow((state) => ({
+      boundUsername: state.user?.bound_username ?? '',
+      token: state.token ?? null,
+    }))
+  );
+  const [deletingTimelineId, setDeletingTimelineId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<
+    { type: 'success' | 'error'; message: string }
+  | null>(null);
+
+  useEffect(() => {
+    if (!feedback) return;
+    const timer = setTimeout(() => setFeedback(null), 3000);
+    return () => clearTimeout(timer);
+  }, [feedback]);
+
+  const notify = (type: 'success' | 'error', message: string) => {
+    setFeedback({ type, message });
+  };
 
   const handleEditTimeline = (timelineId: string) => {
     router.push(`/admin/dynamic?id=${encodeURIComponent(timelineId)}`);
   };
 
-  const handleDeleteTimeline = (timelineId: string) => {
-    if (confirm('确定要删除这个动态吗？此操作不可撤销。')) {
+  const handleDeleteTimeline = async (timelineId: string) => {
+    if (!confirm('确定要删除这个动态吗？此操作不可撤销。')) {
+      return;
+    }
+
+    if (!token || !boundUsername) {
+      notify('error', '请登录并绑定用户名后再删除动态。');
+      return;
+    }
+
+    setDeletingTimelineId(timelineId);
+
+    try {
+      await deleteTimelineApi(boundUsername, timelineId, token);
+      // 成功后从本地状态中删除
       deleteTimelineItem(timelineId);
+      notify('success', '动态删除成功');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '删除失败，请稍后重试。';
+      notify('error', message);
+    } finally {
+      setDeletingTimelineId(null);
     }
   };
 
@@ -69,6 +111,17 @@ export function TimelineManagementList({ items, searchQuery }: TimelineManagemen
 
   return (
     <div className="p-6">
+      {feedback && (
+        <div
+          className={`mb-4 rounded-md border px-4 py-2 text-sm ${
+            feedback.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300'
+              : 'border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300'
+          }`}
+        >
+          {feedback.message}
+        </div>
+      )}
       <div className="space-y-4">
         {items.map((item) => {
           const updateConfig = updateTypeConfig[item.updateType] || updateTypeConfig.update;

@@ -453,6 +453,34 @@ export function updateProject<T extends Record<string, unknown>>(
   );
 }
 
+export function deleteProject(
+  username: string,
+  projectId: string,
+  token: string
+) {
+  return request<{ message: string }>(
+    `/api/projects/${encodeURIComponent(username)}/${encodeURIComponent(projectId)}`,
+    {
+      method: 'DELETE',
+      token,
+    }
+  );
+}
+
+export function deleteTimeline(
+  username: string,
+  timelineId: string,
+  token: string
+) {
+  return request<{ message: string }>(
+    `/api/timeline/${encodeURIComponent(username)}/${encodeURIComponent(timelineId)}`,
+    {
+      method: 'DELETE',
+      token,
+    }
+  );
+}
+
 // ==================== JS 代码执行 ====================
 
 export interface ExecuteJsResponse {

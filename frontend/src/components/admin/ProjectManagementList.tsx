@@ -7,7 +7,7 @@ import { useGlobalStore } from '@/store/useGlobalStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AdminProjectCard } from './AdminProjectCard';
 import { useRouter } from 'next/navigation';
-import { reorderProjects as reorderProjectsApi } from '@/lib/api';
+import { reorderProjects as reorderProjectsApi, deleteProject as deleteProjectApi } from '@/lib/api';
 import { useShallow } from 'zustand/react/shallow';
 
 interface ProjectManagementListProps {
@@ -28,6 +28,7 @@ export function ProjectManagementList({ projects, searchQuery, isFiltered = fals
     }))
   );
   const [reorderingProjectId, setReorderingProjectId] = useState<string | null>(null);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
   const [reorderFeedback, setReorderFeedback] = useState<
     { type: 'success' | 'error'; message: string }
   | null>(null);
@@ -42,9 +43,28 @@ export function ProjectManagementList({ projects, searchQuery, isFiltered = fals
     router.push(`/admin/projects/${projectId}/edit`);
   };
 
-  const handleDeleteProject = (projectId: string) => {
-    if (confirm('确定要删除这个项目吗？此操作不可撤销。')) {
+  const handleDeleteProject = async (projectId: string) => {
+    if (!confirm('确定要删除这个项目吗？此操作不可撤销。')) {
+      return;
+    }
+
+    if (!token || !boundUsername) {
+      notify('error', '请登录并绑定用户名后再删除项目。');
+      return;
+    }
+
+    setDeletingProjectId(projectId);
+
+    try {
+      await deleteProjectApi(boundUsername, projectId, token);
+      // 成功后从本地状态中删除
       deleteProject(projectId);
+      notify('success', '项目删除成功');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '删除失败，请稍后重试。';
+      notify('error', message);
+    } finally {
+      setDeletingProjectId(null);
     }
   };
 
