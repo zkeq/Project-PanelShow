@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { DynamicTags } from './DynamicTags';
 import { ProjectStatusSelector, type ProjectStatus } from './ProjectStatusSelector';
 import { ProjectTypeSelector, type ProjectType } from './ProjectTypeSelector';
@@ -53,6 +54,7 @@ import {
   parseFeatureChipAppearance,
   type FeatureChipPresetId
 } from '@/lib/feature-chips';
+import { PROJECT_JSON_PROMPT_GUIDE } from '@/constants/projectJsonPrompt';
 
 const DEFAULT_STATUS_OPTIONS: ProjectStatus[] = [
   { id: 'active', label: '活跃项目', color: 'bg-green-500' },
@@ -1295,6 +1297,25 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
               onChange={(features) => setFormData(prev => ({ ...prev, featureHighlights: features }))}
               onUploadScreenshot={canUploadAssets ? uploadFeatureScreenshot : undefined}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <ListOrdered className="inline h-5 w-5 mr-2" />
+              JSON 提示词信息
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              参考下列结构编写提示词，可快速生成符合表单要求的完整项目 JSON 配置。
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-72 w-full rounded-md border bg-muted/40">
+              <pre className="whitespace-pre-wrap px-4 py-3 text-xs leading-5">
+                {PROJECT_JSON_PROMPT_GUIDE}
+              </pre>
+            </ScrollArea>
           </CardContent>
         </Card>
 
