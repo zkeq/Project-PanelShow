@@ -124,8 +124,7 @@ export function AdminProjectCard({
 
   // 默认图片列表
   const defaultImages = [
-    "/Snipaste_2025-08-23_22-52-13.png",
-    "/Snipaste_2025-08-23_22-52-25.png",
+    "image.png",
   ];
 
   // 优先使用 screenshots 的第一张图作为封面
