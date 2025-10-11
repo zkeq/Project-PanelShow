@@ -1071,7 +1071,6 @@ const userCode = `{code}`;
 
 (async () => {{
     try {{
-        // 创建沙箱环境
         const sandbox = {{
             console: console,
             setTimeout: setTimeout,
@@ -1084,77 +1083,12 @@ const userCode = `{code}`;
 
         const context = vm.createContext(sandbox);
 
-        // 智能处理用户代码
-        const trimmedCode = userCode.trim();
-
-        // 分析代码结构
-        const lines = trimmedCode.split('\\n').map(l => l.trim()).filter(l => l);
-
-        let wrappedCode;
-
-        // 检查是否已经有 return
-        if (/^return\\s/.test(trimmedCode) || /\\breturn\\s/.test(trimmedCode)) {{
-            // 已有 return，直接执行
-            wrappedCode = `(async () => {{ ${{userCode}} }})()`;
-        }} else if (lines.length === 1) {{
-            // 单行代码
-            const line = lines[0];
-
-            // 检查是否是声明语句
-            if (/^(const|let|var)\\s/.test(line)) {{
-                // 是声明语句，直接执行（不返回值）
-                wrappedCode = `(async () => {{ ${{userCode}} }})()`;
-            }} else {{
-                // 是表达式，返回值
-                wrappedCode = `(async () => {{ return (${{userCode}}) }})()`;
-            }}
-        }} else {{
-            // 多行代码，需要智能分析
-            const lastLine = lines[lines.length - 1];
-
-            // 检查最后一行是否是声明或控制流关键字开头
-            const lastLineIsStatement = /^(const|let|var|if|for|while|do|switch|function|class|import|export)\\s/.test(lastLine);
-
-            // 检查最后一行是否只是块的结束
-            const lastLineIsBlockEnd = lastLine === '}}' || lastLine.startsWith('}} catch') || lastLine.startsWith('}} finally');
-
-            if (lastLineIsStatement || lastLineIsBlockEnd) {{
-                // 最后一行是语句或块结束，不添加 return
-                wrappedCode = `(async () => {{ ${{userCode}} }})()`;
-            }} else {{
-                // 最后一行看起来是表达式，尝试智能添加 return
-                // 找到最后一个完整表达式的开始位置
-                const otherLines = lines.slice(0, -1);
-
-                // 检查倒数第二行等是否也是表达式的一部分（如三元运算符的开始）
-                let expressionStartIndex = lines.length - 1;
-
-                // 向上查找，找到表达式的开始
-                for (let i = lines.length - 2; i >= 0; i--) {{
-                    const line = lines[i];
-                    // 如果这行以声明关键字开头，说明是新语句的开始
-                    if (/^(const|let|var|if|for|while|do|switch|try|function|class|async)\\s/.test(line)) {{
-                        break;
-                    }}
-                    // 如果这行不以 }} 结尾且不是空行，可能是表达式的一部分
-                    if (!line.endsWith('}}') && !line.endsWith('{{')) {{
-                        expressionStartIndex = i;
-                    }} else {{
-                        break;
-                    }}
-                }}
-
-                if (expressionStartIndex === 0) {{
-                    // 整个代码看起来都是一个表达式
-                    wrappedCode = `(async () => {{ return (${{userCode}}) }})()`;
-                }} else {{
-                    // 前面有语句，只对最后的表达式添加 return
-                    const statements = lines.slice(0, expressionStartIndex).join('\\n');
-                    const expression = lines.slice(expressionStartIndex).join('\\n');
-                    wrappedCode = `(async () => {{ ${{statements}}\\nreturn (${{expression}}) }})()`;
-                }}
-            }}
-        }}
+        // 简单包装：将用户代码放在 async 函数中，使用 eval 获取最后的表达式值
+        const wrappedCode = `
+            (async () => {{
+                ${{userCode}}
+            }})()
+        `;
 
         const result = await vm.runInContext(wrappedCode, context, {{
             timeout: 24000,

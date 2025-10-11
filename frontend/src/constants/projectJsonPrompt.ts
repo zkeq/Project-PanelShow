@@ -429,36 +429,36 @@ export const JS_CODE_EXECUTOR_GUIDE = `JavaScript 代码执行指南
 🔧 基础用法
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✓ 返回简单字符串
-  "Vue 3 + TypeScript"
+  return "Vue 3 + TypeScript"
 
 ✓ 返回数值计算结果
-  (2024 - 2020) + "年"
+  return (2024 - 2020) + "年"
 
 ✓ 条件判断
-  new Date().getFullYear() > 2024 ? "最新" : "稳定"
+  return new Date().getFullYear() > 2024 ? "最新" : "稳定"
 
 🌐 网络请求
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✓ 使用 fetch API (推荐)
   const res = await fetch("https://api.github.com/repos/owner/repo")
   const data = await res.json()
-  data.stargazers_count + " stars"
+  return data.stargazers_count + " stars"
 
 📊 数据处理
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ✓ 数组处理
   const data = [100, 200, 300]
-  data.reduce((a,b) => a+b) + " 次访问"
+  return data.reduce((a,b) => a+b) + " 次访问"
 
 ✓ JSON 解析
   const jsonStr = '{"views": 50000}'
-  JSON.parse(jsonStr).views + "w"
+  return JSON.parse(jsonStr).views + "w"
 
 ✓ 日期计算
   const start = new Date("2024-01-01")
   const now = new Date()
   const days = Math.floor((now - start) / (1000*60*60*24))
-  days + " 天"
+  return days + " 天"
 
 ⚠️ 重要限制
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -490,12 +490,12 @@ export const JS_CODE_EXECUTOR_GUIDE = `JavaScript 代码执行指南
 // GitHub Stars 统计
 const res = await fetch("https://api.github.com/repos/zkeq/Coding")
 const data = await res.json()
-data.stargazers_count + " ⭐"
+return data.stargazers_count + " ⭐"
 
 // 项目运行天数
 const start = new Date("2024-01-15")
 const days = Math.floor((Date.now() - start) / 86400000)
-days + " 天"
+return days + " 天"
 
 // API 状态检测
 try {
@@ -507,7 +507,7 @@ try {
 
 // 访问量格式化
 const views = 123456
-views > 10000
+return views > 10000
   ? (views/10000).toFixed(1) + "w"
   : views.toString()
 `;
