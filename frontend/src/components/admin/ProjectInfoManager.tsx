@@ -124,10 +124,15 @@ function PreviewItem({ info }: { info: ProjectInfo }) {
 }
 
 // 可排序的列表项组件
-function SortableItem({ info, onEdit, onDelete }: { 
-  info: ProjectInfo; 
-  onEdit: () => void; 
+type PlacementField = 'showInHomepage' | 'showInSidebar' | 'showInHero';
+
+function SortableItem({ info, onEdit, onDelete, onToggleHomepage, onToggleSidebar, onToggleHero }: {
+  info: ProjectInfo;
+  onEdit: () => void;
   onDelete: () => void;
+  onToggleHomepage: () => void;
+  onToggleSidebar: () => void;
+  onToggleHero: () => void;
 }) {
   const {
     attributes,
@@ -186,7 +191,39 @@ function SortableItem({ info, onEdit, onDelete }: {
         </div>
       </div>
       
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
+        <div className="flex gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={info.showInHomepage ? 'secondary' : 'ghost'}
+            className="h-8"
+            onClick={onToggleHomepage}
+          >
+            <Home className="w-4 h-4 mr-1" />
+            首页
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={info.showInSidebar ? 'secondary' : 'ghost'}
+            className="h-8"
+            onClick={onToggleSidebar}
+          >
+            <Sidebar className="w-4 h-4 mr-1" />
+            侧边栏
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={info.showInHero ? 'secondary' : 'ghost'}
+            className="h-8"
+            onClick={onToggleHero}
+          >
+            <Sparkles className="w-4 h-4 mr-1" />
+            Hero
+          </Button>
+        </div>
         <Button
           type="button"
           size="sm"
@@ -269,6 +306,46 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
         return reordered;
       });
     }
+  };
+
+  const updateInfoPlacement = (id: string, field: PlacementField) => {
+    setInfos(prevInfos => {
+      const target = prevInfos.find(info => info.id === id);
+      if (!target) {
+        return prevInfos;
+      }
+
+      const nextValue = !target[field];
+      if (nextValue) {
+        if (field === 'showInHomepage') {
+          const homepageCount = prevInfos.filter(info => info.showInHomepage).length;
+          if (homepageCount >= 4) {
+            alert('首页最多只能展示4个信息');
+            return prevInfos;
+          }
+        }
+
+        if (field === 'showInSidebar') {
+          const sidebarCount = prevInfos.filter(info => info.showInSidebar).length;
+          if (sidebarCount >= 8) {
+            alert('侧边栏最多只能展示8个信息');
+            return prevInfos;
+          }
+        }
+      }
+
+      const updated = prevInfos.map(info =>
+        info.id === id ? { ...info, [field]: nextValue } : info
+      );
+
+      if (editingInfo?.id === id) {
+        setEditingInfo(prev => (prev ? { ...prev, [field]: nextValue } : prev));
+        setFormData(prev => ({ ...prev, [field]: nextValue }));
+      }
+
+      onChange(updated);
+      return updated;
+    });
   };
 
   const handleAddInfo = () => {
@@ -391,6 +468,9 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
                       info={info}
                       onEdit={() => handleEditInfo(info)}
                       onDelete={() => handleDeleteInfo(info.id)}
+                      onToggleHomepage={() => updateInfoPlacement(info.id, 'showInHomepage')}
+                      onToggleSidebar={() => updateInfoPlacement(info.id, 'showInSidebar')}
+                      onToggleHero={() => updateInfoPlacement(info.id, 'showInHero')}
                     />
                   ))}
                 </div>
