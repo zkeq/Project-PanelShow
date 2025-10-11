@@ -998,12 +998,14 @@ const mockQuickLinks: QuickLink[] = [
   }
 ]
 
+const shouldUseMockData = process.env.NEXT_PUBLIC_ENABLE_MOCK_DATA === 'true';
+
 // 创建全局状态管理
 export const useGlobalStore = create<GlobalState>((set, get) => ({
   // 初始数据
   users: mockUsers,
-  timelineItems: mockTimelineItems,
-  projects: mockProjects,
+  timelineItems: shouldUseMockData ? mockTimelineItems : [],
+  projects: shouldUseMockData ? mockProjects : [],
   projectDetails: mockProjectDetails,
   demoProjects: mockDemoProjects,
   profileInfo: mockProfileInfo,
