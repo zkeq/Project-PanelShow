@@ -345,13 +345,27 @@ async def create_project(
     data: Dict[str, Any] = Body(...),
     current_user: dict = Depends(auth.require_auth)
 ):
-    """创建项目 - 必须是字典类型（因为需要ID）"""
+    """创建项目 - 必须是字典类型（因为需要ID）
+
+    ID 处理逻辑：
+    - 如果用户提供了 id 字段，使用用户提供的 ID
+    - 如果没有提供 id，则自动生成 ID
+    """
     # 检查绑定的用户名
     check_bound_username(current_user, username)
 
     projects = db.read_json(username, "projects.json")
 
-    # 添加ID
+    # ID 处理：优先使用用户提供的 ID，否则生成新 ID
+    user_provided_id = data.get("id")
+    if isinstance(user_provided_id, str) and user_provided_id.strip():
+        # 用户提供了 ID，使用用户提供的
+        data["id"] = user_provided_id.strip()
+    else:
+        # 用户没有提供 ID，自动生成
+        data["id"] = db.generate_id()
+
+    # 处理 order
     existing_orders = [
         parse_order_value(project.get("order"), index)
         for index, project in enumerate(projects)
@@ -359,7 +373,7 @@ async def create_project(
     ]
     next_order = max(existing_orders, default=-1) + 1
     data["order"] = parse_order_value(data.get("order"), next_order)
-    data["id"] = db.generate_id()
+
     projects.append(data)
 
     db.write_json(username, "projects.json", projects)
@@ -516,7 +530,12 @@ async def update_project(
     data: Dict[str, Any] = Body(...),
     current_user: dict = Depends(auth.require_auth)
 ):
-    """更新项目 - 必须是字典类型（因为需要ID）"""
+    """更新项目 - 必须是字典类型（因为需要ID）
+
+    ID 处理逻辑：
+    - 优先使用 data 中提供的 id（用户可能通过 JSON 导入修改了 ID）
+    - 如果 data 中没有 id，则使用 URL 中的 project_id
+    """
     # 检查绑定的用户名
     check_bound_username(current_user, username)
 
@@ -526,14 +545,24 @@ async def update_project(
     if project_index is None:
         raise HTTPException(status_code=404, detail="项目不存在")
 
-    # 保留ID
+    # ID 处理：优先使用用户提供的 ID（如果有的话），否则保持原 ID
+    user_provided_id = data.get("id")
+    if isinstance(user_provided_id, str) and user_provided_id.strip():
+        # 用户提供了新的 ID
+        final_id = user_provided_id.strip()
+    else:
+        # 用户没有提供 ID，使用 URL 中的 project_id
+        final_id = project_id
+
+    # 处理 order
     existing_project = projects[project_index] if isinstance(projects[project_index], dict) else {}
     existing_order = parse_order_value(existing_project.get("order"), project_index)
     if "order" in data:
         data["order"] = parse_order_value(data.get("order"), existing_order)
     else:
         data["order"] = existing_order
-    data["id"] = project_id
+
+    data["id"] = final_id
     projects[project_index] = data
 
     db.write_json(username, "projects.json", projects)
@@ -1093,7 +1122,7 @@ try {{
         )
 
         # 删除临时文件
-        FilePath(temp_file).unlink(missing_ok=True)
+        FilePath(temp_file).unlink()
 
         # 解析结果
         if result.returncode == 0:
@@ -1118,7 +1147,7 @@ try {{
             raise HTTPException(status_code=500, detail=f"执行失败: {result.stderr}")
 
     except subprocess.TimeoutExpired:
-        FilePath(temp_file).unlink(missing_ok=True)
+        FilePath(temp_file).unlink()
         raise HTTPException(status_code=408, detail="代码执行超时（24秒）")
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="Node.js 未安装")

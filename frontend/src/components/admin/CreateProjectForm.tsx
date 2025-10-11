@@ -899,9 +899,22 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
 
     try {
       const now = new Date().toISOString();
+
+      // ID 处理逻辑：
+      // - 编辑模式：优先使用 formData.id（用户可能通过 JSON 导入修改了 ID），否则使用 URL 中的 projectId
+      // - 创建模式：如果用户提供了 ID 就使用，否则不传 ID（让后端生成）
+      let finalId: string | undefined;
+      if (isEditMode) {
+        // 编辑模式：formData.id 或 projectId
+        finalId = formData.id || projectId;
+      } else {
+        // 创建模式：只有用户明确提供了 ID 才使用
+        finalId = formData.id;
+      }
+
       const payload: ProjectFormData = {
         ...formData,
-        id: isEditMode ? (projectId ?? formData.id) : formData.id,
+        id: finalId,
         name: trimmedName,
         description: trimmedDescription,
         tags: sanitizedTags,
