@@ -474,6 +474,9 @@ export const JS_CODE_EXECUTOR_GUIDE = `JavaScript 代码执行指南
 ✗ 不能使用 import/require
   // 可用全局对象: Promise, console, fetch, setTimeout
 
+✗ 不要使用任何鉴权API, 你的代码将在前端被提交, 如有需求请自行编写API处理
+  // ❌ 禁止添加 Authorization 头
+
 💡 最佳实践
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. 始终返回字符串或数值
