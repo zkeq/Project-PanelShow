@@ -270,6 +270,15 @@
   background-color: transparent !important;
 }
 
+.dark .markdown-body table,
+.dark .markdown-body thead,
+.dark .markdown-body tbody,
+.dark .markdown-body tr,
+.dark .markdown-body th,
+.dark .markdown-body td {
+  background-color: transparent !important;
+}
+
 @media (max-width: 767px) {
   .markdown-body {
     padding: 15px;
