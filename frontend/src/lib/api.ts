@@ -211,6 +211,21 @@ export function fetchProjects(username: string, token: string) {
   );
 }
 
+export function reorderProjects(
+  username: string,
+  order: Array<{ id: string; order: number }>,
+  token: string
+) {
+  return request<{ success: boolean; data: unknown }>(
+    `/api/projects/${encodeURIComponent(username)}/reorder`,
+    {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ order }),
+    }
+  );
+}
+
 export interface TechStackListResponse {
   success: boolean;
   data: TechStackResponseData;
@@ -434,6 +449,34 @@ export function updateProject<T extends Record<string, unknown>>(
       method: 'PUT',
       token,
       body: JSON.stringify(project),
+    }
+  );
+}
+
+export function deleteProject(
+  username: string,
+  projectId: string,
+  token: string
+) {
+  return request<{ message: string }>(
+    `/api/projects/${encodeURIComponent(username)}/${encodeURIComponent(projectId)}`,
+    {
+      method: 'DELETE',
+      token,
+    }
+  );
+}
+
+export function deleteTimeline(
+  username: string,
+  timelineId: string,
+  token: string
+) {
+  return request<{ message: string }>(
+    `/api/timeline/${encodeURIComponent(username)}/${encodeURIComponent(timelineId)}`,
+    {
+      method: 'DELETE',
+      token,
     }
   );
 }

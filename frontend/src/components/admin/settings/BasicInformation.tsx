@@ -291,10 +291,14 @@ export function BasicInformation() {
         }
       }
 
+      const trimmedSiteTitleBase = form.siteTitleBase.trim();
+      const fallbackSiteTitle = (form.profileUsername || targetUsername || "").trim();
+      const effectiveSiteTitle = trimmedSiteTitleBase || fallbackSiteTitle || targetUsername;
+
       const payload = {
         ...rawProfile,
         username: form.profileUsername || targetUsername,
-        siteTitle: `${form.siteTitleBase}${SITE_SUFFIX}`.trim(),
+        siteTitle: effectiveSiteTitle,
         siteAddress: normalizedSiteAddress || currentUsername,
         avatar: form.avatar,
         name: form.authorName,

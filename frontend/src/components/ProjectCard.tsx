@@ -96,8 +96,7 @@ export default function ProjectCard({
 
   // 默认图片列表
   const defaultImages = [
-    "/Snipaste_2025-08-23_22-52-13.png",
-    "/Snipaste_2025-08-23_22-52-25.png",
+       "image.png"
   ];
 
   // 根据项目ID选择图片

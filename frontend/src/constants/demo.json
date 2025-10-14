@@ -1,0 +1,330 @@
+{
+    "id": "b73d7c5c-9b92-4a55-8f65-f22ed9978a07",
+    "name": "SparkAI Frontend 前端项目",
+    "description": "主要是一个VUe项目",
+    "tags": [
+        "高性能",
+        "可扩展"
+    ],
+    "status": {
+        "id": "building",
+        "label": "施工中",
+        "color": "bg-yellow-500"
+    },
+    "type": {
+        "id": "type-1759822707305",
+        "label": "新型项目",
+        "icon": "Rocket"
+    },
+    "features": [
+        {
+            "id": "feature-1759822719982",
+            "label": "高性能",
+            "color": "bg-green-500",
+            "icon": "Sparkles"
+        },
+        {
+            "id": "feature-1759822728773",
+            "label": "高并发",
+            "color": "bg-purple-500",
+            "icon": "Rocket"
+        }
+    ],
+    "previewUrl": "https://icodeq.com",
+    "mobilePreviewUrl": "",
+    "sourceUrl": "https://github.com/zkeq/Coding",
+    "leftSidebarMarkdown": "这是左侧栏信息",
+    "rightSidebarMarkdown": "这是右侧栏信息",
+    "isOpenSource": true,
+    "screenshots": [
+        {
+            "id": "ce83144a-f106-4def-8603-9c9602901886",
+            "name": "coding-for-music-and-movie.png",
+            "description": "这是一个截图地址的描述功能",
+            "url": "http://localhost:8000/uploads/zkeq/project-screenshots/8779d81912cf49ec8add18cd6f7baebe.png"
+        }
+    ],
+    "projectInfos": [
+        {
+            "icon": "lucide:settings",
+            "label": "技术栈",
+            "valueCode": "'Vue 3 + Next.js'",
+            "showInHomepage": true,
+            "showInSidebar": true,
+            "color": "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-800",
+            "id": "1759822836314",
+            "order": 0,
+            "showInHero": false
+        },
+        {
+            "id": "hero-月访问量",
+            "icon": "TrendingUp",
+            "label": "月访问量",
+            "valueCode": "'50w'",
+            "showInHomepage": true,
+            "showInSidebar": true,
+            "showInHero": true,
+            "color": "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800",
+            "order": 1
+        },
+        {
+            "id": "hero-开发周期",
+            "icon": "Clock",
+            "label": "开发周期",
+            "valueCode": "'2个月'",
+            "showInHomepage": true,
+            "showInSidebar": true,
+            "showInHero": true,
+            "color": "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-800",
+            "order": 2
+        },
+        {
+            "id": "hero-完成度",
+            "icon": "CheckCircle",
+            "label": "完成度",
+            "valueCode": "'100%'",
+            "showInHomepage": true,
+            "showInSidebar": true,
+            "showInHero": true,
+            "color": "text-purple-600 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-950/30 dark:border-purple-800",
+            "order": 3
+        }
+    ],
+    "projectIntroduction": "这是一个项目介绍",
+    "featureHighlights": [
+        {
+            "id": "feature-1759741245475",
+            "title": "高并发",
+            "description": "这是一个高并发的项目",
+            "techStack": [
+                {
+                    "id": "tag-1759822862032",
+                    "name": "Vue",
+                    "color": "from-orange-500 to-orange-600",
+                    "bgColor": "bg-orange-50 hover:bg-orange-100",
+                    "textColor": "text-orange-700",
+                    "borderColor": "border-orange-200"
+                },
+                {
+                    "id": "tag-1759822869546",
+                    "name": "Next.js",
+                    "color": "from-green-500 to-green-600",
+                    "bgColor": "bg-green-50 hover:bg-green-100",
+                    "textColor": "text-green-700",
+                    "borderColor": "border-green-200"
+                }
+            ],
+            "screenshots": [
+                {
+                    "id": "241313f8-3413-4152-84de-77165bfc612a",
+                    "name": "seepro_i2v.png",
+                    "description": "这是详情信息的描述功能",
+                    "url": "http://localhost:8000/uploads/zkeq/feature-feature-1759741245475/2746cea9a01b4f4b8d1cda7f558d4615.png"
+                }
+            ],
+            "previewUrl": "https://icodeq.com",
+            "mobilePreviewUrl": "https://icodeq.com",
+            "leftMarkdown": "这是展示信息左侧栏",
+            "rightMarkdown": "这是展示信息右侧栏"
+        }
+    ],
+    "createdAt": "2025-10-07T08:05:25.335Z",
+    "updatedAt": "2025-10-08T03:28:47.244Z",
+    "statusId": "building",
+    "typeId": "type-1759822707305",
+    "longDescription": "这是一个项目介绍",
+    "timeline_items": [
+        {
+            "project_id": "b73d7c5c-9b92-4a55-8f65-f22ed9978a07",
+            "publishedAt": "2025-10-06T16:00:00.000Z",
+            "author": {
+                "name": "zkeq",
+                "avatar": "",
+                "username": "zkeq"
+            },
+            "project": {
+                "id": "b73d7c5c-9b92-4a55-8f65-f22ed9978a07",
+                "name": "SparkAI Frontend 前端项目",
+                "logo": "",
+                "description": "修复bug",
+                "techStack": [],
+                "readme": "feat(admin): 更新项目状态选项并优化表单交互体验\n\n- 将项目状态 "active" 更改为 "building"，并更新对应标签和颜色\n- 替换 alert 弹窗为自定义 Toast 提示组件，提升用户反馈体验\n- 增加定时跳转前的清理逻辑，避免内存泄漏\n- 表单提交成功后自动清空草稿内容\n- 引入 StatusToast 组件及状态管理，完善错误与成功提示机制\n",
+                "previewImages": [
+                    "http://localhost:8000/uploads/zkeq/timeline/bf0c20a29d6b4b1d9b0e5e448d0bfcdb.png",
+                    "http://localhost:8000/uploads/zkeq/timeline/317085b2a692409cbf88404b8924050e.png"
+                ],
+                "repositoryUrl": "https://github.com/zkeq",
+                "liveUrl": "https://icodeq.com",
+                "mobileUrl": "https://icodeq.com"
+            },
+            "updateType": "bug",
+            "updateTypeMeta": {
+                "id": "bug",
+                "label": "修复BUG",
+                "color": "#0ea5e9"
+            },
+            "changelog": "修复bug",
+            "tags": [
+                {
+                    "id": "performance",
+                    "label": "性能优化",
+                    "icon": "flame"
+                },
+                {
+                    "id": "bugfix",
+                    "label": "问题修复",
+                    "icon": "bug"
+                },
+                {
+                    "id": "code-update",
+                    "label": "代码更新",
+                    "icon": "code2"
+                },
+                {
+                    "id": "bug",
+                    "label": "测试BUG",
+                    "icon": "code2"
+                }
+            ],
+            "details": "feat(admin): 更新项目状态选项并优化表单交互体验\n\n- 将项目状态 "active" 更改为 "building"，并更新对应标签和颜色\n- 替换 alert 弹窗为自定义 Toast 提示组件，提升用户反馈体验\n- 增加定时跳转前的清理逻辑，避免内存泄漏\n- 表单提交成功后自动清空草稿内容\n- 引入 StatusToast 组件及状态管理，完善错误与成功提示机制\n",
+            "demoIntroduction": {
+                "left": "演示介绍左侧栏",
+                "right": "演示介绍右侧栏"
+            },
+            "links": {
+                "repository": "https://github.com/zkeq",
+                "demo": "https://icodeq.com",
+                "mobile": "https://icodeq.com"
+            },
+            "assets": {
+                "images": [
+                    {
+                        "id": "image-1759849030086-cb3713",
+                        "url": "http://localhost:8000/uploads/zkeq/timeline/bf0c20a29d6b4b1d9b0e5e448d0bfcdb.png",
+                        "filename": "seepro_i2v.png",
+                        "contentType": "image/png",
+                        "size": 2159906
+                    },
+                    {
+                        "id": "image-1759849044523-a6ff0c",
+                        "url": "http://localhost:8000/uploads/zkeq/timeline/317085b2a692409cbf88404b8924050e.png",
+                        "filename": "original-gemini-1017-1756354048418-a9046469-b (1).png",
+                        "contentType": "image/png",
+                        "size": 1125552
+                    }
+                ]
+            },
+            "likes": 3,
+            "comments": 0,
+            "isLiked": false,
+            "createdAt": "2025-10-07T14:58:01.824Z",
+            "id": "22e91fb8-54d2-43bf-ae6e-2cb3decbdddd"
+        },
+        {
+            "project_id": "b73d7c5c-9b92-4a55-8f65-f22ed9978a07",
+            "publishedAt": "2025-10-07T23:40:00.000Z",
+            "author": {
+                "name": "zkeq",
+                "avatar": "",
+                "username": "zkeq"
+            },
+            "project": {
+                "id": "b73d7c5c-9b92-4a55-8f65-f22ed9978a07",
+                "name": "SparkAI Frontend 前端项目",
+                "logo": "",
+                "description": "测试222",
+                "techStack": [],
+                "readme": "测试完",
+                "previewImages": [
+                    "http://localhost:8000/uploads/zkeq/timeline/580e69cb1fad4a16abe766c52f5f9a63.png"
+                ],
+                "repositoryUrl": "https://icodeq.com",
+                "liveUrl": "https://icodeq.com",
+                "mobileUrl": "https://icodeq.com"
+            },
+            "updateType": "feature",
+            "updateTypeMeta": {
+                "id": "feature",
+                "label": "新功能",
+                "color": "#22c55e"
+            },
+            "changelog": "测试222",
+            "tags": [
+                {
+                    "id": "performance",
+                    "label": "性能优化",
+                    "icon": "flame"
+                },
+                {
+                    "id": "code-update",
+                    "label": "代码更新",
+                    "icon": "code2"
+                }
+            ],
+            "details": "测试完",
+            "demoIntroduction": {
+                "left": "左侧",
+                "right": "右侧"
+            },
+            "links": {
+                "repository": "https://icodeq.com",
+                "demo": "https://icodeq.com",
+                "mobile": "https://icodeq.com"
+            },
+            "assets": {
+                "images": [
+                    {
+                        "id": "image-1759880488315-7409a7",
+                        "url": "http://localhost:8000/uploads/zkeq/timeline/580e69cb1fad4a16abe766c52f5f9a63.png",
+                        "filename": "seepro_i2v.png",
+                        "contentType": "image/png",
+                        "size": 2159906
+                    }
+                ]
+            },
+            "createdAt": "2025-10-07T23:41:52.268Z",
+            "id": "7a3fd21c-fc74-4750-bc25-73c7a5f1aef0",
+            "likes": 14,
+            "updatedAt": "2025-10-08T01:37:07.033Z"
+        }
+    ],
+    "homeAttributes": [
+        {
+            "icon": "lucide:settings",
+            "label": "技术栈",
+            "valueCode": "'Vue 3 + Next.js'",
+            "showInHomepage": true,
+            "showInSidebar": true,
+            "color": "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-800",
+            "id": "1759822836314",
+            "order": 0,
+            "showInHero": false
+        }
+    ],
+    "sidebarAttributes": [
+        {
+            "icon": "lucide:settings",
+            "label": "技术栈",
+            "valueCode": "'Vue 3 + Next.js'",
+            "showInHomepage": true,
+            "showInSidebar": true,
+            "color": "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/30 dark:border-blue-800",
+            "id": "1759822836314",
+            "order": 0,
+            "showInHero": false
+        }
+    ],
+    "heroAttributes": [
+        {
+            "id": "hero-月访问量",
+            "icon": "TrendingUp",
+            "label": "月访问量",
+            "valueCode": "'50w'",
+            "showInHomepage": true,
+            "showInSidebar": true,
+            "showInHero": true,
+            "color": "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/30 dark:border-emerald-800",
+            "order": 1
+        }
+    ]
+}

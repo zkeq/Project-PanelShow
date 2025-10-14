@@ -114,7 +114,7 @@ const FEATURE_CHIP_PRESETS: FeatureChipPreset[] = [
     classes: {
       container:
         'bg-indigo-50/70 dark:bg-indigo-950/20 border-indigo-200/40 dark:border-indigo-800/30 text-indigo-600 dark:text-indigo-600',
-      icon: 'text-sky-400 dark:text-sky-500',
+      icon: 'text-indigo-400 dark:text-indigo-500',
       label: 'text-indigo-700 dark:text-indigo-400'
     }
   },

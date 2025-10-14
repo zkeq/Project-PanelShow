@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, use, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Loader2 } from "lucide-react"
@@ -13,6 +13,7 @@ import ProjectInfo from '@/components/demo/ProjectInfo'
 import DemoInfo from '@/components/demo/DemoInfo'
 import { fetchProjectDetail } from '@/lib/api'
 import type { DemoContent, ProjectDetailApiData, ProjectOverview } from '@/types/demo'
+import { useProfileData } from '@/hooks/useProfileData'
 
 interface DemoPageProps {
   params: Promise<{
@@ -47,8 +48,28 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
   const [projectError, setProjectError] = useState<string | null>(null)
   const [projectInfo, setProjectInfo] = useState<ProjectOverview | null>(null)
   const [demoContent, setDemoContent] = useState<DemoContent | null>(null)
+  const lastLoadedPreviewUrlRef = useRef<string | undefined>(undefined)
 
   const { username, projectId } = use(params)
+  const encodedUsername = encodeURIComponent(username)
+  const encodedProjectId = encodeURIComponent(projectId)
+  const profileData = useProfileData(username)
+  const headerAvatar =
+    typeof profileData.profile?.avatar === 'string' && profileData.profile.avatar.trim().length > 0
+      ? profileData.profile.avatar
+      : undefined
+  const headerDisplayName = (() => {
+    const siteTitle =
+      typeof profileData.profile?.siteTitle === 'string' && profileData.profile.siteTitle.trim().length > 0
+        ? profileData.profile.siteTitle.trim()
+        : undefined
+    if (siteTitle) return siteTitle
+    const name =
+      typeof profileData.profile?.name === 'string' && profileData.profile.name.trim().length > 0
+        ? profileData.profile.name.trim()
+        : undefined
+    return name
+  })()
 
   useEffect(() => {
     const updateViewMode = () => {
@@ -116,9 +137,15 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
     const previewForView = getPreviewUrlForView(demoContent, viewMode)
 
     if (previewForView) {
-      setIsLoading(true)
-      setError(false)
+      if (lastLoadedPreviewUrlRef.current !== previewForView) {
+        lastLoadedPreviewUrlRef.current = previewForView
+        setIsLoading(true)
+        setError(false)
+      } else {
+        setIsLoading(false)
+      }
     } else {
+      lastLoadedPreviewUrlRef.current = undefined
       setIsLoading(false)
       setError(false)
     }
@@ -157,7 +184,13 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
           <BackgroundDecorations />
         </div>
 
-        <HeaderNavigation username={username} />
+        <HeaderNavigation
+          username={username}
+          avatar={headerAvatar}
+          displayName={headerDisplayName}
+          backHref={`/project/${encodedUsername}/${encodedProjectId}`}
+          titleHref={`/project/${encodedUsername}`}
+        />
 
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <Card className="p-8 text-center max-w-md mx-4 space-y-4">
@@ -206,7 +239,13 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
           </div>
         </div>
 
-        <HeaderNavigation username={username} />
+        <HeaderNavigation
+          username={username}
+          avatar={headerAvatar}
+          displayName={headerDisplayName}
+          backHref={`/project/${encodedUsername}/${encodedProjectId}`}
+          titleHref={`/project/${encodedUsername}`}
+        />
 
         <div className="relative z-10 flex items-center justify-center min-h-screen">
           <Card className="p-8 text-center max-w-md mx-4 space-y-4">
@@ -232,7 +271,13 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
         <BackgroundDecorations />
       </div>
 
-      <HeaderNavigation username={username} />
+      <HeaderNavigation
+        username={username}
+        avatar={headerAvatar}
+        displayName={headerDisplayName}
+        backHref={`/project/${encodedUsername}/${encodedProjectId}`}
+        titleHref={`/project/${encodedUsername}`}
+      />
 
       <DemoControls
         title={demoContent.title || projectInfo.name}

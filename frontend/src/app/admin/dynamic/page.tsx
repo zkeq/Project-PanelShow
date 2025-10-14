@@ -28,7 +28,7 @@ import {
   updateSettings,
   uploadImage,
 } from '@/lib/api';
-import { AlertCircle, Calendar, Clock, RefreshCcw, Save, Send } from 'lucide-react';
+import { AlertCircle, Braces, Calendar, Check, Clock, RefreshCcw, Save, Send } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { StatusToast, type StatusToastState } from '@/components/admin/settings/StatusToast';
 
@@ -259,8 +259,296 @@ export default function AdminDynamicPage() {
   const [timelineError, setTimelineError] = useState<string | null>(null);
   const [timelineRecord, setTimelineRecord] = useState<Record<string, unknown> | null>(null);
   const hasPrefilledTimelineRef = useRef(false);
+  const [jsonEditorValue, setJsonEditorValue] = useState(() => JSON.stringify(createInitialFormState(), null, 2));
+  const [jsonEditorDirty, setJsonEditorDirty] = useState(false);
+  const [jsonEditorError, setJsonEditorError] = useState<string | null>(null);
 
   const isProjectSelectionDisabled = useMemo(() => !token || !boundUsername, [token, boundUsername]);
+
+  const resolveTypeOptionFromInput = useCallback(
+    (value: unknown): DynamicTypeOption | null => {
+      if (!value) return null;
+      const fallbackColor = '#6366f1';
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+        return (
+          typeOptions.find((option) => option.id === trimmed || option.label === trimmed) ?? {
+            id: trimmed,
+            label: trimmed,
+            color: fallbackColor,
+          }
+        );
+      }
+
+      if (isRecord(value)) {
+        const id = typeof value.id === 'string' ? value.id : undefined;
+        const label = typeof value.label === 'string'
+          ? value.label
+          : typeof value.name === 'string'
+            ? value.name
+            : '';
+        const color = typeof value.color === 'string' ? value.color : fallbackColor;
+
+        if (id) {
+          const matched = typeOptions.find((option) => option.id === id);
+          if (matched) {
+            return matched;
+          }
+        }
+
+        if (label) {
+          const matched = typeOptions.find((option) => option.label === label);
+          if (matched) {
+            return matched;
+          }
+        }
+
+        if (!label && !id) {
+          return null;
+        }
+
+        const baseId = id ?? createUniqueId(label || 'type', typeOptions.map((option) => option.id), 'type');
+        return {
+          id: baseId,
+          label: label || baseId,
+          color,
+        };
+      }
+
+      return null;
+    },
+    [typeOptions]
+  );
+
+  const resolveTagListFromInput = useCallback(
+    (value: unknown): DynamicTagItem[] => {
+      const usedIds = new Set(tagLibrary.map((tag) => tag.id));
+
+      const normalize = (input: unknown, index: number): DynamicTagItem | null => {
+        if (typeof input === 'string') {
+          const trimmed = input.trim();
+          if (!trimmed) {
+            return null;
+          }
+          const matched = tagLibrary.find((tag) => tag.id === trimmed || tag.label === trimmed);
+          if (matched) {
+            return matched;
+          }
+          const newId = createUniqueId(trimmed, Array.from(usedIds), 'tag');
+          usedIds.add(newId);
+          return { id: newId, label: trimmed, icon: 'code2' };
+        }
+
+        if (isRecord(input)) {
+          const id = typeof input.id === 'string' ? input.id : undefined;
+          const label = typeof input.label === 'string'
+            ? input.label
+            : typeof input.name === 'string'
+              ? input.name
+              : '';
+          const icon = typeof input.icon === 'string' && ALLOWED_TAG_ICONS.has(input.icon)
+            ? (input.icon as DynamicTagItem['icon'])
+            : 'code2';
+
+          if (id) {
+            const matched = tagLibrary.find((tag) => tag.id === id);
+            if (matched) {
+              return matched;
+            }
+          }
+
+          if (label) {
+            const matched = tagLibrary.find((tag) => tag.label === label);
+            if (matched) {
+              return matched;
+            }
+          }
+
+          const baseId = id ?? createUniqueId(label || `tag-${index}`, Array.from(usedIds), 'tag');
+          usedIds.add(baseId);
+          return {
+            id: baseId,
+            label: label || baseId,
+            icon,
+          };
+        }
+
+        return null;
+      };
+
+      if (Array.isArray(value)) {
+        return value
+          .map((item, index) => normalize(item, index))
+          .filter((item): item is DynamicTagItem => Boolean(item));
+      }
+
+      const single = normalize(value, 0);
+      return single ? [single] : [];
+    },
+    [tagLibrary]
+  );
+
+  const resolveImagesFromInput = useCallback((value: unknown): DynamicImageAsset[] => {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .map((item, index): DynamicImageAsset | null => {
+        if (typeof item === 'string') {
+          const url = item.trim();
+          if (!url) {
+            return null;
+          }
+          return {
+            id: `json-image-${index}`,
+            file: null,
+            preview: url,
+            source: 'remote' as const,
+            metadata: { url },
+          } satisfies DynamicImageAsset;
+        }
+
+        if (isRecord(item)) {
+          const rawUrl =
+            typeof item.url === 'string'
+              ? item.url
+              : typeof item.preview === 'string'
+                ? item.preview
+                : typeof item.src === 'string'
+                  ? item.src
+                  : '';
+          if (!rawUrl) {
+            return null;
+          }
+          const identifier = typeof item.id === 'string' ? item.id : `json-image-${index}`;
+          return {
+            id: identifier,
+            file: null,
+            preview: rawUrl,
+            source: 'remote' as const,
+            metadata: {
+              url: rawUrl,
+              filename: typeof item.filename === 'string' ? item.filename : null,
+              contentType: typeof item.contentType === 'string' ? item.contentType : null,
+              size:
+                typeof item.size === 'number' && Number.isFinite(item.size)
+                  ? item.size
+                  : null,
+            },
+          } satisfies DynamicImageAsset;
+        }
+
+        return null;
+      })
+      .filter((asset): asset is DynamicImageAsset => Boolean(asset));
+  }, []);
+
+  const buildJsonFromFormState = useCallback((state: DynamicFormState) => ({
+    publishDate: state.publishDate,
+    projectId: state.projectId,
+    description: state.description,
+    type: state.type,
+    tags: state.tags,
+    details: state.details,
+    images: state.images.map((image) => ({
+      id: image.id,
+      source: image.source,
+      preview: image.preview,
+      metadata: image.metadata,
+    })),
+    codeUrl: state.codeUrl,
+    demoUrl: state.demoUrl,
+    mobileUrl: state.mobileUrl,
+    demoLeftMarkdown: state.demoLeftMarkdown,
+    demoRightMarkdown: state.demoRightMarkdown,
+    demoIntroduction: {
+      left: state.demoLeftMarkdown,
+      right: state.demoRightMarkdown,
+    },
+  }), []);
+
+  const mapJsonToDynamicFormState = useCallback(
+    (record: Record<string, unknown>, previous: DynamicFormState): DynamicFormState => {
+      const publishValue =
+        typeof record.publishDate === 'string'
+          ? record.publishDate
+          : typeof record.publishedAt === 'string'
+            ? record.publishedAt
+            : previous.publishDate;
+      const projectIdValue =
+        typeof record.projectId === 'string'
+          ? record.projectId
+          : typeof record.project_id === 'string'
+            ? record.project_id
+            : previous.projectId;
+      const descriptionValue =
+        typeof record.description === 'string'
+          ? record.description
+          : typeof record.changelog === 'string'
+            ? record.changelog
+            : previous.description;
+      const detailsValue = typeof record.details === 'string' ? record.details : previous.details;
+      const codeUrlValue =
+        typeof record.codeUrl === 'string'
+          ? record.codeUrl
+          : typeof record.repositoryUrl === 'string'
+            ? record.repositoryUrl
+            : previous.codeUrl;
+      const demoUrlValue =
+        typeof record.demoUrl === 'string'
+          ? record.demoUrl
+          : typeof record.liveUrl === 'string'
+            ? record.liveUrl
+            : previous.demoUrl;
+      const mobileUrlValue =
+        typeof record.mobileUrl === 'string'
+          ? record.mobileUrl
+          : typeof record.mobilePreviewUrl === 'string'
+            ? record.mobilePreviewUrl
+            : previous.mobileUrl;
+
+      const typeValue =
+        resolveTypeOptionFromInput(record.type ?? record.updateType ?? previous.type) ??
+        previous.type ??
+        (typeOptions[0] ?? null);
+
+      const tagsValue = resolveTagListFromInput(record.tags ?? record.labels ?? record.tagIds ?? previous.tags);
+      const imagesValue = resolveImagesFromInput(record.images ?? record.previewImages ?? record.assets ?? []);
+
+      const demoIntroductionRecord = isRecord(record.demoIntroduction) ? record.demoIntroduction : null;
+      const demoLeftValue =
+        typeof record.demoLeftMarkdown === 'string'
+          ? record.demoLeftMarkdown
+          : demoIntroductionRecord && typeof demoIntroductionRecord.left === 'string'
+            ? (demoIntroductionRecord.left as string)
+            : previous.demoLeftMarkdown;
+      const demoRightValue =
+        typeof record.demoRightMarkdown === 'string'
+          ? record.demoRightMarkdown
+          : demoIntroductionRecord && typeof demoIntroductionRecord.right === 'string'
+            ? (demoIntroductionRecord.right as string)
+            : previous.demoRightMarkdown;
+
+      return {
+        ...previous,
+        publishDate: toDatetimeLocalValue(publishValue),
+        projectId: projectIdValue,
+        description: descriptionValue,
+        type: typeValue,
+        tags: tagsValue,
+        details: detailsValue,
+        images: imagesValue,
+        codeUrl: codeUrlValue,
+        demoUrl: demoUrlValue,
+        mobileUrl: mobileUrlValue,
+        demoLeftMarkdown: demoLeftValue,
+        demoRightMarkdown: demoRightValue,
+      };
+    },
+    [resolveImagesFromInput, resolveTagListFromInput, resolveTypeOptionFromInput, typeOptions]
+  );
 
   const loadProjects = useCallback(async () => {
     if (!token || !boundUsername) {
@@ -673,8 +961,59 @@ export default function AdminDynamicPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (jsonEditorDirty) {
+      return;
+    }
+
+    const nextJson = JSON.stringify(buildJsonFromFormState(formState), null, 2);
+    setJsonEditorValue(nextJson);
+    setJsonEditorError(null);
+  }, [buildJsonFromFormState, formState, jsonEditorDirty]);
+
   const updateFormState = <K extends keyof DynamicFormState>(key: K, value: DynamicFormState[K]) => {
     setFormState((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleJsonEditorChange = (value: string) => {
+    setJsonEditorValue(value);
+    setJsonEditorDirty(true);
+    if (jsonEditorError) {
+      setJsonEditorError(null);
+    }
+  };
+
+  const handleRefreshJson = () => {
+    const nextJson = JSON.stringify(buildJsonFromFormState(formState), null, 2);
+    setJsonEditorValue(nextJson);
+    setJsonEditorDirty(false);
+    setJsonEditorError(null);
+  };
+
+  const handleApplyJson = () => {
+    try {
+      const parsed = JSON.parse(jsonEditorValue) as unknown;
+      if (!isRecord(parsed)) {
+        throw new Error('JSON 结构必须是对象。');
+      }
+
+      setFormState((previous) => {
+        previous.images.forEach((image) => {
+          if (image.source === 'local' && image.file) {
+            URL.revokeObjectURL(image.preview);
+          }
+        });
+
+        return mapJsonToDynamicFormState(parsed, previous);
+      });
+
+      setJsonEditorDirty(false);
+      setJsonEditorError(null);
+    } catch (error) {
+      const message =
+        error instanceof Error ? `解析 JSON 失败：${error.message}` : '解析 JSON 失败，请检查格式。';
+      setJsonEditorError(message);
+    }
   };
 
   const handleCreateDynamicType = async ({ label, color }: { label: string; color: string }) => {
@@ -1193,6 +1532,41 @@ export default function AdminDynamicPage() {
                   value={formState.demoRightMarkdown}
                   onChange={(event) => updateFormState('demoRightMarkdown', event.target.value)}
                 />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Braces className="h-5 w-5 text-primary" />
+              JSON 预览与编辑
+            </CardTitle>
+            <CardDescription>同步或编辑 JSON 数据后可应用至上方表单，也可将表单内容刷新到此处。</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {jsonEditorError && (
+              <div className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-600 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300">
+                <AlertCircle className="mt-0.5 h-4 w-4" />
+                <span>{jsonEditorError}</span>
+              </div>
+            )}
+            <Textarea
+              value={jsonEditorValue}
+              onChange={(event) => handleJsonEditorChange(event.target.value)}
+              className="min-h-[320px] font-mono text-xs"
+              spellCheck={false}
+            />
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>{jsonEditorDirty ? 'JSON 已修改，应用前请先预览结果。' : 'JSON 与当前表单内容保持同步。'}</span>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={handleRefreshJson} disabled={isSubmitting}>
+                  <RefreshCcw className="mr-1 h-4 w-4" /> 同步表单
+                </Button>
+                <Button type="button" onClick={handleApplyJson} disabled={isSubmitting}>
+                  <Check className="mr-1 h-4 w-4" /> 应用到表单
+                </Button>
               </div>
             </div>
           </CardContent>

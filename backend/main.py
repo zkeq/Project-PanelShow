@@ -4,7 +4,8 @@
 from fastapi import FastAPI, HTTPException, Depends, Body, Path, UploadFile, File, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
+import math
 from datetime import timedelta, datetime, timezone
 import copy
 import re
@@ -44,6 +45,23 @@ ALLOWED_IMAGE_TYPES = {
     "image/gif": ".gif",
     "image/webp": ".webp"
 }
+
+
+def parse_order_value(value: Any, fallback: int) -> int:
+    if isinstance(value, (int, float)):
+        return int(value) if math.isfinite(value) else fallback
+
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return fallback
+        try:
+            numeric = float(stripped)
+        except ValueError:
+            return fallback
+        return int(numeric) if math.isfinite(numeric) else fallback
+
+    return fallback
 
 
 def parse_datetime(value: Union[str, None]) -> Union[datetime, None]:
@@ -327,14 +345,35 @@ async def create_project(
     data: Dict[str, Any] = Body(...),
     current_user: dict = Depends(auth.require_auth)
 ):
-    """创建项目 - 必须是字典类型（因为需要ID）"""
+    """创建项目 - 必须是字典类型（因为需要ID）
+
+    ID 处理逻辑：
+    - 如果用户提供了 id 字段，使用用户提供的 ID
+    - 如果没有提供 id，则自动生成 ID
+    """
     # 检查绑定的用户名
     check_bound_username(current_user, username)
 
     projects = db.read_json(username, "projects.json")
 
-    # 添加ID
-    data["id"] = db.generate_id()
+    # ID 处理：优先使用用户提供的 ID，否则生成新 ID
+    user_provided_id = data.get("id")
+    if isinstance(user_provided_id, str) and user_provided_id.strip():
+        # 用户提供了 ID，使用用户提供的
+        data["id"] = user_provided_id.strip()
+    else:
+        # 用户没有提供 ID，自动生成
+        data["id"] = db.generate_id()
+
+    # 处理 order
+    existing_orders = [
+        parse_order_value(project.get("order"), index)
+        for index, project in enumerate(projects)
+        if isinstance(project, dict)
+    ]
+    next_order = max(existing_orders, default=-1) + 1
+    data["order"] = parse_order_value(data.get("order"), next_order)
+
     projects.append(data)
 
     db.write_json(username, "projects.json", projects)
@@ -345,7 +384,19 @@ async def create_project(
 @app.get("/api/projects/{username}", tags=["项目管理"])
 async def get_projects(username: str):
     """获取项目列表"""
-    projects = db.read_json(username, "projects.json")
+    raw_projects = db.read_json(username, "projects.json")
+
+    ordered_records = []
+    for index, project in enumerate(raw_projects):
+        if isinstance(project, dict):
+            order_value = parse_order_value(project.get("order"), index)
+            project["order"] = order_value
+            ordered_records.append((order_value, index, project))
+        else:
+            ordered_records.append((index, index, project))
+
+    ordered_records.sort(key=lambda item: (item[0], item[1]))
+    projects = [record[2] for record in ordered_records]
 
     # 为每个项目处理 projectInfos 分类
     for project in projects:
@@ -479,7 +530,12 @@ async def update_project(
     data: Dict[str, Any] = Body(...),
     current_user: dict = Depends(auth.require_auth)
 ):
-    """更新项目 - 必须是字典类型（因为需要ID）"""
+    """更新项目 - 必须是字典类型（因为需要ID）
+
+    ID 处理逻辑：
+    - 优先使用 data 中提供的 id（用户可能通过 JSON 导入修改了 ID）
+    - 如果 data 中没有 id，则使用 URL 中的 project_id
+    """
     # 检查绑定的用户名
     check_bound_username(current_user, username)
 
@@ -489,8 +545,24 @@ async def update_project(
     if project_index is None:
         raise HTTPException(status_code=404, detail="项目不存在")
 
-    # 保留ID
-    data["id"] = project_id
+    # ID 处理：优先使用用户提供的 ID（如果有的话），否则保持原 ID
+    user_provided_id = data.get("id")
+    if isinstance(user_provided_id, str) and user_provided_id.strip():
+        # 用户提供了新的 ID
+        final_id = user_provided_id.strip()
+    else:
+        # 用户没有提供 ID，使用 URL 中的 project_id
+        final_id = project_id
+
+    # 处理 order
+    existing_project = projects[project_index] if isinstance(projects[project_index], dict) else {}
+    existing_order = parse_order_value(existing_project.get("order"), project_index)
+    if "order" in data:
+        data["order"] = parse_order_value(data.get("order"), existing_order)
+    else:
+        data["order"] = existing_order
+
+    data["id"] = final_id
     projects[project_index] = data
 
     db.write_json(username, "projects.json", projects)
@@ -510,8 +582,92 @@ async def delete_project(
     projects = db.read_json(username, "projects.json")
     projects = [p for p in projects if p.get("id") != project_id]
 
+    for index, project in enumerate(projects):
+        if isinstance(project, dict):
+            project["order"] = index
+
     db.write_json(username, "projects.json", projects)
     return {"message": "项目删除成功"}
+
+
+@app.post("/api/projects/{username}/reorder", tags=["项目管理"])
+async def reorder_projects(
+    username: str,
+    payload: Dict[str, Any] = Body(...),
+    current_user: dict = Depends(auth.require_auth)
+):
+    """批量更新项目排序"""
+    check_bound_username(current_user, username)
+
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="请求格式错误")
+
+    entries = payload.get("order")
+    if not isinstance(entries, list) or len(entries) == 0:
+        raise HTTPException(status_code=400, detail="请提供有效的排序数据")
+
+    sanitized: List[Tuple[str, int]] = []
+    seen_ids: set[str] = set()
+
+    for index, item in enumerate(entries):
+        project_id: Optional[str] = None
+        if isinstance(item, str):
+            project_id = item.strip()
+            order_value = index
+        elif isinstance(item, dict):
+            raw_id = item.get("id")
+            if isinstance(raw_id, str):
+                project_id = raw_id.strip()
+            order_value = parse_order_value(item.get("order"), index)
+        else:
+            continue
+
+        if not project_id or project_id in seen_ids:
+            continue
+
+        seen_ids.add(project_id)
+        sanitized.append((project_id, order_value))
+
+    if not sanitized:
+        raise HTTPException(status_code=400, detail="未提供有效的项目ID")
+
+    projects = db.read_json(username, "projects.json")
+    project_map: Dict[str, Dict[str, Any]] = {
+        project.get("id"): project
+        for project in projects
+        if isinstance(project, dict) and isinstance(project.get("id"), str)
+    }
+
+    missing = [project_id for project_id, _ in sanitized if project_id not in project_map]
+    if missing:
+        raise HTTPException(status_code=404, detail=f"项目不存在: {', '.join(missing)}")
+
+    sorted_entries = sorted(sanitized, key=lambda item: item[1])
+    specified_ids = {project_id for project_id, _ in sanitized}
+    ordered_projects: List[Dict[str, Any]] = []
+
+    for position, (project_id, _) in enumerate(sorted_entries):
+        project = project_map[project_id]
+        project["order"] = position
+        ordered_projects.append(project)
+
+    remaining_projects = [
+        project for project in projects
+        if isinstance(project, dict) and project.get("id") not in specified_ids
+    ]
+
+    remaining_with_index = [
+        (parse_order_value(project.get("order"), len(ordered_projects) + idx), idx, project)
+        for idx, project in enumerate(remaining_projects)
+    ]
+    remaining_with_index.sort(key=lambda item: (item[0], item[1]))
+
+    for offset, (_, _, project) in enumerate(remaining_with_index, start=len(ordered_projects)):
+        project["order"] = offset
+        ordered_projects.append(project)
+
+    db.write_json(username, "projects.json", ordered_projects)
+    return {"success": True, "data": ordered_projects}
 
 
 @app.get("/api/projects/{username}/stats/overview", tags=["项目管理"])
@@ -910,48 +1066,40 @@ async def execute_js_code(code: str = Body(..., embed=True)):
             # vm2 更安全但需要额外安装，vm 是 Node.js 内置的
             js_code = f'''
 const vm = require('vm');
-const https = require('https');
-const http = require('http');
 
 const userCode = `{code}`;
 
-try {{
-    // 创建沙箱环境，允许使用 console 和一些基本功能
-    const sandbox = {{
-        console: console,
-        setTimeout: setTimeout,
-        setInterval: setInterval,
-        clearTimeout: clearTimeout,
-        clearInterval: clearInterval,
-        // 允许使用 Promise
-        Promise: Promise,
-        // 提供 fetch API（Node.js 18+）
-        fetch: typeof fetch !== 'undefined' ? fetch : undefined,
-        // 提供 http/https 模块用于网络请求
-        https: https,
-        http: http,
-        // 可以添加其他允许的全局对象
-    }};
+(async () => {{
+    try {{
+        const sandbox = {{
+            console: console,
+            setTimeout: setTimeout,
+            setInterval: setInterval,
+            clearTimeout: clearTimeout,
+            clearInterval: clearInterval,
+            Promise: Promise,
+            fetch: typeof fetch !== 'undefined' ? fetch : undefined,
+        }};
 
-    const context = vm.createContext(sandbox);
-    const result = vm.runInContext(userCode, context, {{
-        timeout: 24000,  // 24 秒超时
-        displayErrors: true
-    }});
+        const context = vm.createContext(sandbox);
 
-    // 处理 Promise 结果
-    if (result instanceof Promise) {{
-        result.then(resolved => {{
-            console.log(JSON.stringify({{ success: true, result: resolved }}));
-        }}).catch(error => {{
-            console.log(JSON.stringify({{ success: false, error: error.message }}));
+        // 简单包装：将用户代码放在 async 函数中，使用 eval 获取最后的表达式值
+        const wrappedCode = `
+            (async () => {{
+                ${{userCode}}
+            }})()
+        `;
+
+        const result = await vm.runInContext(wrappedCode, context, {{
+            timeout: 24000,
+            displayErrors: true
         }});
-    }} else {{
+
         console.log(JSON.stringify({{ success: true, result: result }}));
+    }} catch (error) {{
+        console.log(JSON.stringify({{ success: false, error: error.message }}));
     }}
-}} catch (error) {{
-    console.log(JSON.stringify({{ success: false, error: error.message }}));
-}}
+}})();
 '''
             f.write(js_code)
             temp_file = f.name
@@ -966,7 +1114,7 @@ try {{
         )
 
         # 删除临时文件
-        FilePath(temp_file).unlink(missing_ok=True)
+        FilePath(temp_file).unlink()
 
         # 解析结果
         if result.returncode == 0:
@@ -991,7 +1139,7 @@ try {{
             raise HTTPException(status_code=500, detail=f"执行失败: {result.stderr}")
 
     except subprocess.TimeoutExpired:
-        FilePath(temp_file).unlink(missing_ok=True)
+        FilePath(temp_file).unlink()
         raise HTTPException(status_code=408, detail="代码执行超时（24秒）")
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="Node.js 未安装")

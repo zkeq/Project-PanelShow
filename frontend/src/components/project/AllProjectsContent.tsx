@@ -17,9 +17,13 @@ interface AllProjectsContentProps {
     following: number
     company?: string
     website?: string
-    stars?: number
-    avatar?: string
-  }
+    githubUrl?: string
+  stars?: number
+  avatar?: string
+  wechatQr?: string
+  wechatDescription?: string
+  subDescription?: string
+}
 }
 
 export default function AllProjectsContent({
@@ -29,11 +33,8 @@ export default function AllProjectsContent({
   username,
   userProfile
 }: AllProjectsContentProps) {
-  // 按更新时间倒序排列
-  const sortedProjects = [...projects].sort((a, b) => 
-    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  )
-
+  // 项目已经在 useProjectsAndTimeline hook 中按 order 字段排序
+  // 这里直接使用传入的顺序，不再重新排序
   return (
     <div className="space-y-6">
       {/* 用户信息区域 */}
@@ -41,7 +42,7 @@ export default function AllProjectsContent({
 
       {/* 项目网格 */}
       <ProjectGrid
-        projects={sortedProjects}
+        projects={projects}
         expandedProjects={expandedProjects}
         onToggleExpand={onToggleExpand}
         username={username}

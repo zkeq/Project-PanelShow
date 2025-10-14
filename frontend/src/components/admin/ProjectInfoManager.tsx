@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Icon } from '@iconify/react';
 import { IconPicker } from './IconPicker';
 import { useExecuteCode } from '@/hooks/useExecuteCode';
 import { Loader2 } from 'lucide-react';
+import { JS_CODE_EXECUTOR_GUIDE } from '@/constants/projectJsonPrompt';
 import {
   DndContext,
   closestCenter,
@@ -124,10 +124,15 @@ function PreviewItem({ info }: { info: ProjectInfo }) {
 }
 
 // 可排序的列表项组件
-function SortableItem({ info, onEdit, onDelete }: { 
-  info: ProjectInfo; 
-  onEdit: () => void; 
+type PlacementField = 'showInHomepage' | 'showInSidebar' | 'showInHero';
+
+function SortableItem({ info, onEdit, onDelete, onToggleHomepage, onToggleSidebar, onToggleHero }: {
+  info: ProjectInfo;
+  onEdit: () => void;
   onDelete: () => void;
+  onToggleHomepage: () => void;
+  onToggleSidebar: () => void;
+  onToggleHero: () => void;
 }) {
   const {
     attributes,
@@ -151,6 +156,7 @@ function SortableItem({ info, onEdit, onDelete }: {
       className="flex items-center gap-3 p-3 bg-background border rounded-lg hover:bg-muted/50 transition-colors"
     >
       <button
+        type="button"
         className="cursor-grab hover:cursor-grabbing"
         {...attributes}
         {...listeners}
@@ -186,7 +192,39 @@ function SortableItem({ info, onEdit, onDelete }: {
         </div>
       </div>
       
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
+        <div className="flex gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant={info.showInHomepage ? 'secondary' : 'ghost'}
+            className="h-8"
+            onClick={onToggleHomepage}
+          >
+            <Home className="w-4 h-4 mr-1" />
+            首页
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={info.showInSidebar ? 'secondary' : 'ghost'}
+            className="h-8"
+            onClick={onToggleSidebar}
+          >
+            <Sidebar className="w-4 h-4 mr-1" />
+            侧边栏
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={info.showInHero ? 'secondary' : 'ghost'}
+            className="h-8"
+            onClick={onToggleHero}
+          >
+            <Sparkles className="w-4 h-4 mr-1" />
+            Hero
+          </Button>
+        </div>
         <Button
           type="button"
           size="sm"
@@ -243,14 +281,14 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
     })
   );
 
-  // 只在 infos 真正改变时才调用 onChange
-  useEffect(() => {
-    // 比较新旧数组，避免无限循环
-    const hasChanged = JSON.stringify(infos) !== JSON.stringify(normalizedProjectInfos);
-    if (hasChanged) {
-      onChange(infos);
-    }
-  }, [infos, normalizedProjectInfos, onChange]);
+  // 只在用户操作时才调用 onChange，不要在 useEffect 中自动同步
+  // 这会导致无限循环，因为 onChange 会触发父组件更新，然后又触发这个组件重新渲染
+  // useEffect(() => {
+  //   const hasChanged = JSON.stringify(infos) !== JSON.stringify(normalizedProjectInfos);
+  //   if (hasChanged) {
+  //     onChange(infos);
+  //   }
+  // }, [infos, normalizedProjectInfos, onChange]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -261,9 +299,54 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
         const newIndex = items.findIndex((item) => item.id === over?.id);
 
         const newItems = arrayMove(items, oldIndex, newIndex);
-        return newItems.map((item, index) => ({ ...item, order: index }));
+        const reordered = newItems.map((item, index) => ({ ...item, order: index }));
+
+        // 调用 onChange 通知父组件
+        onChange(reordered);
+
+        return reordered;
       });
     }
+  };
+
+  const updateInfoPlacement = (id: string, field: PlacementField) => {
+    setInfos(prevInfos => {
+      const target = prevInfos.find(info => info.id === id);
+      if (!target) {
+        return prevInfos;
+      }
+
+      const nextValue = !target[field];
+      if (nextValue) {
+        if (field === 'showInHomepage') {
+          const homepageCount = prevInfos.filter(info => info.showInHomepage).length;
+          if (homepageCount >= 4) {
+            alert('首页最多只能展示4个信息');
+            return prevInfos;
+          }
+        }
+
+        if (field === 'showInSidebar') {
+          const sidebarCount = prevInfos.filter(info => info.showInSidebar).length;
+          if (sidebarCount >= 8) {
+            alert('侧边栏最多只能展示8个信息');
+            return prevInfos;
+          }
+        }
+      }
+
+      const updated = prevInfos.map(info =>
+        info.id === id ? { ...info, [field]: nextValue } : info
+      );
+
+      if (editingInfo?.id === id) {
+        setEditingInfo(prev => (prev ? { ...prev, [field]: nextValue } : prev));
+        setFormData(prev => ({ ...prev, [field]: nextValue }));
+      }
+
+      onChange(updated);
+      return updated;
+    });
   };
 
   const handleAddInfo = () => {
@@ -288,11 +371,13 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
 
     if (editingInfo) {
       // 编辑模式
-      setInfos(prev => prev.map(info => 
-        info.id === editingInfo.id 
+      const updated = infos.map(info =>
+        info.id === editingInfo.id
           ? { ...formData, id: info.id, order: info.order }
           : info
-      ));
+      );
+      setInfos(updated);
+      onChange(updated);
       setEditingInfo(null);
     } else {
       // 新增模式
@@ -301,7 +386,9 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
         id: Date.now().toString(),
         order: infos.length,
       };
-      setInfos(prev => [...prev, newInfo]);
+      const updated = [...infos, newInfo];
+      setInfos(updated);
+      onChange(updated);
     }
 
     // 重置表单
@@ -331,7 +418,9 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
   };
 
   const handleDeleteInfo = (id: string) => {
-    setInfos(prev => prev.filter(info => info.id !== id));
+    const updated = infos.filter(info => info.id !== id);
+    setInfos(updated);
+    onChange(updated);
   };
 
   const handleCancelEdit = () => {
@@ -380,6 +469,9 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
                       info={info}
                       onEdit={() => handleEditInfo(info)}
                       onDelete={() => handleDeleteInfo(info.id)}
+                      onToggleHomepage={() => updateInfoPlacement(info.id, 'showInHomepage')}
+                      onToggleSidebar={() => updateInfoPlacement(info.id, 'showInSidebar')}
+                      onToggleHero={() => updateInfoPlacement(info.id, 'showInHero')}
                     />
                   ))}
                 </div>
@@ -422,10 +514,13 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
               id="valueCode"
               value={formData.valueCode}
               onChange={(e) => setFormData(prev => ({ ...prev, valueCode: e.target.value }))}
-              placeholder={'// 返回要显示的值\n// 可用变量: project\nreturn "Vue 3 + TypeScript"'}
-              rows={4}
-              className="font-mono text-sm"
+              placeholder={JS_CODE_EXECUTOR_GUIDE}
+              rows={12}
+              className="font-mono text-sm overflow-y-auto max-h-[360px]"
             />
+            <p className="text-xs text-muted-foreground">
+              💡 支持 fetch API 网络请求、异步操作、数据计算等。结果会被缓存 6 小时。
+            </p>
           </div>
 
           {/* 展示选项 */}
