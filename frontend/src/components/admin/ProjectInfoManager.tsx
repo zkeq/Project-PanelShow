@@ -156,6 +156,7 @@ function SortableItem({ info, onEdit, onDelete, onToggleHomepage, onToggleSideba
       className="flex items-center gap-3 p-3 bg-background border rounded-lg hover:bg-muted/50 transition-colors"
     >
       <button
+        type="button"
         className="cursor-grab hover:cursor-grabbing"
         {...attributes}
         {...listeners}
