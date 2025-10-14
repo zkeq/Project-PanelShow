@@ -11,6 +11,13 @@ import copy
 import re
 from pathlib import Path as FilePath
 import uuid
+
+from cos_client import (
+    CosConfigError,
+    CosUploadError,
+    build_cos_key,
+    upload_file_to_cos,
+)
 import db
 import auth
 import hashlib
@@ -1018,10 +1025,24 @@ async def upload_image(
 
     relative_url = f"/uploads/{username}/{safe_category}/{unique_name}"
 
+    try:
+        cos_key = build_cos_key(username, safe_category, unique_name)
+        cos_url = upload_file_to_cos(
+            local_path=str(destination),
+            key=cos_key,
+            content_type=file.content_type,
+        )
+    except CosConfigError as exc:
+        raise HTTPException(status_code=500, detail=f"COS 配置错误: {exc}")
+    except CosUploadError as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
     return {
         "success": True,
         "filename": unique_name,
-        "url": relative_url,
+        "url": cos_url,
+        "cos_key": cos_key,
+        "local_url": relative_url,
         "content_type": file.content_type,
         "size": len(contents)
     }
