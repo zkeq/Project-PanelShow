@@ -54,6 +54,12 @@ interface SortableScreenshotItemProps {
   isUploading?: boolean;
 }
 
+const isFileDragEvent = (event: DragEvent<HTMLElement>) => {
+  const types = event.dataTransfer?.types;
+  if (!types) return false;
+  return Array.from(types).includes('Files');
+};
+
 function SortableScreenshotItem({
   screenshot,
   onUpdate,
@@ -100,11 +106,10 @@ function SortableScreenshotItem({
     setImageError(true);
   };
 
-  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
-    if (!onUploadFile || isUploading) return;
+  const handleDragEnter = (event: DragEvent<HTMLDivElement>) => {
+    if (!onUploadFile || isUploading || !isFileDragEvent(event)) return;
     event.preventDefault();
     event.stopPropagation();
-    event.dataTransfer.dropEffect = 'copy';
     setIsDragOver(true);
   };
 
@@ -112,11 +117,15 @@ function SortableScreenshotItem({
     if (!onUploadFile || isUploading) return;
     event.preventDefault();
     event.stopPropagation();
+    const relatedTarget = event.relatedTarget as Node | null;
+    if (relatedTarget && event.currentTarget.contains(relatedTarget)) {
+      return;
+    }
     setIsDragOver(false);
   };
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    if (!onUploadFile || isUploading) return;
+    if (!onUploadFile || isUploading || !isFileDragEvent(event)) return;
     event.preventDefault();
     event.stopPropagation();
     setIsDragOver(false);
@@ -124,6 +133,13 @@ function SortableScreenshotItem({
     if (file) {
       onUploadFile(screenshot.id, file);
     }
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (!onUploadFile || isUploading || !isFileDragEvent(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'copy';
   };
 
   return (
@@ -191,6 +207,7 @@ function SortableScreenshotItem({
                   isDragOver ? 'border-primary bg-primary/10' : ''
                 }`}
                 onDragOver={handleDragOver}
+                onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
@@ -215,6 +232,7 @@ function SortableScreenshotItem({
                           className="w-full h-full object-cover"
                           onLoad={handleImageLoad}
                           onError={handleImageError}
+                          draggable={false}
                           style={{ display: imageLoading ? 'none' : 'block' }}
                         />
                       )}
@@ -372,7 +390,7 @@ export function ScreenshotManager({ screenshots, onChange, onUpload }: Screensho
   };
 
   const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
-    if (!onUpload) return;
+    if (!onUpload || !isFileDragEvent(event)) return;
     event.preventDefault();
     event.stopPropagation();
     const file = event.dataTransfer.files?.[0];
@@ -382,9 +400,9 @@ export function ScreenshotManager({ screenshots, onChange, onUpload }: Screensho
   };
 
   const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
-    if (onUpload) {
-      event.preventDefault();
-    }
+    if (!onUpload || !isFileDragEvent(event)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
   };
 
   const triggerFileDialog = () => {
