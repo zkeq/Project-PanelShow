@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,6 +13,7 @@ import {
   Clock,
   Users,
   Loader2,
+  Globe2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGlobalStore } from '@/store/useGlobalStore';
@@ -20,7 +21,6 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { ProjectManagementList } from './ProjectManagementList';
 import { TimelineManagementList } from './TimelineManagementList';
 import { SearchAndFilter } from './SearchAndFilter';
-import { AdminHeader } from './AdminHeader';
 import { useRouter } from 'next/navigation';
 import { fetchProjectStats, fetchProjects, fetchTimeline } from '@/lib/api';
 import type { Project, TimelineItem } from '@/types/store';
@@ -308,6 +308,15 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
   const [remoteStats, setRemoteStats] = useState<ProjectStatsResponse['data'] | null>(null);
   const [isFetchingRemote, setIsFetchingRemote] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [siteOrigin, setSiteOrigin] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    if (process.env.NEXT_PUBLIC_SITE_ORIGIN) {
+      return process.env.NEXT_PUBLIC_SITE_ORIGIN;
+    }
+    return 'https://projects.icodeq.com';
+  });
 
   const hydratedAuth = useAuthStore((state) => state.hydrated);
   const token = useAuthStore((state) => state.token);
@@ -319,6 +328,16 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
   const timelineItems = useGlobalStore((state) => state.timelineItems);
   const setProjects = useGlobalStore((state) => state.setProjects);
   const setTimelineItems = useGlobalStore((state) => state.setTimelineItems);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const origin = window.location.origin;
+    if (origin && origin !== siteOrigin) {
+      setSiteOrigin(origin);
+    }
+  }, [siteOrigin]);
 
   useEffect(() => {
     if (!hydratedAuth) return;
@@ -472,10 +491,51 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
     });
   }, [timelineItems, searchQuery]);
 
+  const siteUrl = useMemo(() => {
+    if (!boundUsername) return null;
+    if (!siteOrigin) return null;
+    const normalizedOrigin = siteOrigin.replace(/\/$/, '');
+    return `${normalizedOrigin}/project/${encodeURIComponent(boundUsername)}`;
+  }, [siteOrigin, boundUsername]);
+
   return (
     <>
         {/* 主内容区域 */}
-        <div className="relative z-10 container mx-auto p-6 space-y-6 pt-6">
+        <div className={cn('relative z-10 container mx-auto p-6 space-y-6 pt-6', className)}>
+        <div className="flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-emerald-900 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+              <Globe2 className="h-4 w-4" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium">站点访问地址</p>
+              {siteUrl ? (
+                <p className="text-sm font-mono break-all text-emerald-800">{siteUrl}</p>
+              ) : (
+                <p className="text-sm text-emerald-800/80">
+                  {boundUsername
+                    ? '正在准备站点访问地址...'
+                    : '尚未绑定站点地址，请在欢迎页或设置中完成绑定后查看访问地址'}
+                </p>
+              )}
+            </div>
+          </div>
+          {siteUrl ? (
+            <Button
+              asChild
+              size="sm"
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+                前往
+              </a>
+            </Button>
+          ) : (
+            <Button size="sm" disabled className="bg-emerald-500/60 text-white">
+              前往
+            </Button>
+          )}
+        </div>
         {(fetchError || isFetchingRemote) && (
           <div className="space-y-3">
             {isFetchingRemote && (
