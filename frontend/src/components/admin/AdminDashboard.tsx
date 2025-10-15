@@ -502,17 +502,17 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
     <>
         {/* 主内容区域 */}
         <div className={cn('relative z-10 container mx-auto p-6 space-y-6 pt-6', className)}>
-        <div className="flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-emerald-900 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-emerald-900 shadow-sm dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+            <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
               <Globe2 className="h-4 w-4" />
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium">站点访问地址</p>
               {siteUrl ? (
-                <p className="text-sm font-mono break-all text-emerald-800">{siteUrl}</p>
+                <p className="text-sm font-mono break-all text-emerald-800 dark:text-emerald-100">{siteUrl}</p>
               ) : (
-                <p className="text-sm text-emerald-800/80">
+                <p className="text-sm text-emerald-800/80 dark:text-emerald-200/80">
                   {boundUsername
                     ? '正在准备站点访问地址...'
                     : '尚未绑定站点地址，请在欢迎页或设置中完成绑定后查看访问地址'}
@@ -524,14 +524,14 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
             <Button
               asChild
               size="sm"
-              className="bg-emerald-600 text-white hover:bg-emerald-700"
+              className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400"
             >
               <a href={siteUrl} target="_blank" rel="noopener noreferrer">
                 前往
               </a>
             </Button>
           ) : (
-            <Button size="sm" disabled className="bg-emerald-500/60 text-white">
+            <Button size="sm" disabled className="bg-emerald-500/60 text-white dark:bg-emerald-500/30 dark:text-emerald-200">
               前往
             </Button>
           )}
