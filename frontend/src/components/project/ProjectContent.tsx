@@ -35,6 +35,15 @@ import {
   Puzzle,
   Code,
   Package,
+  Sparkles,
+  Layers,
+  Palette,
+  Wind,
+  FileText,
+  Image as ImageIcon,
+  FileDown,
+  Mic,
+  Route,
   type LucideIcon,
 } from "lucide-react";
 import { ProjectInfo } from "@/types/store";
@@ -89,11 +98,21 @@ interface ProjectContentProps {
   mobileNavigation?: MobileNavigationData;
 }
 
+const emojiRegex = /\p{Extended_Pictographic}/u;
+
 // 图标渲染函数 - 支持 Iconify 和 Lucide 图标
 const renderIcon = (iconName: string, className: string = "w-4 h-4") => {
   // 如果是 Iconify 格式的图标（包含冒号），使用 Iconify
   if (iconName.includes(':')) {
     return <Icon icon={iconName} className={className} />;
+  }
+
+  if (emojiRegex.test(iconName)) {
+    return (
+      <span className={`inline-flex items-center justify-center ${className}`.trim()}>
+        <span className="text-lg leading-none">{iconName}</span>
+      </span>
+    );
   }
 
   // 否则尝试使用 Lucide 图标（向后兼容）
@@ -121,6 +140,16 @@ const renderIcon = (iconName: string, className: string = "w-4 h-4") => {
     Eye,
     GitBranch,
     ExternalLink,
+    Package,
+    Sparkles,
+    Layers,
+    Palette,
+    Wind,
+    FileText,
+    Image: ImageIcon,
+    FileDown,
+    Mic,
+    Route,
   };
 
   const LucideIcon = iconMap[iconName];
@@ -377,8 +406,8 @@ export default function ProjectContent({ project, username, mobileNavigation, ti
                 <div className="space-y-4">
                   {/* Header with icon and title */}
                   <div className="flex items-center gap-3">
-                    <div className="text-2xl">
-                      {feature.icon}
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg border ${getColorTheme(index)}`}>
+                      {renderIcon(feature.icon || "lucide:sparkles", "w-5 h-5")}
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-foreground">

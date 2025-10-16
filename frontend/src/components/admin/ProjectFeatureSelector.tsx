@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Icon } from '@iconify/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,9 +69,29 @@ const iconOptions = [
   { name: 'TrendingUp', component: TrendingUp, label: '趋势' },
 ];
 
-function getIconComponent(iconName: string) {
-  const icon = iconOptions.find((opt) => opt.name === iconName);
-  return icon?.component || Zap;
+const emojiRegex = /\p{Extended_Pictographic}/u;
+
+const findIconOption = (iconName: string) =>
+  iconOptions.find((opt) => opt.name.toLowerCase() === iconName.toLowerCase());
+
+function renderFeatureIcon(iconName: string, className?: string) {
+  if (iconName) {
+    const matchedOption = findIconOption(iconName);
+    if (matchedOption) {
+      const IconComponent = matchedOption.component;
+      return <IconComponent className={className} />;
+    }
+
+    if (iconName.includes(':')) {
+      return <Icon icon={iconName} className={className} />;
+    }
+
+    if (emojiRegex.test(iconName)) {
+      return <span className={cn('text-base leading-none', className)}>{iconName}</span>;
+    }
+  }
+
+  return <Sparkles className={className} />;
 }
 
 function FeatureChipPreview({
@@ -84,8 +105,8 @@ function FeatureChipPreview({
   className?: string;
   iconSize?: string;
 }) {
-  const IconComponent = getIconComponent(feature.icon);
   const visuals = computeFeatureChipVisuals(feature);
+  const iconElement = renderFeatureIcon(feature.icon, cn(iconSize, visuals.iconClass));
 
   return (
     <span
@@ -95,7 +116,7 @@ function FeatureChipPreview({
         className,
       )}
     >
-      <IconComponent className={cn(iconSize, visuals.iconClass)} />
+      {iconElement}
       <span className={cn('leading-none', visuals.labelClass)}>
         {feature.label || placeholderLabel}
       </span>
@@ -174,8 +195,11 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
           <Label className="text-sm font-medium text-muted-foreground">已选特性</Label>
           <div className="flex flex-wrap gap-2">
             {features.map((feature) => {
-              const IconComponent = getIconComponent(feature.icon);
               const visuals = computeFeatureChipVisuals(feature);
+              const iconElement = renderFeatureIcon(
+                feature.icon,
+                cn('h-3.5 w-3.5', visuals.iconClass),
+              );
               return (
                 <span
                   key={feature.id}
@@ -184,7 +208,7 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
                     visuals.containerClass,
                   )}
                 >
-                  <IconComponent className={cn('h-3.5 w-3.5', visuals.iconClass)} />
+                  {iconElement}
                   <span className={cn('leading-none', visuals.labelClass)}>{feature.label}</span>
                   <button
                     type="button"
@@ -206,8 +230,11 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
           <Label className="text-sm font-medium text-muted-foreground">可选特性</Label>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {unselectedFeatures.map((feature) => {
-              const IconComponent = getIconComponent(feature.icon);
               const visuals = computeFeatureChipVisuals(feature);
+              const iconElement = renderFeatureIcon(
+                feature.icon,
+                cn('h-3.5 w-3.5', visuals.iconClass),
+              );
               return (
                 <button
                   key={feature.id}
@@ -222,7 +249,7 @@ export function ProjectFeatureSelector({ features, options, onChange, onCreateOp
                         visuals.containerClass,
                       )}
                     >
-                      <IconComponent className={cn('h-3.5 w-3.5', visuals.iconClass)} />
+                      {iconElement}
                       <span className={cn('leading-none', visuals.labelClass)}>{feature.label}</span>
                     </span>
                   </span>
