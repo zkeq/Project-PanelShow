@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import remarkToc from "remark-toc";
@@ -16,18 +17,9 @@ interface MarkdownProps {
 export default function Markdown({ children }: MarkdownProps) {
   const { resolvedTheme } = useTheme();
 
-  const components = useMemo(() => {
+  const components = useMemo<Partial<Components>>(() => {
     return {
-      code({
-        inline,
-        className,
-        children,
-        ...props
-      }: {
-        inline?: boolean;
-        className?: string;
-        children: React.ReactNode;
-      }) {
+      code({ inline, className, children, ...props }) {
         const match = /language-(\w+)/.exec(className ?? "");
         if (!inline && match?.[1] === "mermaid") {
           return (
