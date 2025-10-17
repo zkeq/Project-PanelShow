@@ -1,6 +1,6 @@
 const MERMAID_SECURITY_LEVEL = "loose";
 const MERMAID_CDN_URL =
-  "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  "https://jsd.onmicrosoft.cn/npm/mermaid@10/dist/mermaid.esm.min.mjs";
 
 export type MermaidTheme = "default" | "dark";
 
