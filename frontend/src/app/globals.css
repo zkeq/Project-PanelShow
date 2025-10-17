@@ -327,3 +327,9 @@
 .bytemd {
   height: 500px;
 }
+
+
+.markdown-body .highlight pre, .markdown-body pre {
+    padding: 0 !important;
+    background-color: transparent !important;;
+}
