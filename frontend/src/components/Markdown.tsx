@@ -18,25 +18,35 @@ export default function Markdown({ children }: MarkdownProps) {
   const { resolvedTheme } = useTheme();
 
   const components = useMemo<Partial<Components>>(() => {
-    return {
-      code({ inline, className, children, ...props }) {
-        const match = /language-(\w+)/.exec(className ?? "");
-        if (!inline && match?.[1] === "mermaid") {
-          return (
-            <MermaidBlock
-              chart={String(children).replace(/\n$/, "")}
-              theme={resolvedTheme === "dark" ? "dark" : "default"}
-            />
-          );
-        }
+    type CodeRendererProps = React.ComponentPropsWithoutRef<"code"> & {
+      inline?: boolean;
+      node?: unknown;
+    };
 
+    const code = ({
+      inline,
+      className,
+      children,
+      ...props
+    }: CodeRendererProps) => {
+      const match = /language-(\w+)/.exec(className ?? "");
+      if (!inline && match?.[1] === "mermaid") {
         return (
-          <code className={className} {...props}>
-            {children}
-          </code>
+          <MermaidBlock
+            chart={String(children ?? "").replace(/\n$/, "")}
+            theme={resolvedTheme === "dark" ? "dark" : "default"}
+          />
         );
       }
+
+      return (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
     };
+
+    return { code: code as Components["code"] };
   }, [resolvedTheme]);
 
   return (
