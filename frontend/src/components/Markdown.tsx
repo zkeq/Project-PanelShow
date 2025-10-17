@@ -1,19 +1,58 @@
+"use client";
+
+import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import remarkToc from "remark-toc";
-import React from "react";
+import { useTheme } from "next-themes";
+
+import { MermaidBlock } from "./markdown/MermaidBlock";
 
 interface MarkdownProps {
   children: string;
 }
 
 export default function Markdown({ children }: MarkdownProps) {
+  const { resolvedTheme } = useTheme();
+
+  const components = useMemo(() => {
+    return {
+      code({
+        inline,
+        className,
+        children,
+        ...props
+      }: {
+        inline?: boolean;
+        className?: string;
+        children: React.ReactNode;
+      }) {
+        const match = /language-(\w+)/.exec(className ?? "");
+        if (!inline && match?.[1] === "mermaid") {
+          return (
+            <MermaidBlock
+              chart={String(children).replace(/\n$/, "")}
+              theme={resolvedTheme === "dark" ? "dark" : "default"}
+            />
+          );
+        }
+
+        return (
+          <code className={className} {...props}>
+            {children}
+          </code>
+        );
+      }
+    };
+  }, [resolvedTheme]);
+
   return (
     <div className="markdown-body">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, [remarkToc, { maxDepth: 3, tight: true }]]}
         rehypePlugins={[rehypeSlug]}
+        components={components}
       >
         {children}
       </ReactMarkdown>
