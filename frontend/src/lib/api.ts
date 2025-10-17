@@ -1,6 +1,6 @@
 import type { TechStackConfig, TechStackResponseData } from '@/types/tech-stack'
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://pps-backend.onmicrosoft.cn';
 
 interface RequestOptions extends RequestInit {
   token?: string | null;
