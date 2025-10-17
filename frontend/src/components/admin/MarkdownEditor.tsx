@@ -7,6 +7,7 @@ import type { BytemdPlugin } from 'bytemd';
 import 'bytemd/dist/index.css';
 // import 'github-markdown-css/github-markdown-light.css';
 // import 'github-markdown-css/github-markdown-dark.css';
+import { createMermaidPlugin } from '@/lib/bytemdMermaidPlugin';
 
 interface MarkdownEditorProps {
   value: string;
@@ -17,9 +18,15 @@ interface MarkdownEditorProps {
 // ByteMD 编辑器组件类型
 type ByteMDEditor = React.ComponentType<EditorProps>;
 
+type PluginFactories = {
+  gfm: typeof import('@bytemd/plugin-gfm').default;
+  highlight: typeof import('@bytemd/plugin-highlight').default;
+};
+
 export function MarkdownEditor({ value, onChange, placeholder = "输入项目详细介绍..." }: MarkdownEditorProps) {
   const [Editor, setEditor] = useState<ByteMDEditor | null>(null);
   const [plugins, setPlugins] = useState<BytemdPlugin[]>([]);
+  const [pluginFactories, setPluginFactories] = useState<PluginFactories | null>(null);
   const { theme, resolvedTheme } = useTheme();
 
   useEffect(() => {
@@ -37,7 +44,7 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
         ]);
 
         setEditor(() => BytemdEditor);
-        setPlugins([gfm(), highlight()]);
+        setPluginFactories({ gfm, highlight });
       } catch (error) {
         console.error('加载 Markdown 编辑器失败:', error);
       }
@@ -45,6 +52,20 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
 
     loadEditor();
   }, []);
+
+  useEffect(() => {
+    if (!pluginFactories) {
+      return;
+    }
+
+    const mermaidTheme = resolvedTheme === 'dark' || theme === 'dark' ? 'dark' : 'default';
+
+    setPlugins([
+      pluginFactories.gfm(),
+      pluginFactories.highlight(),
+      createMermaidPlugin(() => mermaidTheme)
+    ]);
+  }, [pluginFactories, resolvedTheme, theme]);
 
   if (!Editor) {
     return (
@@ -284,7 +305,8 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        支持 Markdown 语法，包括代码块、表格、链接等。左侧编辑，右侧预览。
+        支持 Markdown 语法，包括代码块、表格、链接以及 <code className="font-mono">Mermaid</code> 流程图。
+        左侧编辑，右侧预览。
       </p>
     </div>
   );
