@@ -54,10 +54,10 @@ export default function SidebarNavigation({
 }: SidebarNavigationProps) {
 
   return (
-    <aside className={`border-r bg-muted/10 transition-all duration-300 fixed h-[calc(100vh-3.5rem)] z-40 ${
+    <aside className={`border-r bg-muted/10 transition-all duration-300 fixed top-14 h-[calc(100vh-3.5rem)] z-40 ${
       sidebarCollapsed ? 'w-16' : 'w-56'
     }`}>
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col min-h-0">
         {/* 项目/时间线 切换标签 */}
         {!sidebarCollapsed && (
           <div className="p-4 pb-2">
@@ -92,7 +92,7 @@ export default function SidebarNavigation({
           </div>
         )}
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-4 pt-2">
             {activeTab === 'projects' ? (
               <div className="space-y-2">
