@@ -85,7 +85,7 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
         <style jsx global>{`
           /* ByteMD 基础样式 */
           .bytemd {
-            height: 500px;
+            height: 70vh;
             border-radius: 8px;
             font-family: var(--font-sans);
           }
