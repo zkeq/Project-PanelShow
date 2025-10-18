@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Plus, ExternalLink } from "lucide-react";
 import Lightbox from "yet-another-react-lightbox";
+import type { SlideImage } from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 
@@ -364,29 +365,42 @@ export default function FeatureGallery({
           }
         }}
         render={{
-          slideFooter: () => {
+          slideFooter: ({ slide }) => {
             const currentImage = images[selectedImageIndex];
 
             if (!currentImage) {
               return null;
             }
 
+            const slideWithMeta = slide as SlideImage & {
+              title?: string;
+              description?: string;
+            };
+
+            const title = slideWithMeta.title ?? currentImage.label;
+            const description =
+              typeof slideWithMeta.description === "string"
+                ? slideWithMeta.description
+                : currentImage.description;
+
             return (
-              <div className="flex flex-col gap-2 px-6 pb-6 text-left text-white">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-semibold leading-6">
-                      {currentImage.label}
-                    </h3>
-                    {currentImage.description && (
-                      <p className="mt-1 text-sm text-white/90">
-                        {currentImage.description}
-                      </p>
-                    )}
+              <div className="pointer-events-none absolute left-6 bottom-6 text-left text-white">
+                <div className="max-w-xl rounded-lg bg-black/50 p-4 backdrop-blur-sm">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-semibold leading-6">
+                        {title}
+                      </h3>
+                      {description && (
+                        <p className="mt-1 text-sm text-white/90">
+                          {description}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-sm font-medium text-white/80">
+                      {selectedImageIndex + 1} / {images.length}
+                    </span>
                   </div>
-                  <span className="text-sm font-medium text-white/70">
-                    {selectedImageIndex + 1} / {images.length}
-                  </span>
                 </div>
               </div>
             );
