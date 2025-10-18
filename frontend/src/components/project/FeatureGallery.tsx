@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Plus, ExternalLink } from "lucide-react";
+import Lightbox from "yet-another-react-lightbox";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import "yet-another-react-lightbox/styles.css";
 
 interface FeatureImage {
   src: string;
@@ -63,18 +65,6 @@ export default function FeatureGallery({
     setIsPreviewOpen(true);
   };
 
-  const handlePrevious = () => {
-    setSelectedImageIndex((prev) => 
-      prev > 0 ? prev - 1 : images.length - 1
-    );
-  };
-
-  const handleNext = () => {
-    setSelectedImageIndex((prev) => 
-      prev < images.length - 1 ? prev + 1 : 0
-    );
-  };
-
   const handleCarouselPrevious = () => {
     setCurrentSlideIndex((prev) => 
       prev > 0 ? prev - 1 : images.length - 1
@@ -98,13 +88,6 @@ export default function FeatureGallery({
     // 手动操作时暂时暂停自动切换
     setIsPaused(true);
     setTimeout(() => setIsPaused(false), 6000); // 6秒后恢复自动切换
-  };
-
-  const handleBackgroundClick = (e: React.MouseEvent) => {
-    // 只有当点击的是背景容器本身时才关闭
-    if (e.target === e.currentTarget) {
-      setIsPreviewOpen(false);
-    }
   };
 
   return (
@@ -359,85 +342,63 @@ export default function FeatureGallery({
         </div>
       )}
 
-      {/* 图片预览弹窗 */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent 
-          className="max-w-none max-h-none w-[100vw] h-[100vh] p-0 bg-black border-0"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
-          <DialogTitle className="sr-only">
-            图片预览 - {images[selectedImageIndex]?.alt}
-          </DialogTitle>
+      <Lightbox
+        open={isPreviewOpen}
+        close={() => setIsPreviewOpen(false)}
+        slides={images.map((image) => ({
+          src: image.src,
+          title: image.label,
+          description: image.description,
+          alt: image.alt
+        }))}
+        index={selectedImageIndex}
+        plugins={[Zoom]}
+        carousel={{ finite: images.length <= 1 }}
+        animation={{ swipe: 400 }}
+        controller={{ closeOnPullDown: true, closeOnBackdropClick: true }}
+        on={{
+          view: ({ index }) => {
+            if (typeof index === "number") {
+              setSelectedImageIndex(index);
+            }
+          }
+        }}
+        render={{
+          slideFooter: () => {
+            const currentImage = images[selectedImageIndex];
 
-          {/* 导航按钮 */}
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={handlePrevious}
-                className="absolute left-6 top-1/2 -translate-y-1/2 z-50 text-white/80 hover:text-white p-3 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <button
-                onClick={handleNext}
-                className="absolute right-6 top-1/2 -translate-y-1/2 z-50 text-white/80 hover:text-white p-3 rounded-full bg-black/50 hover:bg-black/70 transition-colors"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </>
-          )}
+            if (!currentImage) {
+              return null;
+            }
 
-          {/* 图片展示容器 */}
-          <div 
-            className="relative w-full h-full flex items-center justify-center cursor-pointer"
-            onClick={handleBackgroundClick}
-          >
-            {images[selectedImageIndex] && (
-              <div className="relative cursor-default" onClick={(e) => e.stopPropagation()}>
-                <img
-                  src={images[selectedImageIndex].src}
-                  alt={images[selectedImageIndex].alt}
-                  className="max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain"
-                />
-                
-                {/* 图片底部渐变信息栏 */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 via-black/30 to-transparent p-6 text-white">
-                  <div className="max-w-lg">
-                    <h3 className="text-lg font-semibold mb-1">
-                      {images[selectedImageIndex]?.label}
+            return (
+              <div className="flex flex-col gap-2 px-6 pb-6 text-left text-white">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold leading-6">
+                      {currentImage.label}
                     </h3>
-                    {images[selectedImageIndex]?.description && (
-                      <p className="text-sm text-white/90 mb-2 leading-relaxed">
-                        {images[selectedImageIndex].description}
+                    {currentImage.description && (
+                      <p className="mt-1 text-sm text-white/90">
+                        {currentImage.description}
                       </p>
                     )}
-                    <div className="text-xs text-white/70">
-                      {selectedImageIndex + 1} / {images.length}
-                    </div>
                   </div>
+                  <span className="text-sm font-medium text-white/70">
+                    {selectedImageIndex + 1} / {images.length}
+                  </span>
                 </div>
-                
-                {/* 图片切换指示器 - 图片底部中间 */}
-                {images.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 z-10">
-                    {images.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImageIndex(index)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          index === selectedImageIndex
-                            ? "bg-white"
-                            : "bg-white/40 hover:bg-white/60"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+            );
+          }
+        }}
+        zoom={{ maxZoomPixelRatio: 4, scrollToZoom: true }}
+        styles={{
+          root: {
+            backgroundColor: "rgba(0, 0, 0, 0.95)"
+          }
+        }}
+      />
     </div>
   );
 }
