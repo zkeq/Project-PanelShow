@@ -89,6 +89,20 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
             border-radius: 8px;
             font-family: var(--font-sans);
           }
+
+          .bytemd.bytemd-fullscreen {
+            position: fixed !important;
+            inset: 0 !important;
+            height: 100vh !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            z-index: 50 !important;
+            border-radius: 0 !important;
+          }
+
+          .bytemd.bytemd-fullscreen .bytemd-body {
+            height: calc(100vh - 3.5rem) !important;
+          }
           
           /* 亮色模式预览文字颜色修复 */
           .bytemd-wrapper.light .markdown-body {
