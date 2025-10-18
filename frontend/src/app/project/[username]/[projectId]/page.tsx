@@ -141,7 +141,7 @@ const mapFeatures = (source: unknown): ProjectFeature[] => {
       if (!isRecord(item)) return null
       const title = typeof item.title === 'string' && item.title.trim() ? item.title : `特色功能 ${index + 1}`
       const description = typeof item.description === 'string' ? item.description : ''
-      const icon = typeof item.icon === 'string' && item.icon.trim() ? item.icon : '✨'
+      const icon = typeof item.icon === 'string' && item.icon.trim() ? item.icon : 'lucide:sparkles'
       const techStackSource = item.techStack
       const techStack = Array.isArray(techStackSource)
         ? techStackSource
