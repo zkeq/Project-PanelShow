@@ -92,11 +92,14 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
 
           .bytemd.bytemd-fullscreen {
             position: fixed !important;
-            inset: 0 !important;
-            height: 100vh !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            top: 3.5rem !important;
+            height: calc(100vh - 3.5rem) !important;
             width: 100vw !important;
             max-width: 100vw !important;
-            z-index: 100 !important;
+            z-index: 9999 !important;
             border-radius: 0 !important;
           }
 
@@ -107,7 +110,7 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
           }
 
           .bytemd.bytemd-fullscreen .bytemd-body {
-            height: calc(100vh - 3.5rem) !important;
+            height: calc(100% - 5.5rem) !important;
           }
           
           /* 亮色模式预览文字颜色修复 */
