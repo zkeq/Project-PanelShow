@@ -96,8 +96,14 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
             height: 100vh !important;
             width: 100vw !important;
             max-width: 100vw !important;
-            z-index: 50 !important;
+            z-index: 100 !important;
             border-radius: 0 !important;
+          }
+
+          .bytemd.bytemd-fullscreen .bytemd-editor,
+          .bytemd.bytemd-fullscreen .bytemd-preview,
+          .bytemd.bytemd-fullscreen .bytemd-body {
+            z-index: inherit;
           }
 
           .bytemd.bytemd-fullscreen .bytemd-body {
