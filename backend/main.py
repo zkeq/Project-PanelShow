@@ -1,16 +1,18 @@
 """
 极简JSON后端 - 所有API路由
 """
+import asyncio
+import math
+import copy
+import re
+import uuid
+from datetime import timedelta, datetime, timezone
+from pathlib import Path as FilePath
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 from fastapi import FastAPI, HTTPException, Depends, Body, Path, UploadFile, File, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from typing import Any, Dict, List, Optional, Tuple, Union
-import math
-from datetime import timedelta, datetime, timezone
-import copy
-import re
-from pathlib import Path as FilePath
-import uuid
 
 from cos_client import (
     CosConfigError,
@@ -18,10 +20,12 @@ from cos_client import (
     build_cos_key,
     upload_file_to_cos,
 )
-import db
-import auth
 import hashlib
 import json
+
+import auth
+import db
+import notifications
 
 app = FastAPI(title="极简JSON后端", version="2.0.0")
 
@@ -280,6 +284,7 @@ async def create_user(
         raise HTTPException(status_code=400, detail="用户已存在")
 
     db.create_user(username)
+    asyncio.create_task(notifications.notify_site_initialized(username))
     return {"message": f"用户 {username} 创建成功"}
 
 
@@ -384,6 +389,7 @@ async def create_project(
     projects.append(data)
 
     db.write_json(username, "projects.json", projects)
+    asyncio.create_task(notifications.notify_project_created(username, data))
 
     return {"message": "项目创建成功", "data": data}
 
@@ -573,6 +579,7 @@ async def update_project(
     projects[project_index] = data
 
     db.write_json(username, "projects.json", projects)
+    asyncio.create_task(notifications.notify_project_updated(username, data))
     return {"message": "项目更新成功", "data": data}
 
 
@@ -769,6 +776,7 @@ async def create_timeline(
     timeline.append(data)
 
     db.write_json(username, "timeline.json", timeline)
+    asyncio.create_task(notifications.notify_timeline_created(username, data))
 
     return {"message": "时间线创建成功", "data": data}
 
@@ -806,6 +814,7 @@ async def update_timeline(
                 updated_item["likes"] = item.get("likes", 0)
             timeline[index] = updated_item
             db.write_json(username, "timeline.json", timeline)
+            asyncio.create_task(notifications.notify_timeline_updated(username, updated_item))
             return {"message": "时间线更新成功", "data": updated_item}
 
     raise HTTPException(status_code=404, detail="时间线项不存在")
@@ -1002,8 +1011,9 @@ async def upload_image(
         raise HTTPException(status_code=400, detail="仅支持上传 PNG/JPEG/GIF/WEBP 图片")
 
     contents = await file.read()
+    file_size = len(contents)
     max_size_bytes = 5 * 1024 * 1024  # 5MB
-    if len(contents) > max_size_bytes:
+    if file_size > max_size_bytes:
         raise HTTPException(status_code=400, detail="文件大小不能超过 5MB")
 
     original_suffix = FilePath(str(file.filename)).suffix if file.filename else ""
@@ -1037,6 +1047,17 @@ async def upload_image(
     except CosUploadError as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
+    upload_stats = notifications.record_image_upload(
+        username=username,
+        original_filename=file.filename,
+        stored_filename=unique_name,
+        file_url=cos_url,
+        local_url=relative_url,
+        category=safe_category,
+        size=file_size,
+    )
+    asyncio.create_task(notifications.notify_image_uploaded(upload_stats))
+
     return {
         "success": True,
         "filename": unique_name,
@@ -1044,7 +1065,7 @@ async def upload_image(
         "cos_key": cos_key,
         "local_url": relative_url,
         "content_type": file.content_type,
-        "size": len(contents)
+        "size": file_size
     }
 
 
