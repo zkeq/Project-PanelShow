@@ -15,9 +15,9 @@ import db
 logger = logging.getLogger(__name__)
 
 NOTIFICATION_ENDPOINT = os.getenv(
-    "WECHAT_NOTIFY_ENDPOINT",
-    "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=14a680a2-8578-4ab5-bebd-385aa02beb3b",
+    "WECHAT_NOTIFY_ENDPOINT", "http://127.0.0.1:6789/send_message/"
 )
+DEFAULT_TOUID = os.getenv("WECHAT_NOTIFY_TOUID", "@all")
 
 LOCAL_TIMEZONE = timezone(timedelta(hours=8))
 UPLOAD_LOG_PATH = Path(__file__).parent / "data" / "uploads_log.json"
@@ -111,12 +111,9 @@ def _format_lines(title: str, body_lines: List[str]) -> str:
 
 
 async def _post_notification(text: str, touid: Optional[str] = None) -> None:
-    # "touid" 参数仅为兼容旧接口保留，企业微信群机器人无需该字段
     payload = {
-        "msgtype": "text",
-        "text": {
-            "content": text,
-        },
+        "text": text,
+        "wecom_touid": touid or DEFAULT_TOUID,
     }
 
     try:
@@ -271,4 +268,3 @@ async def notify_timeline_updated(username: str, item: Dict[str, Any]) -> None:
     ]
     message = _format_lines("【动态更新】", lines)
     await _post_notification(message)
-
