@@ -225,7 +225,12 @@ async def bind_username(
 
         # 用户名未被绑定，正常绑定
         github_id = current_user["github_id"]
+        user_existed = db.user_exists(username)
+        if not user_existed:
+            db.create_user(username)
         auth.save_user_binding(github_id, username)
+        if not user_existed:
+            asyncio.create_task(notifications.notify_site_initialized(username))
         return {"message": f"用户已绑定用户名: {username}", "username": username}
 
     else:
