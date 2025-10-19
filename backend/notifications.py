@@ -7,6 +7,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
+from urllib.parse import quote
 
 import httpx
 
@@ -18,6 +19,7 @@ NOTIFICATION_ENDPOINT = os.getenv(
     "WECHAT_NOTIFY_ENDPOINT", "http://127.0.0.1:6789/send_message/"
 )
 DEFAULT_TOUID = os.getenv("WECHAT_NOTIFY_TOUID", "@all")
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "https://projects.onmicrosoft.cn")
 
 LOCAL_TIMEZONE = timezone(timedelta(hours=8))
 UPLOAD_LOG_PATH = Path(__file__).parent / "data" / "uploads_log.json"
@@ -31,6 +33,35 @@ def _iter_users() -> Iterable[str]:
             if username.startswith("_"):
                 continue
             yield username
+
+
+def _build_public_url(*segments: Any) -> str:
+    base = FRONTEND_BASE_URL.rstrip("/")
+    encoded_segments = []
+    for segment in segments:
+        if segment is None:
+            continue
+        text = str(segment).strip()
+        if not text:
+            continue
+        encoded_segments.append(quote(text.strip("/"), safe=""))
+
+    if not encoded_segments:
+        return base
+
+    if base:
+        return "/".join([base, *encoded_segments])
+    return "/" + "/".join(encoded_segments)
+
+
+def _build_site_url(username: str) -> str:
+    return _build_public_url("project", username)
+
+
+def _build_project_url(username: str, project_id: Any) -> str:
+    if project_id:
+        return _build_public_url("project", username, project_id)
+    return _build_site_url(username)
 
 
 def _count_records(username: Optional[str], filename: str) -> int:
@@ -217,6 +248,7 @@ async def notify_site_initialized(username: str) -> None:
     lines = [
         f"用户 {username} 完成站点初始化",
         f"当前站点总数：{get_total_user_count()}",
+        f"站点地址：{_build_site_url(username)}",
     ]
     message = _format_lines("【站点初始化】", lines)
     await _post_notification(message)
@@ -229,6 +261,7 @@ async def notify_project_created(username: str, project: Dict[str, Any]) -> None
         f"项目 ID：{project.get('id')}",
         f"当前站点项目数：{get_user_project_count(username)}",
         f"全站项目总数：{get_total_project_count()}",
+        f"访问链接：{_build_project_url(username, project.get('id'))}",
     ]
     message = _format_lines("【项目创建】", lines)
     await _post_notification(message)
@@ -241,6 +274,7 @@ async def notify_project_updated(username: str, project: Dict[str, Any]) -> None
         f"项目 ID：{project.get('id')}",
         f"当前站点项目数：{get_user_project_count(username)}",
         f"全站项目总数：{get_total_project_count()}",
+        f"访问链接：{_build_project_url(username, project.get('id'))}",
     ]
     message = _format_lines("【项目更新】", lines)
     await _post_notification(message)
@@ -253,6 +287,7 @@ async def notify_timeline_created(username: str, item: Dict[str, Any]) -> None:
         f"动态 ID：{item.get('id')}",
         f"当前站点动态数：{get_user_timeline_count(username)}",
         f"全站动态总数：{get_total_timeline_count()}",
+        f"站点地址：{_build_site_url(username)}",
     ]
     message = _format_lines("【动态创建】", lines)
     await _post_notification(message)
@@ -265,6 +300,7 @@ async def notify_timeline_updated(username: str, item: Dict[str, Any]) -> None:
         f"动态 ID：{item.get('id')}",
         f"当前站点动态数：{get_user_timeline_count(username)}",
         f"全站动态总数：{get_total_timeline_count()}",
+        f"站点地址：{_build_site_url(username)}",
     ]
     message = _format_lines("【动态更新】", lines)
     await _post_notification(message)
