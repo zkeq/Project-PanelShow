@@ -1017,9 +1017,9 @@ async def upload_image(
 
     contents = await file.read()
     file_size = len(contents)
-    max_size_bytes = 5 * 1024 * 1024  # 5MB
+    max_size_bytes = 100 * 1024 * 1024  # 5MB
     if file_size > max_size_bytes:
-        raise HTTPException(status_code=400, detail="文件大小不能超过 5MB")
+        raise HTTPException(status_code=400, detail="文件大小不能超过 100MB")
 
     original_suffix = FilePath(str(file.filename)).suffix if file.filename else ""
     fallback_suffix = ALLOWED_IMAGE_TYPES[file.content_type]
