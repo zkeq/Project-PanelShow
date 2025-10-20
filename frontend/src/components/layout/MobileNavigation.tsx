@@ -27,7 +27,7 @@ interface MobileNavigationProps {
   expandedYears: string[]
   timelineStructure: { [key: string]: { [key: string]: unknown[] } }
   onTabChange: (tab: 'projects' | 'timeline') => void
-  onSectionChange: (section: string) => void
+  onSectionChange: (section: string, tabOverride?: 'projects' | 'timeline') => void
   onCategoryToggle: (categoryId: string) => void
   onYearToggle: (year: string) => void
   getMonthName: (month: string) => string
@@ -83,7 +83,7 @@ export default function MobileNavigation({
             <button
               onClick={() => {
                 onTabChange('projects')
-                onSectionChange('all-projects')
+                onSectionChange('all-projects', 'projects')
               }}
               className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === 'projects' 
@@ -99,7 +99,7 @@ export default function MobileNavigation({
             <button
               onClick={() => {
                 onTabChange('timeline')
-                onSectionChange('all-timeline')
+                onSectionChange('all-timeline', 'timeline')
               }}
               className={`flex-1 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === 'timeline' 
@@ -135,8 +135,8 @@ export default function MobileNavigation({
                     <Layers className="w-4 h-4 text-primary" />
                     <span>项目分类</span>
                   </DropdownMenuLabel>
-                  <DropdownMenuItem 
-                    onClick={() => onSectionChange('all-projects')}
+                  <DropdownMenuItem
+                    onClick={() => onSectionChange('all-projects', 'projects')}
                     className={`transition-colors ${activeSection === 'all-projects' ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                   >
                     <Layers className="mr-2 h-4 w-4" />
@@ -157,7 +157,7 @@ export default function MobileNavigation({
                         return (
                           <DropdownMenuItem
                             key={child.id}
-                            onClick={() => onSectionChange(child.id)}
+                            onClick={() => onSectionChange(child.id, 'projects')}
                             className={`ml-4 transition-colors ${activeSection === child.id ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                           >
                             <Icon icon={childIconName} className="mr-2 h-3 w-3" />
@@ -170,16 +170,16 @@ export default function MobileNavigation({
                   
                   <DropdownMenuSeparator />
                   
-                  <DropdownMenuItem 
-                    onClick={() => onSectionChange('experience')}
+                  <DropdownMenuItem
+                    onClick={() => onSectionChange('experience', 'projects')}
                     className={`transition-colors ${activeSection === 'experience' ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                   >
                     <Briefcase className="mr-2 h-4 w-4" />
                     工作经历
                   </DropdownMenuItem>
                   
-                  <DropdownMenuItem 
-                    onClick={() => onSectionChange('about')}
+                  <DropdownMenuItem
+                    onClick={() => onSectionChange('about', 'projects')}
                     className={`transition-colors ${activeSection === 'about' ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                   >
                     <User className="mr-2 h-4 w-4" />
@@ -192,8 +192,8 @@ export default function MobileNavigation({
                     <Calendar className="w-4 h-4 text-primary" />
                     <span>时间线筛选</span>
                   </DropdownMenuLabel>
-                  <DropdownMenuItem 
-                    onClick={() => onSectionChange('all-timeline')}
+                  <DropdownMenuItem
+                    onClick={() => onSectionChange('all-timeline', 'timeline')}
                     className={`transition-colors ${activeSection === 'all-timeline' ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                   >
                     <Layers className="mr-2 h-4 w-4" />
@@ -222,7 +222,7 @@ export default function MobileNavigation({
                               return (
                                 <DropdownMenuItem
                                   key={month}
-                                  onClick={() => onSectionChange(sectionId)}
+                                  onClick={() => onSectionChange(sectionId, 'timeline')}
                                   className={`ml-4 transition-colors ${activeSection === sectionId ? 'bg-muted text-foreground font-medium' : 'hover:bg-muted/50'}`}
                                 >
                                   <span className="mr-2 text-xs">📅</span>
