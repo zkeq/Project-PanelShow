@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 
-import ProjectShowcaseClient from './ProjectShowcaseClient'
+import ProjectShowcaseClient from '../ProjectShowcaseClient'
 
 interface LayoutProps {
   children: ReactNode
@@ -9,7 +9,7 @@ interface LayoutProps {
   }>
 }
 
-export default async function ProjectLayout({ children, params }: LayoutProps) {
+export default async function ProjectOverviewLayout({ children, params }: LayoutProps) {
   const { username } = await params
 
   return (
