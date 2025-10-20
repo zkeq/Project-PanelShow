@@ -1,17 +1,19 @@
 import ProjectShowcaseClient from '../../ProjectShowcaseClient'
 
-interface PageProps {
-  params: {
+type PageProps = {
+  params: Promise<{
     username: string
     categoryId: string
-  }
+  }>
 }
 
-export default function CategoryPage({ params }: PageProps) {
-  const decodedCategoryId = decodeURIComponent(params.categoryId)
+export default async function CategoryPage({ params }: PageProps) {
+  const { categoryId, username } = await params
+  const decodedCategoryId = decodeURIComponent(categoryId)
+
   return (
     <ProjectShowcaseClient
-      username={params.username}
+      username={username}
       initialTab="projects"
       initialSection={decodedCategoryId}
     />

@@ -41,34 +41,34 @@ interface ContentRendererProps {
 const parseContactMethods = (value: unknown): ContactMethod[] => {
   if (!Array.isArray(value)) return []
 
-  return value
-    .map((item) => {
-      if (!item || typeof item !== 'object') return null
-      const candidate = item as Record<string, unknown>
-      const rawId = candidate.id
-      const rawLabel = candidate.label
-      const rawValue = candidate.value
-      const rawIcon = candidate.icon
+  return value.reduce<ContactMethod[]>((accumulator, item) => {
+    if (!item || typeof item !== 'object') return accumulator
+    const candidate = item as Record<string, unknown>
+    const rawId = candidate.id
+    const rawLabel = candidate.label
+    const rawValue = candidate.value
+    const rawIcon = candidate.icon
 
-      const label = typeof rawLabel === 'string' ? rawLabel.trim() : ''
-      const valueText = typeof rawValue === 'string' ? rawValue.trim() : ''
-      if (!label || !valueText) return null
+    const label = typeof rawLabel === 'string' ? rawLabel.trim() : ''
+    const valueText = typeof rawValue === 'string' ? rawValue.trim() : ''
+    if (!label || !valueText) return accumulator
 
-      const id = typeof rawId === 'string' && rawId.trim().length > 0
-        ? rawId.trim()
-        : `${label}-${valueText}`
-      const icon = typeof rawIcon === 'string' && rawIcon.trim().length > 0
-        ? rawIcon.trim()
-        : undefined
+    const id = typeof rawId === 'string' && rawId.trim().length > 0
+      ? rawId.trim()
+      : `${label}-${valueText}`
+    const icon = typeof rawIcon === 'string' && rawIcon.trim().length > 0
+      ? rawIcon.trim()
+      : undefined
 
-      return {
-        id,
-        label,
-        value: valueText,
-        icon
-      } satisfies ContactMethod
+    accumulator.push({
+      id,
+      label,
+      value: valueText,
+      icon
     })
-    .filter((method): method is ContactMethod => Boolean(method))
+
+    return accumulator
+  }, [])
 }
 
 export default function ContentRenderer({

@@ -1,20 +1,22 @@
 import ProjectShowcaseClient from '../../../ProjectShowcaseClient'
 
-interface PageProps {
-  params: {
+type PageProps = {
+  params: Promise<{
     username: string
     year: string
     month: string
-  }
+  }>
 }
 
-export default function TimelineMonthPage({ params }: PageProps) {
-  const normalizedMonth = params.month.padStart(2, '0')
+export default async function TimelineMonthPage({ params }: PageProps) {
+  const { month, username, year } = await params
+  const normalizedMonth = month.padStart(2, '0')
+
   return (
     <ProjectShowcaseClient
-      username={params.username}
+      username={username}
       initialTab="timeline"
-      initialSection={`${params.year}-${normalizedMonth}`}
+      initialSection={`${year}-${normalizedMonth}`}
     />
   )
 }

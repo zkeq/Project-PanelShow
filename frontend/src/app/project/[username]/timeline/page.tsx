@@ -1,15 +1,17 @@
 import ProjectShowcaseClient from '../ProjectShowcaseClient'
 
-interface PageProps {
-  params: {
+type PageProps = {
+  params: Promise<{
     username: string
-  }
+  }>
 }
 
-export default function TimelinePage({ params }: PageProps) {
+export default async function TimelinePage({ params }: PageProps) {
+  const { username } = await params
+
   return (
     <ProjectShowcaseClient
-      username={params.username}
+      username={username}
       initialTab="timeline"
       initialSection="all-timeline"
     />

@@ -1,15 +1,17 @@
 import ProjectShowcaseClient from '../ProjectShowcaseClient'
 
-interface PageProps {
-  params: {
+type PageProps = {
+  params: Promise<{
     username: string
-  }
+  }>
 }
 
-export default function ExperiencePage({ params }: PageProps) {
+export default async function ExperiencePage({ params }: PageProps) {
+  const { username } = await params
+
   return (
     <ProjectShowcaseClient
-      username={params.username}
+      username={username}
       initialTab="projects"
       initialSection="experience"
     />
