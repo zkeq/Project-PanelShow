@@ -1,4 +1,4 @@
-import ProjectShowcaseClient from './ProjectShowcaseClient'
+import ProjectShowcaseClient from '../ProjectShowcaseClient'
 
 interface PageProps {
   params: {
@@ -6,12 +6,12 @@ interface PageProps {
   }
 }
 
-export default function Page({ params }: PageProps) {
+export default function AboutPage({ params }: PageProps) {
   return (
     <ProjectShowcaseClient
       username={params.username}
       initialTab="projects"
-      initialSection="all-projects"
+      initialSection="about"
     />
   )
 }

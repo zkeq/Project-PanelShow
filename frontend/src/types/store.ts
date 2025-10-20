@@ -209,6 +209,13 @@ export interface SkillCategory {
   items: SkillItem[]
 }
 
+export interface ContactMethod {
+  id: string
+  label: string
+  value: string
+  icon?: string
+}
+
 export interface ProfileInfo {
   username: string
   name: string
@@ -220,6 +227,7 @@ export interface ProfileInfo {
   aboutSubtitle?: string
   skills: SkillCategory[]
   interests: string[]
+  contactMethods?: ContactMethod[]
 }
 
 // 快捷链接类型

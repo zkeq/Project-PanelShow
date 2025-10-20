@@ -906,6 +906,11 @@ const mockProfileInfo: ProfileInfo = {
       ]
     }
   ],
+  contactMethods: [
+    { id: 'email', label: '邮箱', value: 'contact@example.com', icon: 'lucide:mail' },
+    { id: 'github', label: 'GitHub', value: 'https://github.com/zkeq', icon: 'simple-icons:github' },
+    { id: 'website', label: '个人网站', value: 'https://personal-website.com', icon: 'lucide:globe' }
+  ],
   interests: ["编程", "开源", "摄影", "阅读", "旅行", "音乐"]
 }
 
