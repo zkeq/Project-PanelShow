@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { type ReactNode, useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSelectedLayoutSegments } from 'next/navigation'
 import { AlertCircle, Loader2 } from 'lucide-react'
 
 import { checkUsername } from '@/lib/api'
@@ -18,26 +18,77 @@ import { Button } from '@/components/ui/button'
 
 interface ProjectShowcaseClientProps {
   username: string
-  initialTab: 'projects' | 'timeline'
-  initialSection: string
+  children?: ReactNode
 }
 
-export default function ProjectShowcaseClient({
-  username,
-  initialTab,
-  initialSection
-}: ProjectShowcaseClientProps) {
+const deriveSelectionFromSegments = (segments: readonly string[]) => {
+  if (!segments || segments.length === 0) {
+    return {
+      tab: 'projects' as const,
+      section: 'all-projects'
+    }
+  }
+
+  const [first, second, third] = segments
+
+  if (first === 'about') {
+    return { tab: 'projects' as const, section: 'about' }
+  }
+
+  if (first === 'experience') {
+    return { tab: 'projects' as const, section: 'experience' }
+  }
+
+  if (first === 'category') {
+    if (!second) {
+      return { tab: 'projects' as const, section: 'all-projects' }
+    }
+
+    try {
+      return { tab: 'projects' as const, section: decodeURIComponent(second) }
+    } catch {
+      return { tab: 'projects' as const, section: second }
+    }
+  }
+
+  if (first === 'timeline') {
+    if (!second) {
+      return { tab: 'timeline' as const, section: 'all-timeline' }
+    }
+
+    if (!third) {
+      return { tab: 'timeline' as const, section: 'all-timeline' }
+    }
+
+    const normalizedYear = decodeURIComponent(second)
+    const normalizedMonth = decodeURIComponent(third).padStart(2, '0')
+    const normalizedSection = `${normalizedYear}-${normalizedMonth}`
+
+    if (/^\d{4}-\d{2}$/.test(normalizedSection)) {
+      return { tab: 'timeline' as const, section: normalizedSection }
+    }
+
+    return { tab: 'timeline' as const, section: 'all-timeline' }
+  }
+
+  return { tab: 'projects' as const, section: 'all-projects' }
+}
+
+export default function ProjectShowcaseClient({ username, children }: ProjectShowcaseClientProps) {
   const router = useRouter()
   const encodedUsername = encodeURIComponent(username)
   const basePath = `/project/${encodedUsername}`
 
-  const [activeTab, setActiveTab] = useState<'projects' | 'timeline'>(initialTab)
-  const [activeSection, setActiveSection] = useState(initialSection)
+  const segments = useSelectedLayoutSegments()
+  const derivedSelection = useMemo(() => deriveSelectionFromSegments(segments), [segments])
+
+  const [activeTab, setActiveTab] = useState<'projects' | 'timeline'>(derivedSelection.tab)
+  const [activeSection, setActiveSection] = useState(derivedSelection.section)
   const [expandedCategories, setExpandedCategories] = useState<string[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [expandedYears, setExpandedYears] = useState<string[]>(() => {
-    if (initialTab === 'timeline' && /^\d{4}-\d{2}$/.test(initialSection)) {
-      return [initialSection.split('-')[0]]
+    if (derivedSelection.tab === 'timeline' && /^\d{4}-\d{2}$/.test(derivedSelection.section)) {
+      return [derivedSelection.section.split('-')[0]]
     }
     return ['2024', '2025']
   })
@@ -56,18 +107,18 @@ export default function ProjectShowcaseClient({
   })
 
   useEffect(() => {
-    setActiveTab(initialTab)
-  }, [initialTab])
+    setActiveTab(prev => (prev === derivedSelection.tab ? prev : derivedSelection.tab))
+  }, [derivedSelection.tab])
 
   useEffect(() => {
-    setActiveSection(initialSection)
-    if (initialTab === 'timeline' && /^\d{4}-\d{2}$/.test(initialSection)) {
+    setActiveSection(prev => (prev === derivedSelection.section ? prev : derivedSelection.section))
+    if (derivedSelection.tab === 'timeline' && /^\d{4}-\d{2}$/.test(derivedSelection.section)) {
       setExpandedYears(prev => {
-        const year = initialSection.split('-')[0]
+        const year = derivedSelection.section.split('-')[0]
         return prev.includes(year) ? prev : [...prev, year]
       })
     }
-  }, [initialSection, initialTab])
+  }, [derivedSelection.section, derivedSelection.tab])
 
   const projectsAndTimeline = useProjectsAndTimeline(username)
   const techStackConfig = useTechStackConfig(username)
@@ -359,6 +410,7 @@ export default function ProjectShowcaseClient({
           </div>
         </main>
       </div>
+      {children}
     </div>
   )
 }
