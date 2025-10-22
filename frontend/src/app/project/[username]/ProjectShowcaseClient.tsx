@@ -244,6 +244,8 @@ export default function ProjectShowcaseClient({ username, children }: ProjectSho
   useEffect(() => {
     if (activeTab !== 'projects') return
 
+    if (techStackConfig.loading) return
+
     const staticSections = new Set(['all-projects', 'experience', 'about'])
     if (staticSections.has(activeSection)) return
 
@@ -251,7 +253,7 @@ export default function ProjectShowcaseClient({ username, children }: ProjectSho
     if (!allChildIds.includes(activeSection)) {
       handleSectionChange('all-projects', 'projects')
     }
-  }, [activeTab, activeSection, techStackStructure, handleSectionChange])
+  }, [activeTab, activeSection, techStackStructure, handleSectionChange, techStackConfig.loading])
 
   const handleTabChange = useCallback(
     (tab: 'projects' | 'timeline') => {
