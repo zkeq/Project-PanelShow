@@ -220,9 +220,12 @@ export default function ContentRenderer({
   }
 
   const projectMap = new Map<string, Project>()
-  projects.forEach(project => {
+  const projectIndexMap = new Map<string, number>()
+
+  projects.forEach((project, index) => {
     if (project.id) {
       projectMap.set(project.id, project)
+      projectIndexMap.set(project.id, index)
     }
   })
 
@@ -234,6 +237,12 @@ export default function ContentRenderer({
     ? activeTechStackChild.projectIds
         .map(projectId => projectMap.get(projectId))
         .filter((project): project is Project => Boolean(project))
+        .sort((a, b) => {
+          const orderA = a.id ? projectIndexMap.get(a.id) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER
+          const orderB = b.id ? projectIndexMap.get(b.id) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER
+
+          return orderA - orderB
+        })
     : []
   
   if (filteredProjects.length > 0) {
