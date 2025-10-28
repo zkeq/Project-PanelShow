@@ -23,6 +23,7 @@ import {
   DEFAULT_FEATURE_CHIP_PRESET_ID,
   type FeatureChipAppearance
 } from '@/lib/feature-chips'
+import ProjectExportDialog from '@/components/project/ProjectExportDialog'
 
 interface HeroProjectData {
   name: string
@@ -42,6 +43,7 @@ interface ProjectHeroProps {
   project: HeroProjectData
   username?: string
   projectId: string
+  getExportTarget?: () => HTMLElement | null
 }
 
 interface FeatureChip {
@@ -66,7 +68,7 @@ const HeroStatItem = ({ attribute }: { attribute: ProjectInfo }) => {
   )
 }
 
-export default function ProjectHero({ project, username, projectId }: ProjectHeroProps) {
+export default function ProjectHero({ project, username, projectId, getExportTarget }: ProjectHeroProps) {
   const router = useRouter();
   const getStatusConfig = (status: string, label?: string) => {
     switch (status) {
@@ -320,7 +322,7 @@ export default function ProjectHero({ project, username, projectId }: ProjectHer
         </div>
 
         {/* 操作按钮 */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-wrap">
           <Button
             size="lg"
             onClick={handlePreview}
@@ -340,6 +342,9 @@ export default function ProjectHero({ project, username, projectId }: ProjectHer
             <GitBranch className="w-4 h-4 mr-2" />
             查看源码
           </Button>
+          {getExportTarget && (
+            <ProjectExportDialog getTargetNode={getExportTarget} fileName={project.name} />
+          )}
         </div>
 
         {/* 特色标签 */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import HeaderNavigation from '@/components/layout/HeaderNavigation'
@@ -432,6 +432,8 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const profileData = useProfileData(username)
+  const pageRef = useRef<HTMLDivElement | null>(null)
+  const getPageNode = useCallback(() => pageRef.current, [])
   const headerAvatar =
     typeof profileData.profile?.avatar === 'string' && profileData.profile.avatar.trim().length > 0
       ? profileData.profile.avatar
@@ -550,7 +552,7 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={pageRef} className="min-h-screen bg-background">
       <HeaderNavigation
         username={username}
         avatar={headerAvatar}
@@ -599,6 +601,7 @@ export default function ProjectDetailPage() {
                 }}
                 username={username}
                 projectId={projectData.id}
+                getExportTarget={getPageNode}
               />
 
               <ProjectContent
