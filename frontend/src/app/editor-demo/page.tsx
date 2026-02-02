@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link'
 import { MarkdownEditor } from '@/components/admin/MarkdownEditor';
 import Markdown from '@/components/Markdown';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,10 +64,10 @@ export default function EditorDemoPage() {
           <div className="flex items-center gap-2">
             <ThemeSwitch />
             <Button variant="ghost" size="sm" asChild>
-              <a href="/" className="flex items-center gap-1">
+              <Link href="/" className="flex items-center gap-1">
                 <Home className="h-4 w-4" />
                 返回首页
-              </a>
+              </Link>
             </Button>
           </div>
         </div>
