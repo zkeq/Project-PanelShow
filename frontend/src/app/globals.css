@@ -341,6 +341,9 @@
 
 .editor-demo-wide .markdown-body {
   max-width: 10000px;
+}
+
+.markdown-body {
   padding: 15px;
   border-radius: 12px;
 }
