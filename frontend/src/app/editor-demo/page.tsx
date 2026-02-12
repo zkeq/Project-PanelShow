@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 import Link from 'next/link'
 import { MarkdownEditor } from '@/components/admin/MarkdownEditor';
 import Markdown from '@/components/Markdown';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThemeSwitch } from '@/components/theme-switch';
+import { useTheme } from 'next-themes';
 import { Monitor, Home } from 'lucide-react';
 
 const DEFAULT_MARKDOWN = `# 管理后台 Markdown 编辑器演示
@@ -47,12 +49,28 @@ mindmap
 > 在上方编辑，下方即可看到渲染结果。可以直接修改内容，体验实时效果。
 `;
 
+type EditorThemeMode = 'github' | 'dracula';
+
 export default function EditorDemoPage() {
   const [content, setContent] = useState(DEFAULT_MARKDOWN);
   const [isWideMode, setIsWideMode] = useState(false);
+  const [editorThemeMode, setEditorThemeMode] = useState<EditorThemeMode>('github');
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    if (editorThemeMode === 'dracula') {
+      setTheme('dark');
+    }
+  }, [editorThemeMode, setTheme]);
 
   return (
-    <div className={`editor-demo-page min-h-screen bg-background ${isWideMode ? 'editor-demo-wide' : ''}`}>
+    <div
+      className={cn(
+        'editor-demo-page min-h-screen bg-background',
+        isWideMode && 'editor-demo-wide',
+        editorThemeMode === 'dracula' && 'editor-demo-dracula'
+      )}
+    >
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between">
           <div className="flex items-center gap-2">
@@ -64,13 +82,28 @@ export default function EditorDemoPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button
+              variant={editorThemeMode === 'dracula' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() =>
+                setEditorThemeMode((current) => (current === 'github' ? 'dracula' : 'github'))
+              }
+            >
+              {editorThemeMode === 'github' ? 'Github 主题' : 'Dracula 主题'}
+            </Button>
+            <Button
               variant={isWideMode ? 'default' : 'outline'}
               size="sm"
               onClick={() => setIsWideMode((current) => !current)}
             >
               {isWideMode ? '退出宽屏' : '宽屏模式'}
             </Button>
-            <ThemeSwitch />
+            {editorThemeMode === 'github' ? (
+              <ThemeSwitch />
+            ) : (
+              <span className="rounded-md border border-border/60 px-2 py-1 text-xs text-muted-foreground">
+                Dracula 固定暗色
+              </span>
+            )}
             <Button variant="ghost" size="sm" asChild>
               <Link href="/" className="flex items-center gap-1">
                 <Home className="h-4 w-4" />
