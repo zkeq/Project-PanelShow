@@ -333,3 +333,145 @@
     padding: 0 !important;
     background-color: transparent !important;;
 }
+
+.editor-demo-wide .container {
+  max-width: 10000px;
+  padding-inline: calc(var(--spacing) * 6);
+}
+
+.editor-demo-wide .markdown-body {
+  max-width: 10000px;
+}
+
+.editor-demo-dracula {
+  --background: rgb(40 42 54);
+  --foreground: rgb(248 248 242);
+  --card: rgb(32 34 39);
+  --card-foreground: rgb(248 248 242);
+  --popover: rgb(32 34 39);
+  --popover-foreground: rgb(248 248 242);
+  --primary: rgb(139 233 253);
+  --primary-foreground: rgb(40 42 54);
+  --secondary: rgb(68 71 90);
+  --secondary-foreground: rgb(248 248 242);
+  --muted: rgb(68 71 90 / 0.4);
+  --muted-foreground: rgb(98 114 164);
+  --accent: rgb(68 71 90);
+  --accent-foreground: rgb(248 248 242);
+  --border: rgb(68 71 90);
+  --input: rgb(68 71 90);
+  --ring: rgb(139 233 253);
+}
+
+.editor-demo-dracula .text-primary {
+  color: rgb(139 233 253) !important;
+}
+
+.editor-demo-dracula .text-muted-foreground {
+  color: rgb(98 114 164) !important;
+}
+
+.editor-demo-dracula .bg-background\/95 {
+  background-color: rgb(40 42 54 / 0.95) !important;
+}
+
+.editor-demo-dracula .border-border\/60 {
+  border-color: rgb(68 71 90 / 0.8) !important;
+}
+
+
+.editor-demo-dracula .markdown-body {
+  color: rgb(248, 248, 242) !important;
+  background: rgb(40, 42, 54) !important;
+}
+
+.editor-demo-dracula .markdown-body h1,
+.editor-demo-dracula .markdown-body h2,
+.editor-demo-dracula .markdown-body h3,
+.editor-demo-dracula .markdown-body h4,
+.editor-demo-dracula .markdown-body h5,
+.editor-demo-dracula .markdown-body h6,
+.editor-demo-dracula .markdown-body p,
+.editor-demo-dracula .markdown-body li,
+.editor-demo-dracula .markdown-body strong {
+  color: rgb(248, 248, 242) !important;
+}
+
+.editor-demo-dracula .markdown-body h1,
+.editor-demo-dracula .markdown-body h2 {
+  border-bottom-color: rgb(68, 71, 90) !important;
+}
+
+.editor-demo-dracula .markdown-body a {
+  color: rgb(139, 233, 253) !important;
+}
+
+.editor-demo-dracula .markdown-body a:hover {
+  color: rgb(255, 121, 198) !important;
+}
+
+.editor-demo-dracula .markdown-body blockquote {
+  border-left-color: rgb(248, 248, 242) !important;
+  background-color: rgb(32, 34, 39) !important;
+}
+
+.editor-demo-dracula .markdown-body code,
+.editor-demo-dracula .markdown-body pre {
+  background-color: rgb(32, 34, 39) !important;
+  color: rgb(248, 248, 242) !important;
+}
+
+.editor-demo-dracula .markdown-body table,
+.editor-demo-dracula .markdown-body table tr,
+.editor-demo-dracula .markdown-body table td,
+.editor-demo-dracula .markdown-body table th {
+  border-color: rgb(248, 248, 242) !important;
+  color: rgb(248, 248, 242) !important;
+}
+
+.editor-demo-dracula .markdown-body table thead tr {
+  background-color: rgb(68, 71, 90) !important;
+}
+
+.editor-demo-dracula .markdown-body table tbody tr:nth-child(odd) {
+  background-color: rgb(40, 42, 54) !important;
+}
+
+.editor-demo-dracula .markdown-body table tbody tr:nth-child(even) {
+  background-color: rgb(32, 34, 39) !important;
+}
+
+.editor-demo-dracula .bytemd-wrapper.light .bytemd,
+.editor-demo-dracula .bytemd-wrapper.light .bytemd-body,
+.editor-demo-dracula .bytemd-wrapper.light .bytemd-editor,
+.editor-demo-dracula .bytemd-wrapper.light .bytemd-preview,
+.editor-demo-dracula .bytemd-wrapper.light .CodeMirror,
+.editor-demo-dracula .bytemd-wrapper.light .CodeMirror-gutters,
+.editor-demo-dracula .bytemd-wrapper.light .bytemd-toolbar,
+.editor-demo-dracula .bytemd-wrapper.light .bytemd-status {
+  background: rgb(40, 42, 54) !important;
+  color: rgb(248, 248, 242) !important;
+  border-color: rgb(68, 71, 90) !important;
+}
+
+.editor-demo-dracula .bytemd-wrapper.light .bytemd-toolbar-icon,
+.editor-demo-dracula .bytemd-wrapper.light .bytemd-toolbar-tab {
+  color: rgb(248, 248, 242) !important;
+  border-color: rgb(68, 71, 90) !important;
+}
+
+.editor-demo-dracula .bytemd-wrapper.light .bytemd-toolbar-icon:hover {
+  background: rgb(68, 71, 90) !important;
+}
+
+.editor-demo-dracula .bytemd-wrapper.light .CodeMirror-cursor {
+  border-left: 2px solid rgb(248, 248, 242) !important;
+}
+
+.editor-demo-dracula .bytemd-wrapper.light .CodeMirror-selected {
+  background: rgba(98, 114, 164, 0.4) !important;
+}
+
+.editor-demo-dracula .bytemd-wrapper.light .cm-s-default .cm-link {
+  color: rgb(139, 233, 253) !important;
+}
