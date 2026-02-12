@@ -341,42 +341,8 @@
 
 .editor-demo-wide .markdown-body {
   max-width: 10000px;
-}
-
-.editor-demo-dracula {
-  --background: rgb(40 42 54);
-  --foreground: rgb(248 248 242);
-  --card: rgb(32 34 39);
-  --card-foreground: rgb(248 248 242);
-  --popover: rgb(32 34 39);
-  --popover-foreground: rgb(248 248 242);
-  --primary: rgb(139 233 253);
-  --primary-foreground: rgb(40 42 54);
-  --secondary: rgb(68 71 90);
-  --secondary-foreground: rgb(248 248 242);
-  --muted: rgb(68 71 90 / 0.4);
-  --muted-foreground: rgb(98 114 164);
-  --accent: rgb(68 71 90);
-  --accent-foreground: rgb(248 248 242);
-  --border: rgb(68 71 90);
-  --input: rgb(68 71 90);
-  --ring: rgb(139 233 253);
-}
-
-.editor-demo-dracula .text-primary {
-  color: rgb(139 233 253) !important;
-}
-
-.editor-demo-dracula .text-muted-foreground {
-  color: rgb(98 114 164) !important;
-}
-
-.editor-demo-dracula .bg-background\/95 {
-  background-color: rgb(40 42 54 / 0.95) !important;
-}
-
-.editor-demo-dracula .border-border\/60 {
-  border-color: rgb(68 71 90 / 0.8) !important;
+  padding: 15px;
+  border-radius: 12px;
 }
 
 
