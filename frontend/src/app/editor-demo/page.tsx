@@ -49,9 +49,10 @@ mindmap
 
 export default function EditorDemoPage() {
   const [content, setContent] = useState(DEFAULT_MARKDOWN);
+  const [isWideMode, setIsWideMode] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`editor-demo-page min-h-screen bg-background ${isWideMode ? 'editor-demo-wide' : ''}`}>
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between">
           <div className="flex items-center gap-2">
@@ -62,6 +63,13 @@ export default function EditorDemoPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant={isWideMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setIsWideMode((current) => !current)}
+            >
+              {isWideMode ? '退出宽屏' : '宽屏模式'}
+            </Button>
             <ThemeSwitch />
             <Button variant="ghost" size="sm" asChild>
               <Link href="/" className="flex items-center gap-1">
