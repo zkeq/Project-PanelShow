@@ -351,17 +351,29 @@ export default function EditorDemoPage() {
                     回档记录
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="h-[85vh] max-w-6xl">
-                  <DialogHeader>
+                <DialogContent className="flex h-[85vh] w-[95vw] max-w-6xl flex-col overflow-hidden p-0">
+                  <DialogHeader className="border-b px-6 py-4">
                     <DialogTitle>本地回档记录</DialogTitle>
                     <DialogDescription>自动快照与手动保存分开存储，点击条目可预览并回档。</DialogDescription>
                   </DialogHeader>
-                  <div className="grid h-full gap-4 lg:grid-cols-2">
-                    <div className="space-y-4 overflow-y-auto rounded-md border border-border/60 p-4">
+                  <div className="grid min-h-0 flex-1 gap-4 overflow-hidden p-4 lg:grid-cols-2">
+                    <div className="min-h-0 space-y-4 overflow-y-auto rounded-md border border-border/60 p-4">
                       <div className="space-y-2">
                         <p className="text-xs font-semibold text-muted-foreground">自动快照</p>
+                        <div className="space-y-2 rounded-md border border-border/60 px-3 py-2">
+                          <button
+                            type="button"
+                            className="w-full text-left"
+                            onClick={() => setPreviewContent(content)}
+                          >
+                            <p className="text-sm font-medium">当前草稿（实时）</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {lastSavedLabel} · {content.slice(0, 30) || '空内容'}
+                            </p>
+                          </button>
+                        </div>
                         {versions.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">暂无自动快照。</p>
+                          <p className="text-sm text-muted-foreground">暂无 2 分钟自动快照，系统会按间隔生成版本。</p>
                         ) : (
                           versions.map((version, index) => (
                             <div
@@ -421,9 +433,9 @@ export default function EditorDemoPage() {
                       </div>
                     </div>
 
-                    <div className="overflow-y-auto rounded-md border border-border/60 p-4">
+                    <div className="min-h-0 overflow-y-auto rounded-md border border-border/60 p-4">
                       <p className="mb-3 text-xs font-semibold text-muted-foreground">内容预览</p>
-                      <div className="min-h-[65vh]">
+                      <div className="min-h-full">
                         <Markdown>{previewContent || '暂无可预览内容'}</Markdown>
                       </div>
                     </div>
