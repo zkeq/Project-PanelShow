@@ -1112,10 +1112,23 @@ async def upload_share_image(file: UploadFile = File(...)):
 
     relative_url = f"/uploads/_share/images/{unique_name}"
 
+    try:
+        cos_key = build_cos_key("_share", "images", unique_name)
+        cos_url = upload_file_to_cos(
+            local_path=str(destination),
+            key=cos_key,
+            content_type=file.content_type,
+        )
+    except CosConfigError:
+        cos_url = relative_url
+    except CosUploadError:
+        cos_url = relative_url
+
     return {
         "success": True,
         "filename": unique_name,
-        "url": relative_url,
+        "url": cos_url,
+        "local_url": relative_url,
         "content_type": file.content_type,
         "size": file_size,
     }

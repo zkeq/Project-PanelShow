@@ -374,6 +374,7 @@ export interface UploadShareImageResponse {
   success: boolean;
   filename: string;
   url: string;
+  local_url?: string;
   content_type: string;
   size: number;
 }

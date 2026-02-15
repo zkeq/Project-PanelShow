@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { MarkdownEditor } from '@/components/admin/MarkdownEditor';
@@ -257,35 +257,34 @@ export default function EditorDemoPage() {
     }
   };
 
-  const handleEditorDrop = async (event: DragEvent<HTMLDivElement>) => {
-    const files = Array.from(event.dataTransfer.files ?? []);
+  const handleUploadImages = useCallback(async (files: File[]) => {
     const imageFiles = files.filter((file) => file.type.startsWith('image/'));
     if (imageFiles.length === 0) {
-      return;
+      return [];
     }
 
-    event.preventDefault();
-    event.stopPropagation();
     setUploadError(null);
     setIsUploadingImage(true);
 
     try {
-      const markdownParts: string[] = [];
+      const result: Array<{ url: string; alt?: string; title?: string }> = [];
       for (const file of imageFiles) {
         const uploaded = await uploadShareImage(file);
-        markdownParts.push(`![${file.name || 'image'}](${uploaded.url})`);
+        result.push({
+          url: uploaded.url,
+          alt: file.name || 'image',
+          title: file.name || 'image',
+        });
       }
 
-      setContent((current) => {
-        const prefix = current.endsWith('\n') ? current : `${current}\n`;
-        return `${prefix}\n${markdownParts.join('\n')}\n`;
-      });
+      return result;
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : '图片上传失败，请稍后再试');
+      return [];
     } finally {
       setIsUploadingImage(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!historyDialogOpen) {
@@ -542,17 +541,16 @@ export default function EditorDemoPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={handleEditorDrop}
-              className="space-y-2"
-            >
+            <div className="space-y-2">
               <MarkdownEditor
                 value={content}
                 onChange={setContent}
                 placeholder="输入要演示的 Markdown 内容..."
+                uploadImages={handleUploadImages}
               />
-              <p className="text-xs text-muted-foreground">可直接拖拽图片到编辑器自动上传并插入 Markdown。</p>
+              <p className="text-xs text-muted-foreground">
+                可直接拖拽图片到编辑器自动上传并插入 Markdown（保持当前光标位置）。
+              </p>
               {isUploadingImage ? <p className="text-xs text-primary">图片上传中...</p> : null}
               {uploadError ? <p className="text-xs text-destructive">{uploadError}</p> : null}
             </div>
