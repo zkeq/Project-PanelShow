@@ -10,7 +10,12 @@ import { Label } from '@/components/ui/label';
 import Markdown from '@/components/Markdown';
 import { getTextShare, updateTextShare } from '@/lib/api';
 import { MarkdownEditor } from '@/components/admin/MarkdownEditor';
-import { Home, PencilLine } from 'lucide-react';
+import { Home, Monitor, PencilLine } from 'lucide-react';
+import { ThemeSwitch } from '@/components/theme-switch';
+import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
+
+type EditorThemeMode = 'github' | 'dracula';
 
 export default function SharedTextPage() {
   const params = useParams<{ shareId: string }>();
@@ -24,6 +29,9 @@ export default function SharedTextPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isWideMode, setIsWideMode] = useState(false);
+  const [editorThemeMode, setEditorThemeMode] = useState<EditorThemeMode>('github');
+  const { setTheme } = useTheme();
 
   useEffect(() => {
     if (!shareId) {
@@ -74,22 +82,60 @@ export default function SharedTextPage() {
     }
   };
 
+  useEffect(() => {
+    if (editorThemeMode === 'dracula') {
+      setTheme('dark');
+    }
+  }, [editorThemeMode, setTheme]);
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
-        <div className="container flex h-14 max-w-4xl items-center justify-between">
-          <div>
-            <p className="text-sm font-semibold">分享内容预览</p>
-            <p className="text-xs text-muted-foreground">只读浏览，可在此输入密码后修改</p>
-          </div>
+    <div
+      className={cn(
+        'editor-demo-page min-h-screen bg-background',
+        isWideMode && 'editor-demo-wide',
+        editorThemeMode === 'dracula' && 'editor-demo-dracula'
+      )}
+    >
+      <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex flex-col gap-2 py-2 sm:h-14 sm:flex-row sm:items-center sm:justify-between sm:py-0">
           <div className="flex items-center gap-2">
+            <Monitor className="h-5 w-5" />
+            <div>
+              <p className="text-sm font-semibold">Markdown 编辑器演示</p>
+              <p className="text-xs text-muted-foreground">Project-PanelShow Open Source</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={editorThemeMode === 'dracula' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() =>
+                setEditorThemeMode((current) => (current === 'github' ? 'dracula' : 'github'))
+              }
+            >
+              {editorThemeMode === 'github' ? 'Github 主题' : 'Dracula 主题'}
+            </Button>
+            <Button
+              variant={isWideMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setIsWideMode((current) => !current)}
+            >
+              {isWideMode ? '退出宽屏' : '宽屏模式'}
+            </Button>
+            {editorThemeMode === 'github' ? (
+              <ThemeSwitch />
+            ) : (
+              <span className="rounded-md border border-border/60 px-2 py-1 text-xs text-muted-foreground">
+                Dracula 固定暗色
+              </span>
+            )}
             {!isEditMode ? (
               <Button size="sm" onClick={() => setIsEditMode(true)}>
                 <PencilLine className="mr-1 h-4 w-4" />
-                修改内容
+                编辑模式
               </Button>
             ) : null}
-            <Button size="sm" variant="outline" asChild>
+            <Button size="sm" variant="ghost" asChild>
               <Link href="/">
                 <Home className="mr-1 h-4 w-4" />
                 返回首页
