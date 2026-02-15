@@ -13,6 +13,7 @@ interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  uploadImages?: (files: File[]) => Promise<Array<{ url: string; alt?: string; title?: string }>>;
 }
 
 // ByteMD 编辑器组件类型
@@ -23,7 +24,12 @@ type PluginFactories = {
   highlight: typeof import('@bytemd/plugin-highlight').default;
 };
 
-export function MarkdownEditor({ value, onChange, placeholder = "输入项目详细介绍..." }: MarkdownEditorProps) {
+export function MarkdownEditor({
+  value,
+  onChange,
+  placeholder = "输入项目详细介绍...",
+  uploadImages,
+}: MarkdownEditorProps) {
   const [Editor, setEditor] = useState<ByteMDEditor | null>(null);
   const [plugins, setPlugins] = useState<BytemdPlugin[]>([]);
   const [pluginFactories, setPluginFactories] = useState<PluginFactories | null>(null);
@@ -325,6 +331,7 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
           onChange={onChange}
           plugins={plugins}
           placeholder={placeholder}
+          uploadImages={uploadImages}
         />
       </div>
       <p className="text-xs text-muted-foreground">
