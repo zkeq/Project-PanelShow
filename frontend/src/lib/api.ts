@@ -260,6 +260,40 @@ export function updateTechStacks(
   );
 }
 
+export interface CreateTextShareResponse {
+  share_id: string;
+  share_url: string;
+  created_at: string;
+}
+
+export interface TextShareDetailResponse {
+  share_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export function createTextShare(content: string, password: string) {
+  return request<CreateTextShareResponse>('/api/shares/text', {
+    method: 'POST',
+    body: JSON.stringify({ content, password }),
+  });
+}
+
+export function getTextShare(shareId: string) {
+  return request<TextShareDetailResponse>(`/api/shares/text/${encodeURIComponent(shareId)}`);
+}
+
+export function updateTextShare(shareId: string, content: string, password: string) {
+  return request<{ message: string; share_id: string; updated_at: string }>(
+    `/api/shares/text/${encodeURIComponent(shareId)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ content, password }),
+    }
+  );
+}
+
 export function fetchProjectDetail(
   username: string,
   projectId: string,
