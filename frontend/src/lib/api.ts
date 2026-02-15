@@ -260,6 +260,40 @@ export function updateTechStacks(
   );
 }
 
+export interface CreateTextShareResponse {
+  share_id: string;
+  share_url: string;
+  created_at: string;
+}
+
+export interface TextShareDetailResponse {
+  share_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export function createTextShare(content: string, password: string) {
+  return request<CreateTextShareResponse>('/api/shares/text', {
+    method: 'POST',
+    body: JSON.stringify({ content, password }),
+  });
+}
+
+export function getTextShare(shareId: string) {
+  return request<TextShareDetailResponse>(`/api/shares/text/${encodeURIComponent(shareId)}`);
+}
+
+export function updateTextShare(shareId: string, content: string, password: string) {
+  return request<{ message: string; share_id: string; updated_at: string }>(
+    `/api/shares/text/${encodeURIComponent(shareId)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ content, password }),
+    }
+  );
+}
+
 export function fetchProjectDetail(
   username: string,
   projectId: string,
@@ -336,6 +370,14 @@ export interface UploadImageResponse {
   size: number;
 }
 
+export interface UploadShareImageResponse {
+  success: boolean;
+  filename: string;
+  url: string;
+  content_type: string;
+  size: number;
+}
+
 export async function uploadImage(
   username: string,
   file: File,
@@ -362,6 +404,32 @@ export async function uploadImage(
   }
 
   const data = (await response.json()) as UploadImageResponse;
+  const normalizedUrl =
+    typeof data.url === 'string' && data.url.startsWith('/')
+      ? `${API_BASE_URL.replace(/\/+$/, '')}/${data.url.replace(/^\/+/, '')}`
+      : data.url;
+
+  return {
+    ...data,
+    url: normalizedUrl,
+  };
+}
+
+export async function uploadShareImage(file: File): Promise<UploadShareImageResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/api/shares/text/images`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `上传失败 (${response.status})`);
+  }
+
+  const data = (await response.json()) as UploadShareImageResponse;
   const normalizedUrl =
     typeof data.url === 'string' && data.url.startsWith('/')
       ? `${API_BASE_URL.replace(/\/+$/, '')}/${data.url.replace(/^\/+/, '')}`
