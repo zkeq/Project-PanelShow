@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { MarkdownEditor } from '@/components/admin/MarkdownEditor';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { useTheme } from 'next-themes';
 import { Monitor, Home, Save, Share2, History } from 'lucide-react';
-import { createTextShare } from '@/lib/api';
+import { createTextShare, uploadShareImage } from '@/lib/api';
 import {
   Dialog,
   DialogContent,
@@ -100,6 +100,8 @@ export default function EditorDemoPage() {
   const [shareResult, setShareResult] = useState<string | null>(null);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const contentRef = useRef(content);
 
   const persistVersions = (versionList: LocalVersion[]) => {
@@ -252,6 +254,36 @@ export default function EditorDemoPage() {
       setShareError(error instanceof Error ? error.message : '分享失败，请稍后再试');
     } finally {
       setIsSharing(false);
+    }
+  };
+
+  const handleEditorDrop = async (event: DragEvent<HTMLDivElement>) => {
+    const files = Array.from(event.dataTransfer.files ?? []);
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'));
+    if (imageFiles.length === 0) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    setUploadError(null);
+    setIsUploadingImage(true);
+
+    try {
+      const markdownParts: string[] = [];
+      for (const file of imageFiles) {
+        const uploaded = await uploadShareImage(file);
+        markdownParts.push(`![${file.name || 'image'}](${uploaded.url})`);
+      }
+
+      setContent((current) => {
+        const prefix = current.endsWith('\n') ? current : `${current}\n`;
+        return `${prefix}\n${markdownParts.join('\n')}\n`;
+      });
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : '图片上传失败，请稍后再试');
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -510,11 +542,20 @@ export default function EditorDemoPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <MarkdownEditor
-              value={content}
-              onChange={setContent}
-              placeholder="输入要演示的 Markdown 内容..."
-            />
+            <div
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={handleEditorDrop}
+              className="space-y-2"
+            >
+              <MarkdownEditor
+                value={content}
+                onChange={setContent}
+                placeholder="输入要演示的 Markdown 内容..."
+              />
+              <p className="text-xs text-muted-foreground">可直接拖拽图片到编辑器自动上传并插入 Markdown。</p>
+              {isUploadingImage ? <p className="text-xs text-primary">图片上传中...</p> : null}
+              {uploadError ? <p className="text-xs text-destructive">{uploadError}</p> : null}
+            </div>
           </CardContent>
         </Card>
 

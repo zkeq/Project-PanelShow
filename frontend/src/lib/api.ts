@@ -370,6 +370,14 @@ export interface UploadImageResponse {
   size: number;
 }
 
+export interface UploadShareImageResponse {
+  success: boolean;
+  filename: string;
+  url: string;
+  content_type: string;
+  size: number;
+}
+
 export async function uploadImage(
   username: string,
   file: File,
@@ -396,6 +404,32 @@ export async function uploadImage(
   }
 
   const data = (await response.json()) as UploadImageResponse;
+  const normalizedUrl =
+    typeof data.url === 'string' && data.url.startsWith('/')
+      ? `${API_BASE_URL.replace(/\/+$/, '')}/${data.url.replace(/^\/+/, '')}`
+      : data.url;
+
+  return {
+    ...data,
+    url: normalizedUrl,
+  };
+}
+
+export async function uploadShareImage(file: File): Promise<UploadShareImageResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/api/shares/text/images`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `上传失败 (${response.status})`);
+  }
+
+  const data = (await response.json()) as UploadShareImageResponse;
   const normalizedUrl =
     typeof data.url === 'string' && data.url.startsWith('/')
       ? `${API_BASE_URL.replace(/\/+$/, '')}/${data.url.replace(/^\/+/, '')}`

@@ -1085,6 +1085,42 @@ async def upload_image(
     }
 
 
+@app.post("/api/shares/text/images", tags=["文字分享"])
+async def upload_share_image(file: UploadFile = File(...)):
+    """为编辑器分享场景提供免登录图片上传接口"""
+
+    if not file.content_type or file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="仅支持上传 PNG/JPEG/GIF/WEBP 图片")
+
+    contents = await file.read()
+    file_size = len(contents)
+    max_size_bytes = 10 * 1024 * 1024
+    if file_size > max_size_bytes:
+        raise HTTPException(status_code=400, detail="文件大小不能超过 10MB")
+
+    original_suffix = FilePath(str(file.filename)).suffix if file.filename else ""
+    fallback_suffix = ALLOWED_IMAGE_TYPES[file.content_type]
+    file_extension = original_suffix or fallback_suffix
+
+    unique_name = f"{uuid.uuid4().hex}{file_extension}"
+    share_upload_dir = FILE_UPLOAD_ROOT / "_share" / "images"
+    share_upload_dir.mkdir(parents=True, exist_ok=True)
+
+    destination = share_upload_dir / unique_name
+    with destination.open("wb") as buffer:
+        buffer.write(contents)
+
+    relative_url = f"/uploads/_share/images/{unique_name}"
+
+    return {
+        "success": True,
+        "filename": unique_name,
+        "url": relative_url,
+        "content_type": file.content_type,
+        "size": file_size,
+    }
+
+
 # ==================== JS 代码执行 ====================
 
 @app.post("/api/execute-js", tags=["工具"])
