@@ -69,14 +69,23 @@ interface LocalVersion {
   savedAt: string;
 }
 
+interface SavedDocument {
+  id: string;
+  title: string;
+  content: string;
+  savedAt: string;
+}
+
 const DRAFT_KEY = 'editor-demo:draft';
 const VERSIONS_KEY = 'editor-demo:versions';
+const SAVED_DOCS_KEY = 'editor-demo:saved-documents';
 const VERSION_LIMIT = 50;
 const SNAPSHOT_INTERVAL_MS = 2 * 60 * 1000;
 
 export default function EditorDemoPage() {
   const [content, setContent] = useState(DEFAULT_MARKDOWN);
   const [versions, setVersions] = useState<LocalVersion[]>([]);
+  const [savedDocuments, setSavedDocuments] = useState<SavedDocument[]>([]);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -89,10 +98,16 @@ export default function EditorDemoPage() {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const [shareResult, setShareResult] = useState<string | null>(null);
+  const [hasShared, setHasShared] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState('');
 
   const persistVersions = (versionList: LocalVersion[]) => {
     localStorage.setItem(VERSIONS_KEY, JSON.stringify(versionList));
+  };
+
+  const persistSavedDocuments = (documents: SavedDocument[]) => {
+    localStorage.setItem(SAVED_DOCS_KEY, JSON.stringify(documents));
   };
 
   useEffect(() => {
@@ -104,6 +119,7 @@ export default function EditorDemoPage() {
   useEffect(() => {
     const cachedDraft = localStorage.getItem(DRAFT_KEY);
     const cachedVersions = localStorage.getItem(VERSIONS_KEY);
+    const cachedSavedDocuments = localStorage.getItem(SAVED_DOCS_KEY);
 
     if (cachedDraft) {
       setContent(cachedDraft);
@@ -117,6 +133,17 @@ export default function EditorDemoPage() {
         }
       } catch {
         setVersions([]);
+      }
+    }
+
+    if (cachedSavedDocuments) {
+      try {
+        const parsedDocs = JSON.parse(cachedSavedDocuments) as SavedDocument[];
+        if (Array.isArray(parsedDocs)) {
+          setSavedDocuments(parsedDocs.slice(0, VERSION_LIMIT));
+        }
+      } catch {
+        setSavedDocuments([]);
       }
     }
 
@@ -179,25 +206,40 @@ export default function EditorDemoPage() {
     setHistoryDialogOpen(false);
   };
 
+  const rollbackToSavedDocument = (document: SavedDocument) => {
+    setContent(document.content);
+    localStorage.setItem(DRAFT_KEY, document.content);
+    setLastSavedAt(new Date().toISOString());
+    setHistoryDialogOpen(false);
+  };
+
   const handleManualSave = () => {
-    setVersions((current) => {
-      const nextVersions: LocalVersion[] = [
+    setSavedDocuments((current) => {
+      const nextDocuments: SavedDocument[] = [
         {
           id: crypto.randomUUID(),
+          title: `手动保存 ${new Date().toLocaleString()}`,
           content,
           savedAt: new Date().toISOString(),
         },
         ...current,
-      ].filter((item, index, arr) => index === 0 || item.content !== arr[index - 1].content).slice(0, VERSION_LIMIT);
+      ]
+        .filter((item, index, arr) => index === 0 || item.content !== arr[index - 1].content)
+        .slice(0, VERSION_LIMIT);
 
-      persistVersions(nextVersions);
+      persistSavedDocuments(nextDocuments);
       localStorage.setItem(DRAFT_KEY, content);
       setLastSavedAt(new Date().toISOString());
-      return nextVersions;
+      return nextDocuments;
     });
   };
 
   const handleShare = async () => {
+    if (hasShared) {
+      setShareError('当前内容已分享，请直接使用已生成的分享链接');
+      return;
+    }
+
     if (sharePassword.trim().length < 4) {
       setShareError('分享密码至少 4 位');
       return;
@@ -210,6 +252,7 @@ export default function EditorDemoPage() {
       const response = await createTextShare(content, sharePassword.trim());
       const absoluteUrl = `${window.location.origin}${response.share_url}`;
       setShareResult(absoluteUrl);
+      setHasShared(true);
       await navigator.clipboard.writeText(absoluteUrl);
     } catch (error) {
       setShareError(error instanceof Error ? error.message : '分享失败，请稍后再试');
@@ -217,6 +260,15 @@ export default function EditorDemoPage() {
       setIsSharing(false);
     }
   };
+
+  useEffect(() => {
+    if (!historyDialogOpen) {
+      return;
+    }
+
+    const initialPreview = versions[0]?.content ?? savedDocuments[0]?.content ?? content;
+    setPreviewContent(initialPreview);
+  }, [historyDialogOpen, versions, savedDocuments, content]);
 
   return (
     <div
@@ -305,76 +357,139 @@ export default function EditorDemoPage() {
                     回档记录
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-h-[70vh] overflow-y-auto">
+                <DialogContent className="max-h-[80vh] max-w-5xl overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>本地回档记录</DialogTitle>
-                    <DialogDescription>最多展示 50 条本地快照，点击即可恢复。</DialogDescription>
+                    <DialogDescription>自动快照与手动保存分开存储，点击条目可预览并回档。</DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-2">
-                    {versions.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">暂无可回档版本，请先输入内容。</p>
-                    ) : (
-                      versions.map((version, index) => (
-                        <div
-                          key={version.id}
-                          className="flex items-center justify-between gap-2 rounded-md border border-border/60 px-3 py-2"
-                        >
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium">版本 #{versions.length - index}</p>
-                            <p className="truncate text-xs text-muted-foreground">
-                              {new Date(version.savedAt).toLocaleString()} ·{' '}
-                              {version.content.slice(0, 40) || '空内容'}
-                            </p>
-                          </div>
-                          <Button size="sm" variant="outline" onClick={() => rollbackToVersion(version)}>
-                            回档
-                          </Button>
-                        </div>
-                      ))
-                    )}
+                  <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground">自动快照</p>
+                        {versions.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">暂无自动快照。</p>
+                        ) : (
+                          versions.map((version, index) => (
+                            <div
+                              key={version.id}
+                              className="space-y-2 rounded-md border border-border/60 px-3 py-2"
+                            >
+                              <button
+                                type="button"
+                                className="w-full text-left"
+                                onClick={() => setPreviewContent(version.content)}
+                              >
+                                <p className="text-sm font-medium">自动版本 #{versions.length - index}</p>
+                                <p className="truncate text-xs text-muted-foreground">
+                                  {new Date(version.savedAt).toLocaleString()} ·{' '}
+                                  {version.content.slice(0, 30) || '空内容'}
+                                </p>
+                              </button>
+                              <Button size="sm" variant="outline" onClick={() => rollbackToVersion(version)}>
+                                回档
+                              </Button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground">手动保存文档</p>
+                        {savedDocuments.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">暂无手动保存文档。</p>
+                        ) : (
+                          savedDocuments.map((document) => (
+                            <div
+                              key={document.id}
+                              className="space-y-2 rounded-md border border-border/60 px-3 py-2"
+                            >
+                              <button
+                                type="button"
+                                className="w-full text-left"
+                                onClick={() => setPreviewContent(document.content)}
+                              >
+                                <p className="text-sm font-medium">{document.title}</p>
+                                <p className="truncate text-xs text-muted-foreground">
+                                  {new Date(document.savedAt).toLocaleString()} ·{' '}
+                                  {document.content.slice(0, 30) || '空内容'}
+                                </p>
+                              </button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => rollbackToSavedDocument(document)}
+                              >
+                                回档
+                              </Button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-md border border-border/60 p-4">
+                      <p className="mb-3 text-xs font-semibold text-muted-foreground">内容预览</p>
+                      <div className="max-h-[55vh] overflow-y-auto">
+                        <Markdown>{previewContent || '暂无可预览内容'}</Markdown>
+                      </div>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
 
               <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="ml-auto" variant="secondary">
+                  <Button size="sm" className="ml-auto" variant="secondary" disabled={hasShared}>
                     <Share2 className="mr-1 h-4 w-4" />
-                    分享
+                    {hasShared ? '已分享' : '分享'}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>分享文本</DialogTitle>
-                    <DialogDescription>
-                      设置密码后生成分享链接。系统会按每 1500 字切片调用文本审核。
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-2">
-                    <Label htmlFor="share-password">分享密码</Label>
-                    <Input
-                      id="share-password"
-                      type="password"
-                      placeholder="至少 4 位"
-                      value={sharePassword}
-                      onChange={(event) => setSharePassword(event.target.value)}
-                    />
-                    {shareError ? <p className="text-sm text-destructive">{shareError}</p> : null}
-                    {shareResult ? (
-                      <p className="break-all text-sm text-emerald-600">
-                        分享成功（已复制）：
-                        {shareResult}
-                      </p>
-                    ) : null}
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
-                      取消
-                    </Button>
-                    <Button onClick={handleShare} disabled={isSharing}>
-                      {isSharing ? '分享中...' : '确认分享'}
-                    </Button>
-                  </DialogFooter>
+                  {shareResult ? (
+                    <>
+                      <DialogHeader>
+                        <DialogTitle>分享成功</DialogTitle>
+                        <DialogDescription>
+                          你的内容已成功分享，分享地址如下（已复制到剪贴板）。
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-700">
+                        <p className="font-medium">分享地址</p>
+                        <p className="break-all">{shareResult}</p>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={() => setShareDialogOpen(false)}>完成</Button>
+                      </DialogFooter>
+                    </>
+                  ) : (
+                    <>
+                      <DialogHeader>
+                        <DialogTitle>分享文本</DialogTitle>
+                        <DialogDescription>
+                          设置密码后生成分享链接。系统会按每 1500 字切片调用文本审核。
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-2">
+                        <Label htmlFor="share-password">分享密码</Label>
+                        <Input
+                          id="share-password"
+                          type="password"
+                          placeholder="至少 4 位"
+                          value={sharePassword}
+                          onChange={(event) => setSharePassword(event.target.value)}
+                        />
+                        {shareError ? <p className="text-sm text-destructive">{shareError}</p> : null}
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
+                          取消
+                        </Button>
+                        <Button onClick={handleShare} disabled={isSharing || hasShared}>
+                          {isSharing ? '分享中...' : '确认分享'}
+                        </Button>
+                      </DialogFooter>
+                    </>
+                  )}
                 </DialogContent>
               </Dialog>
             </div>
