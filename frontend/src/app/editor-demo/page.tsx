@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { MarkdownEditor } from '@/components/admin/MarkdownEditor';
@@ -98,9 +98,9 @@ export default function EditorDemoPage() {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const [shareResult, setShareResult] = useState<string | null>(null);
-  const [hasShared, setHasShared] = useState(false);
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [previewContent, setPreviewContent] = useState('');
+  const contentRef = useRef(content);
 
   const persistVersions = (versionList: LocalVersion[]) => {
     localStorage.setItem(VERSIONS_KEY, JSON.stringify(versionList));
@@ -156,6 +156,7 @@ export default function EditorDemoPage() {
     }
 
     localStorage.setItem(DRAFT_KEY, content);
+    contentRef.current = content;
     setLastSavedAt(new Date().toISOString());
   }, [content, isHydrated]);
 
@@ -166,14 +167,14 @@ export default function EditorDemoPage() {
 
     const saveSnapshot = () => {
       setVersions((current) => {
-        if (current[0]?.content === content) {
+        if (current[0]?.content === contentRef.current) {
           return current;
         }
 
         const nextVersions: LocalVersion[] = [
           {
             id: crypto.randomUUID(),
-            content,
+            content: contentRef.current,
             savedAt: new Date().toISOString(),
           },
           ...current,
@@ -185,10 +186,9 @@ export default function EditorDemoPage() {
       });
     };
 
-    saveSnapshot();
     const timer = window.setInterval(saveSnapshot, SNAPSHOT_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [content, isHydrated]);
+  }, [isHydrated]);
 
   const lastSavedLabel = useMemo(() => {
     if (!lastSavedAt) {
@@ -235,11 +235,6 @@ export default function EditorDemoPage() {
   };
 
   const handleShare = async () => {
-    if (hasShared) {
-      setShareError('当前内容已分享，请直接使用已生成的分享链接');
-      return;
-    }
-
     if (sharePassword.trim().length < 4) {
       setShareError('分享密码至少 4 位');
       return;
@@ -252,7 +247,6 @@ export default function EditorDemoPage() {
       const response = await createTextShare(content, sharePassword.trim());
       const absoluteUrl = `${window.location.origin}${response.share_url}`;
       setShareResult(absoluteUrl);
-      setHasShared(true);
       await navigator.clipboard.writeText(absoluteUrl);
     } catch (error) {
       setShareError(error instanceof Error ? error.message : '分享失败，请稍后再试');
@@ -357,13 +351,13 @@ export default function EditorDemoPage() {
                     回档记录
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-h-[80vh] max-w-5xl overflow-y-auto">
+                <DialogContent className="h-[85vh] max-w-6xl">
                   <DialogHeader>
                     <DialogTitle>本地回档记录</DialogTitle>
                     <DialogDescription>自动快照与手动保存分开存储，点击条目可预览并回档。</DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
-                    <div className="space-y-4">
+                  <div className="grid h-full gap-4 lg:grid-cols-2">
+                    <div className="space-y-4 overflow-y-auto rounded-md border border-border/60 p-4">
                       <div className="space-y-2">
                         <p className="text-xs font-semibold text-muted-foreground">自动快照</p>
                         {versions.length === 0 ? (
@@ -427,9 +421,9 @@ export default function EditorDemoPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-md border border-border/60 p-4">
+                    <div className="overflow-y-auto rounded-md border border-border/60 p-4">
                       <p className="mb-3 text-xs font-semibold text-muted-foreground">内容预览</p>
-                      <div className="max-h-[55vh] overflow-y-auto">
+                      <div className="min-h-[65vh]">
                         <Markdown>{previewContent || '暂无可预览内容'}</Markdown>
                       </div>
                     </div>
@@ -437,11 +431,20 @@ export default function EditorDemoPage() {
                 </DialogContent>
               </Dialog>
 
-              <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+              <Dialog
+                open={shareDialogOpen}
+                onOpenChange={(open) => {
+                  setShareDialogOpen(open);
+                  if (open) {
+                    setShareResult(null);
+                    setShareError(null);
+                  }
+                }}
+              >
                 <DialogTrigger asChild>
-                  <Button size="sm" className="ml-auto" variant="secondary" disabled={hasShared}>
+                  <Button size="sm" className="ml-auto" variant="secondary">
                     <Share2 className="mr-1 h-4 w-4" />
-                    {hasShared ? '已分享' : '分享'}
+                    分享
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -484,7 +487,7 @@ export default function EditorDemoPage() {
                         <Button variant="outline" onClick={() => setShareDialogOpen(false)}>
                           取消
                         </Button>
-                        <Button onClick={handleShare} disabled={isSharing || hasShared}>
+                        <Button onClick={handleShare} disabled={isSharing || Boolean(shareResult)}>
                           {isSharing ? '分享中...' : '确认分享'}
                         </Button>
                       </DialogFooter>
