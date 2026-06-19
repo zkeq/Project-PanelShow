@@ -7,19 +7,32 @@ import type { BytemdPlugin } from 'bytemd';
 import 'bytemd/dist/index.css';
 // import 'github-markdown-css/github-markdown-light.css';
 // import 'github-markdown-css/github-markdown-dark.css';
+import { createMermaidPlugin } from '@/lib/bytemdMermaidPlugin';
 
 interface MarkdownEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  uploadImages?: (files: File[]) => Promise<Array<{ url: string; alt?: string; title?: string }>>;
 }
 
 // ByteMD 编辑器组件类型
 type ByteMDEditor = React.ComponentType<EditorProps>;
 
-export function MarkdownEditor({ value, onChange, placeholder = "输入项目详细介绍..." }: MarkdownEditorProps) {
+type PluginFactories = {
+  gfm: typeof import('@bytemd/plugin-gfm').default;
+  highlight: typeof import('@bytemd/plugin-highlight').default;
+};
+
+export function MarkdownEditor({
+  value,
+  onChange,
+  placeholder = "输入项目详细介绍...",
+  uploadImages,
+}: MarkdownEditorProps) {
   const [Editor, setEditor] = useState<ByteMDEditor | null>(null);
   const [plugins, setPlugins] = useState<BytemdPlugin[]>([]);
+  const [pluginFactories, setPluginFactories] = useState<PluginFactories | null>(null);
   const { theme, resolvedTheme } = useTheme();
 
   useEffect(() => {
@@ -37,7 +50,7 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
         ]);
 
         setEditor(() => BytemdEditor);
-        setPlugins([gfm(), highlight()]);
+        setPluginFactories({ gfm, highlight });
       } catch (error) {
         console.error('加载 Markdown 编辑器失败:', error);
       }
@@ -45,6 +58,20 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
 
     loadEditor();
   }, []);
+
+  useEffect(() => {
+    if (!pluginFactories) {
+      return;
+    }
+
+    const mermaidTheme = resolvedTheme === 'dark' || theme === 'dark' ? 'dark' : 'default';
+
+    setPlugins([
+      pluginFactories.gfm(),
+      pluginFactories.highlight(),
+      createMermaidPlugin(() => mermaidTheme)
+    ]);
+  }, [pluginFactories, resolvedTheme, theme]);
 
   if (!Editor) {
     return (
@@ -64,9 +91,32 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
         <style jsx global>{`
           /* ByteMD 基础样式 */
           .bytemd {
-            height: 500px;
+            height: 70vh;
             border-radius: 8px;
             font-family: var(--font-sans);
+          }
+
+          .bytemd.bytemd-fullscreen {
+            position: fixed !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            top: 3.5rem !important;
+            height: calc(100vh - 3.5rem) !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            z-index: 9999 !important;
+            border-radius: 0 !important;
+          }
+
+          .bytemd.bytemd-fullscreen .bytemd-editor,
+          .bytemd.bytemd-fullscreen .bytemd-preview,
+          .bytemd.bytemd-fullscreen .bytemd-body {
+            z-index: inherit;
+          }
+
+          .bytemd.bytemd-fullscreen .bytemd-body {
+            height: calc(100% - 5.5rem) !important;
           }
           
           /* 亮色模式预览文字颜色修复 */
@@ -281,10 +331,12 @@ export function MarkdownEditor({ value, onChange, placeholder = "输入项目详
           onChange={onChange}
           plugins={plugins}
           placeholder={placeholder}
+          uploadImages={uploadImages}
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        支持 Markdown 语法，包括代码块、表格、链接等。左侧编辑，右侧预览。
+        支持 Markdown 语法，包括代码块、表格、链接以及 <code className="font-mono">Mermaid</code> 流程图。
+        左侧编辑，右侧预览。
       </p>
     </div>
   );

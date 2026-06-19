@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { TimelineItem } from '@/types/timeline'
-import { Project } from '@/types/store'
+import { Project, ContactMethod } from '@/types/store'
 import { ProfileData } from '@/hooks/useProfileData'
 
 import AllProjectsContent from '@/components/project/AllProjectsContent'
@@ -19,7 +19,7 @@ interface MobileNavigationData {
   expandedYears: string[]
   timelineStructure: { [key: string]: { [key: string]: unknown[] } }
   onTabChange: (tab: 'projects' | 'timeline') => void
-  onSectionChange: (section: string) => void
+  onSectionChange: (section: string, tabOverride?: 'projects' | 'timeline') => void
   onCategoryToggle: (categoryId: string) => void
   onYearToggle: (year: string) => void
 }
@@ -36,6 +36,39 @@ interface ContentRendererProps {
   mobileNavigation?: MobileNavigationData
   profileData: ProfileData
   techStackStructure: TechStackCategory[]
+}
+
+const parseContactMethods = (value: unknown): ContactMethod[] => {
+  if (!Array.isArray(value)) return []
+
+  return value.reduce<ContactMethod[]>((accumulator, item) => {
+    if (!item || typeof item !== 'object') return accumulator
+    const candidate = item as Record<string, unknown>
+    const rawId = candidate.id
+    const rawLabel = candidate.label
+    const rawValue = candidate.value
+    const rawIcon = candidate.icon
+
+    const label = typeof rawLabel === 'string' ? rawLabel.trim() : ''
+    const valueText = typeof rawValue === 'string' ? rawValue.trim() : ''
+    if (!label || !valueText) return accumulator
+
+    const id = typeof rawId === 'string' && rawId.trim().length > 0
+      ? rawId.trim()
+      : `${label}-${valueText}`
+    const icon = typeof rawIcon === 'string' && rawIcon.trim().length > 0
+      ? rawIcon.trim()
+      : undefined
+
+    accumulator.push({
+      id,
+      label,
+      value: valueText,
+      icon
+    })
+
+    return accumulator
+  }, [])
 }
 
 export default function ContentRenderer({
@@ -187,9 +220,12 @@ export default function ContentRenderer({
   }
 
   const projectMap = new Map<string, Project>()
-  projects.forEach(project => {
+  const projectIndexMap = new Map<string, number>()
+
+  projects.forEach((project, index) => {
     if (project.id) {
       projectMap.set(project.id, project)
+      projectIndexMap.set(project.id, index)
     }
   })
 
@@ -201,6 +237,12 @@ export default function ContentRenderer({
     ? activeTechStackChild.projectIds
         .map(projectId => projectMap.get(projectId))
         .filter((project): project is Project => Boolean(project))
+        .sort((a, b) => {
+          const orderA = a.id ? projectIndexMap.get(a.id) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER
+          const orderB = b.id ? projectIndexMap.get(b.id) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER
+
+          return orderA - orderB
+        })
     : []
   
   if (filteredProjects.length > 0) {
@@ -258,6 +300,12 @@ export default function ContentRenderer({
 
   // 关于我页面
   if (activeSection === 'about') {
+    const contactMethods = parseContactMethods(profileData.profile?.contactMethods)
+    const email = getString(profileData.profile?.email)
+    const aboutGithub = getString(profileData.profile?.github_username) || githubHandle
+    const aboutBio = getString(profileData.profile?.bio) || ''
+    const aboutSubtitle = getString(profileData.profile?.aboutSubtitle)
+
     return (
       <div className="space-y-6">
         {/* 移动端导航 */}
@@ -274,10 +322,14 @@ export default function ContentRenderer({
 
         <AboutContent
           username={username}
-          github={profileData.profile?.github_username || username}
-          bio={String(profileData.profile?.bio || '')}
+          github={aboutGithub || username}
+          bio={aboutBio}
           skills={profileData.profile?.skills}
           interests={profileData.profile?.interests as string[] | undefined}
+          email={email}
+          website={website}
+          aboutSubtitle={aboutSubtitle}
+          contactMethods={contactMethods.length ? contactMethods : undefined}
         />
       </div>
     )

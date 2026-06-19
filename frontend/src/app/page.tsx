@@ -53,6 +53,13 @@ function MobileMenu() {
             >
               文档
             </a>
+            <a 
+              href="/editor-demo" 
+              className="block text-sm font-medium text-foreground/60 hover:text-foreground/80 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              编辑器演示
+            </a>
           </nav>
         </div>
       )}
@@ -96,6 +103,9 @@ export default function Home() {
             </a>
             <a href="#docs" className="transition-colors hover:text-foreground/80 text-foreground/60">
               文档
+            </a>
+            <a href="/editor-demo" className="transition-colors hover:text-foreground/80 text-foreground/60">
+              编辑器演示
             </a>
           </nav>
           <div className="flex items-center space-x-1 sm:space-x-2">

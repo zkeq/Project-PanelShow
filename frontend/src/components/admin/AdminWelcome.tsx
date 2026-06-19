@@ -14,6 +14,7 @@ import {
   checkUsernameAvailability,
   getProfileSection,
   updateProfileSection,
+  syncGithubProfile,
 } from '@/lib/api';
 
 interface AdminWelcomeProps {
@@ -182,12 +183,49 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
         console.warn('获取现有 profile 失败，将创建新配置', fetchError);
       }
 
+      let githubProfileData: Record<string, unknown> = {};
+
+      if (user?.auth_type === 'github' && user.github_username) {
+        try {
+          const syncResult = await syncGithubProfile(
+            bindingIdentifier,
+            user.github_username.toLowerCase(),
+            token
+          );
+          if (syncResult?.data && typeof syncResult.data === 'object') {
+            githubProfileData = syncResult.data;
+          }
+        } catch (syncError) {
+          console.warn('自动同步 GitHub 信息失败', syncError);
+        }
+      }
+
+      const pickString = (value: unknown, fallback?: string) => {
+        if (typeof value === 'string' && value.trim()) {
+          return value;
+        }
+        return fallback;
+      };
+
       const mergedProfile = {
         ...currentProfile,
+        ...githubProfileData,
         username: targetUsername || bindingIdentifier,
-        name: siteTitle.trim() || currentProfile.name || targetUsername || bindingIdentifier,
-        siteTitle: siteTitle.trim() || currentProfile.siteTitle || targetUsername || bindingIdentifier,
+        name:
+          siteTitle.trim() ||
+          pickString(currentProfile['name'], undefined) ||
+          targetUsername ||
+          bindingIdentifier,
+        siteTitle:
+          siteTitle.trim() ||
+          pickString(currentProfile['siteTitle'], undefined) ||
+          targetUsername ||
+          bindingIdentifier,
         siteAddress: bindingIdentifier,
+        github_username:
+          user?.auth_type === 'github' && user.github_username
+            ? user.github_username.toLowerCase()
+            : pickString(githubProfileData['github_username'], pickString(currentProfile['github_username'])),
         updatedAt: new Date().toISOString(),
       } as Record<string, unknown>;
 

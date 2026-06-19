@@ -6,7 +6,7 @@ import { useTheme } from "next-themes"
 import { Switch } from "@/components/ui/switch"
 
 export function ThemeSwitch() {
-  const { theme, setTheme } = useTheme()
+  const { setTheme, resolvedTheme, theme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -17,7 +17,7 @@ export function ThemeSwitch() {
     return null
   }
 
-  const isDark = theme === "dark"
+  const isDark = (theme === "system" ? resolvedTheme : theme) === "dark"
 
   return (
     <div className="flex items-center space-x-2">

@@ -1,20 +1,38 @@
 """
 极简JSON后端 - 所有API路由
 """
+import asyncio
+import base64
+import hmac
+import math
+import copy
+import re
+import uuid
+import os
+import time
+from datetime import timedelta, datetime, timezone
+from pathlib import Path as FilePath
+from typing import Any, Dict, List, Optional, Tuple, Union
+from urllib import parse as urllib_parse
+from urllib import request as urllib_request
+from urllib.parse import quote
+
 from fastapi import FastAPI, HTTPException, Depends, Body, Path, UploadFile, File, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from typing import Any, Dict, List, Optional, Tuple, Union
-import math
-from datetime import timedelta, datetime, timezone
-import copy
-import re
-from pathlib import Path as FilePath
-import uuid
-import db
-import auth
+
+from cos_client import (
+    CosConfigError,
+    CosUploadError,
+    build_cos_key,
+    upload_file_to_cos,
+)
 import hashlib
 import json
+
+import auth
+import db
+import notifications
 
 app = FastAPI(title="极简JSON后端", version="2.0.0")
 
@@ -29,6 +47,10 @@ app.add_middleware(
 
 # JS 代码执行缓存（内存缓存）
 js_execution_cache: Dict[str, Dict[str, Any]] = {}
+
+TEXT_SHARE_FILE = FilePath(__file__).parent / "data" / "text_shares.json"
+TEXT_SHARE_CHUNK_SIZE = 1500
+LOCAL_BLOCKED_KEYWORDS = {"诈骗", "赌博", "毒品", "恐怖袭击"}
 
 
 # ==================== 辅助函数 ====================
@@ -214,7 +236,12 @@ async def bind_username(
 
         # 用户名未被绑定，正常绑定
         github_id = current_user["github_id"]
+        user_existed = db.user_exists(username)
+        if not user_existed:
+            db.create_user(username)
         auth.save_user_binding(github_id, username)
+        if not user_existed:
+            asyncio.create_task(notifications.notify_site_initialized(username))
         return {"message": f"用户已绑定用户名: {username}", "username": username}
 
     else:
@@ -273,6 +300,7 @@ async def create_user(
         raise HTTPException(status_code=400, detail="用户已存在")
 
     db.create_user(username)
+    asyncio.create_task(notifications.notify_site_initialized(username))
     return {"message": f"用户 {username} 创建成功"}
 
 
@@ -377,6 +405,7 @@ async def create_project(
     projects.append(data)
 
     db.write_json(username, "projects.json", projects)
+    asyncio.create_task(notifications.notify_project_created(username, data))
 
     return {"message": "项目创建成功", "data": data}
 
@@ -566,6 +595,7 @@ async def update_project(
     projects[project_index] = data
 
     db.write_json(username, "projects.json", projects)
+    asyncio.create_task(notifications.notify_project_updated(username, data))
     return {"message": "项目更新成功", "data": data}
 
 
@@ -762,6 +792,7 @@ async def create_timeline(
     timeline.append(data)
 
     db.write_json(username, "timeline.json", timeline)
+    asyncio.create_task(notifications.notify_timeline_created(username, data))
 
     return {"message": "时间线创建成功", "data": data}
 
@@ -799,6 +830,7 @@ async def update_timeline(
                 updated_item["likes"] = item.get("likes", 0)
             timeline[index] = updated_item
             db.write_json(username, "timeline.json", timeline)
+            asyncio.create_task(notifications.notify_timeline_updated(username, updated_item))
             return {"message": "时间线更新成功", "data": updated_item}
 
     raise HTTPException(status_code=404, detail="时间线项不存在")
@@ -995,9 +1027,10 @@ async def upload_image(
         raise HTTPException(status_code=400, detail="仅支持上传 PNG/JPEG/GIF/WEBP 图片")
 
     contents = await file.read()
-    max_size_bytes = 5 * 1024 * 1024  # 5MB
-    if len(contents) > max_size_bytes:
-        raise HTTPException(status_code=400, detail="文件大小不能超过 5MB")
+    file_size = len(contents)
+    max_size_bytes = 100 * 1024 * 1024  # 5MB
+    if file_size > max_size_bytes:
+        raise HTTPException(status_code=400, detail="文件大小不能超过 100MB")
 
     original_suffix = FilePath(str(file.filename)).suffix if file.filename else ""
     fallback_suffix = ALLOWED_IMAGE_TYPES[file.content_type]
@@ -1018,12 +1051,86 @@ async def upload_image(
 
     relative_url = f"/uploads/{username}/{safe_category}/{unique_name}"
 
+    try:
+        cos_key = build_cos_key(username, safe_category, unique_name)
+        cos_url = upload_file_to_cos(
+            local_path=str(destination),
+            key=cos_key,
+            content_type=file.content_type,
+        )
+    except CosConfigError as exc:
+        raise HTTPException(status_code=500, detail=f"COS 配置错误: {exc}")
+    except CosUploadError as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    upload_stats = notifications.record_image_upload(
+        username=username,
+        original_filename=file.filename,
+        stored_filename=unique_name,
+        file_url=cos_url,
+        local_url=relative_url,
+        category=safe_category,
+        size=file_size,
+    )
+    asyncio.create_task(notifications.notify_image_uploaded(upload_stats))
+
     return {
         "success": True,
         "filename": unique_name,
-        "url": relative_url,
+        "url": cos_url,
+        "cos_key": cos_key,
+        "local_url": relative_url,
         "content_type": file.content_type,
-        "size": len(contents)
+        "size": file_size
+    }
+
+
+@app.post("/api/shares/text/images", tags=["文字分享"])
+async def upload_share_image(file: UploadFile = File(...)):
+    """为编辑器分享场景提供免登录图片上传接口"""
+
+    if not file.content_type or file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="仅支持上传 PNG/JPEG/GIF/WEBP 图片")
+
+    contents = await file.read()
+    file_size = len(contents)
+    max_size_bytes = 10 * 1024 * 1024
+    if file_size > max_size_bytes:
+        raise HTTPException(status_code=400, detail="文件大小不能超过 10MB")
+
+    original_suffix = FilePath(str(file.filename)).suffix if file.filename else ""
+    fallback_suffix = ALLOWED_IMAGE_TYPES[file.content_type]
+    file_extension = original_suffix or fallback_suffix
+
+    unique_name = f"{uuid.uuid4().hex}{file_extension}"
+    share_upload_dir = FILE_UPLOAD_ROOT / "_share" / "images"
+    share_upload_dir.mkdir(parents=True, exist_ok=True)
+
+    destination = share_upload_dir / unique_name
+    with destination.open("wb") as buffer:
+        buffer.write(contents)
+
+    relative_url = f"/uploads/_share/images/{unique_name}"
+
+    try:
+        cos_key = build_cos_key("_share", "images", unique_name)
+        cos_url = upload_file_to_cos(
+            local_path=str(destination),
+            key=cos_key,
+            content_type=file.content_type,
+        )
+    except CosConfigError:
+        cos_url = relative_url
+    except CosUploadError:
+        cos_url = relative_url
+
+    return {
+        "success": True,
+        "filename": unique_name,
+        "url": cos_url,
+        "local_url": relative_url,
+        "content_type": file.content_type,
+        "size": file_size,
     }
 
 
@@ -1392,3 +1499,221 @@ def update_project_tech_stacks(
     if updated:
         db.write_json(username, "projects.json", projects)
 
+
+def read_text_shares() -> List[Dict[str, Any]]:
+    if not TEXT_SHARE_FILE.exists():
+        return []
+
+    try:
+        with open(TEXT_SHARE_FILE, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return []
+
+    if not isinstance(payload, list):
+        return []
+
+    return payload
+
+
+def write_text_shares(shares: List[Dict[str, Any]]):
+    TEXT_SHARE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(TEXT_SHARE_FILE, "w", encoding="utf-8") as f:
+        json.dump(shares, f, ensure_ascii=False, indent=2)
+
+
+def hash_share_password(password: str) -> str:
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+
+def run_remote_moderation(chunk: str, open_id: str) -> Tuple[bool, str]:
+    access_key_id = os.getenv("ALIYUN_GREEN_ACCESS_KEY_ID", "").strip()
+    access_key_secret = os.getenv("ALIYUN_GREEN_ACCESS_KEY_SECRET", "").strip()
+    endpoint = os.getenv("ALIYUN_GREEN_ENDPOINT", "green-cip.cn-shanghai.aliyuncs.com").strip()
+    scene = os.getenv("ALIYUN_GREEN_SCENE", "llm_query_moderation").strip()
+
+    if not access_key_id or not access_key_secret:
+        return False, "内容审核接口未配置密钥"
+
+    def percent_encode(value: Any) -> str:
+        return quote(str(value), safe="~")
+
+    def sign_params(params: Dict[str, Any]) -> str:
+        sorted_items = sorted(params.items(), key=lambda item: item[0])
+        canonicalized = "&".join(
+            f"{percent_encode(key)}={percent_encode(val)}" for key, val in sorted_items
+        )
+        string_to_sign = "POST&%2F&" + percent_encode(canonicalized)
+        return base64.b64encode(
+            hmac.new(
+                (access_key_secret + "&").encode("utf-8"),
+                string_to_sign.encode("utf-8"),
+                hashlib.sha1,
+            ).digest()
+        ).decode("utf-8")
+
+    service_parameters = json.dumps(
+        {
+            "content": chunk,
+            "dataId": f"{open_id}-{int(time.time() * 1000)}",
+        },
+        ensure_ascii=False,
+    )
+
+    params = {
+        "Action": "TextModerationPlus",
+        "Version": "2022-03-02",
+        "Format": "JSON",
+        "AccessKeyId": access_key_id,
+        "SignatureMethod": "HMAC-SHA1",
+        "SignatureVersion": "1.0",
+        "SignatureNonce": str(uuid.uuid4()),
+        "Timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "Service": scene,
+        "ServiceParameters": service_parameters,
+    }
+    params["Signature"] = sign_params(params)
+
+    timeout_seconds = float(os.getenv("TEXT_MODERATION_TIMEOUT", "10"))
+    request_data = urllib_parse.urlencode(params).encode("utf-8")
+    req = urllib_request.Request(
+        f"https://{endpoint}/",
+        data=request_data,
+        method="POST",
+    )
+
+    with urllib_request.urlopen(req, timeout=timeout_seconds) as response:
+        payload = response.read().decode("utf-8")
+
+    body = json.loads(payload) if payload else {}
+    if not isinstance(body, dict):
+        return False, "内容审核接口返回异常"
+
+    code = body.get("code", body.get("Code"))
+    if code != 200:
+        message = body.get("message", body.get("Message"))
+        return False, f"内容审核接口异常: {message or code}"
+
+    data = body.get("data") or body.get("Data") or {}
+    result_items = data.get("result") or data.get("Result") or []
+    advice_items = data.get("advice") or data.get("Advice") or []
+    risky_results = [
+        item
+        for item in result_items
+        if (item.get("label") or item.get("Label"))
+        and (item.get("label") or item.get("Label")) != "nonLabel"
+    ]
+
+    risk_words: List[str] = []
+    for item in risky_results:
+        words = item.get("riskWords") or item.get("RiskWords") or ""
+        normalized_words = words.replace("，", ",")
+        risk_words.extend([word.strip() for word in normalized_words.split(",") if word.strip()])
+
+    risk_level = data.get("riskLevel") or data.get("RiskLevel")
+    is_risky = (risk_level and risk_level != "none") or risky_results or advice_items
+    if is_risky:
+        risk_words_text = ",".join(sorted(set(risk_words))) if risk_words else "***"
+        return False, f"您输入的内容包含违规内容: {risk_words_text},请检查后重试"
+
+    return True, "内容审核通过"
+
+
+def moderate_text_content(content: str):
+    if not content.strip():
+        raise HTTPException(status_code=400, detail="分享内容不能为空")
+
+    for blocked_word in LOCAL_BLOCKED_KEYWORDS:
+        if blocked_word in content:
+            raise HTTPException(status_code=400, detail="内容包含不允许发布的敏感词")
+
+    chunks = [content[i:i + TEXT_SHARE_CHUNK_SIZE] for i in range(0, len(content), TEXT_SHARE_CHUNK_SIZE)]
+    for index, chunk in enumerate(chunks):
+        open_id = f"text-share-{index + 1}"
+        try:
+            is_passed, message = run_remote_moderation(chunk, open_id)
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"文本审核服务不可用: {exc}")
+
+        if not is_passed:
+            raise HTTPException(status_code=400, detail=message)
+
+
+def get_share_record_by_id(share_id: str) -> Dict[str, Any]:
+    shares = read_text_shares()
+    for share in shares:
+        if share.get("id") == share_id:
+            return share
+    raise HTTPException(status_code=404, detail="分享不存在或已失效")
+
+
+@app.post("/api/shares/text", tags=["文字分享"])
+async def create_text_share(payload: Dict[str, str] = Body(...)):
+    content = str(payload.get("content", ""))
+    password = str(payload.get("password", "")).strip()
+
+    if len(password) < 4:
+        raise HTTPException(status_code=400, detail="分享密码至少 4 位")
+
+    moderate_text_content(content)
+
+    shares = read_text_shares()
+    share_id = uuid.uuid4().hex[:11]
+    now = datetime.now(timezone.utc).isoformat()
+    share_record = {
+        "id": share_id,
+        "content": content,
+        "password_hash": hash_share_password(password),
+        "created_at": now,
+        "updated_at": now,
+    }
+    shares.append(share_record)
+    write_text_shares(shares)
+
+    return {
+        "share_id": share_id,
+        "share_url": f"/share/{share_id}",
+        "created_at": now,
+    }
+
+
+@app.get("/api/shares/text/{share_id}", tags=["文字分享"])
+async def get_text_share(share_id: str = Path(...)):
+    share = get_share_record_by_id(share_id)
+    return {
+        "share_id": share["id"],
+        "content": share.get("content", ""),
+        "updated_at": share.get("updated_at"),
+        "created_at": share.get("created_at"),
+    }
+
+
+@app.put("/api/shares/text/{share_id}", tags=["文字分享"])
+async def update_text_share(share_id: str = Path(...), payload: Dict[str, str] = Body(...)):
+    password = str(payload.get("password", "")).strip()
+    content = str(payload.get("content", ""))
+
+    shares = read_text_shares()
+    target_index = -1
+    for index, share in enumerate(shares):
+        if share.get("id") == share_id:
+            target_index = index
+            break
+
+    if target_index < 0:
+        raise HTTPException(status_code=404, detail="分享不存在或已失效")
+
+    if hash_share_password(password) != shares[target_index].get("password_hash"):
+        raise HTTPException(status_code=401, detail="密码错误，无法修改")
+
+    moderate_text_content(content)
+
+    shares[target_index]["content"] = content
+    shares[target_index]["updated_at"] = datetime.now(timezone.utc).isoformat()
+    write_text_shares(shares)
+
+    return {
+        "message": "分享内容更新成功",
+        "share_id": share_id,
+        "updated_at": shares[target_index]["updated_at"],
+    }

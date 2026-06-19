@@ -1,40 +1,104 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { useParams } from 'next/navigation'
+import { type ReactNode, useState, useEffect, useMemo, useCallback } from 'react'
+import Link from 'next/link'
+import { useRouter, useSelectedLayoutSegments } from 'next/navigation'
+import { AlertCircle, Loader2 } from 'lucide-react'
+
 import { checkUsername } from '@/lib/api'
 import { useProfileData } from '@/hooks/useProfileData'
 import { useProjectsAndTimeline } from '@/hooks/useProjectsAndTimeline'
 import { useTechStackConfig } from '@/hooks/useTechStackConfig'
-import { Card, CardContent } from '@/components/ui/card'
-import { AlertCircle, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-
-// 导入新的组件
 import HeaderNavigation from '@/components/layout/HeaderNavigation'
 import SidebarNavigation from '@/components/layout/SidebarNavigation'
 import ContentRenderer from '@/components/layout/ContentRenderer'
 import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
-export default function UserProjectPage() {
-  const params = useParams()
-  const username = params.username as string
+interface ProjectShowcaseClientProps {
+  username: string
+  children?: ReactNode
+}
+
+const deriveSelectionFromSegments = (segments: readonly string[]) => {
+  if (!segments || segments.length === 0) {
+    return {
+      tab: 'projects' as const,
+      section: 'all-projects'
+    }
+  }
+
+  const [first, second, third] = segments
+
+  if (first === 'about') {
+    return { tab: 'projects' as const, section: 'about' }
+  }
+
+  if (first === 'experience') {
+    return { tab: 'projects' as const, section: 'experience' }
+  }
+
+  if (first === 'category') {
+    if (!second) {
+      return { tab: 'projects' as const, section: 'all-projects' }
+    }
+
+    try {
+      return { tab: 'projects' as const, section: decodeURIComponent(second) }
+    } catch {
+      return { tab: 'projects' as const, section: second }
+    }
+  }
+
+  if (first === 'timeline') {
+    if (!second) {
+      return { tab: 'timeline' as const, section: 'all-timeline' }
+    }
+
+    if (!third) {
+      return { tab: 'timeline' as const, section: 'all-timeline' }
+    }
+
+    const normalizedYear = decodeURIComponent(second)
+    const normalizedMonth = decodeURIComponent(third).padStart(2, '0')
+    const normalizedSection = `${normalizedYear}-${normalizedMonth}`
+
+    if (/^\d{4}-\d{2}$/.test(normalizedSection)) {
+      return { tab: 'timeline' as const, section: normalizedSection }
+    }
+
+    return { tab: 'timeline' as const, section: 'all-timeline' }
+  }
+
+  return { tab: 'projects' as const, section: 'all-projects' }
+}
+
+export default function ProjectShowcaseClient({ username, children }: ProjectShowcaseClientProps) {
+  const router = useRouter()
   const encodedUsername = encodeURIComponent(username)
+  const basePath = `/project/${encodedUsername}`
 
-  // 所有 hooks 必须在顶部调用
-  const [activeTab, setActiveTab] = useState<'projects' | 'timeline'>('projects')
-  const [activeSection, setActiveSection] = useState('all-projects')
+  const segments = useSelectedLayoutSegments()
+  const derivedSelection = useMemo(() => deriveSelectionFromSegments(segments), [segments])
+
+  const [activeTab, setActiveTab] = useState<'projects' | 'timeline'>(derivedSelection.tab)
+  const [activeSection, setActiveSection] = useState(derivedSelection.section)
   const [expandedCategories, setExpandedCategories] = useState<string[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [expandedYears, setExpandedYears] = useState<string[]>(['2024', '2025'])
+  const [expandedYears, setExpandedYears] = useState<string[]>(() => {
+    if (derivedSelection.tab === 'timeline' && /^\d{4}-\d{2}$/.test(derivedSelection.section)) {
+      return [derivedSelection.section.split('-')[0]]
+    }
+    return ['2024', '2025']
+  })
   const [expandedProjects, setExpandedProjects] = useState<string[]>([])
 
   const [userStatus, setUserStatus] = useState<{
-    loading: boolean;
-    exists: boolean;
-    isBound: boolean;
-    error: string | null;
+    loading: boolean
+    exists: boolean
+    isBound: boolean
+    error: string | null
   }>({
     loading: true,
     exists: false,
@@ -42,7 +106,20 @@ export default function UserProjectPage() {
     error: null
   })
 
-  // 从 API 获取项目和时间线数据
+  useEffect(() => {
+    setActiveTab(prev => (prev === derivedSelection.tab ? prev : derivedSelection.tab))
+  }, [derivedSelection.tab])
+
+  useEffect(() => {
+    setActiveSection(prev => (prev === derivedSelection.section ? prev : derivedSelection.section))
+    if (derivedSelection.tab === 'timeline' && /^\d{4}-\d{2}$/.test(derivedSelection.section)) {
+      setExpandedYears(prev => {
+        const year = derivedSelection.section.split('-')[0]
+        return prev.includes(year) ? prev : [...prev, year]
+      })
+    }
+  }, [derivedSelection.section, derivedSelection.tab])
+
   const projectsAndTimeline = useProjectsAndTimeline(username)
   const techStackConfig = useTechStackConfig(username)
   const projects = projectsAndTimeline.projects
@@ -52,7 +129,6 @@ export default function UserProjectPage() {
     [techStackConfig.config]
   )
 
-  // 获取profile数据
   const profileData = useProfileData(username)
   const headerAvatar = useMemo(() => {
     const rawAvatar = profileData.profile?.avatar
@@ -62,6 +138,7 @@ export default function UserProjectPage() {
     }
     return undefined
   }, [profileData.profile?.avatar])
+
   const headerDisplayName = useMemo(() => {
     const rawSiteTitle = profileData.profile?.siteTitle
     if (typeof rawSiteTitle === 'string') {
@@ -76,13 +153,10 @@ export default function UserProjectPage() {
     return undefined
   }, [profileData.profile?.siteTitle, profileData.profile?.name])
 
-  // 检查用户名是否存在和被绑定
   useEffect(() => {
     const checkUser = async () => {
       try {
         const response = await checkUsername(username)
-
-        // 用户必须存在且被绑定才能访问
         if (response.exists && response.is_bound) {
           setUserStatus({
             loading: false,
@@ -117,28 +191,120 @@ export default function UserProjectPage() {
     }
   }, [techStackStructure])
 
+  const handleSectionChange = useCallback(
+    (section: string, tabOverride?: 'projects' | 'timeline') => {
+      const targetTab = tabOverride ?? activeTab
+      setActiveTab(targetTab)
+
+      if (targetTab === 'timeline') {
+        if (section === 'all-timeline') {
+          setActiveSection(section)
+          router.push(`${basePath}/timeline`)
+          return
+        }
+
+        const [year, month] = section.split('-')
+        if (!year || !month) {
+          setActiveSection('all-timeline')
+          router.push(`${basePath}/timeline`)
+          return
+        }
+
+        const normalizedMonth = month.padStart(2, '0')
+        const normalizedSection = `${year}-${normalizedMonth}`
+        setActiveSection(normalizedSection)
+        router.push(`${basePath}/timeline/${encodeURIComponent(year)}/${encodeURIComponent(normalizedMonth)}`)
+        return
+      }
+
+      if (section === 'all-projects') {
+        setActiveSection(section)
+        router.push(basePath)
+        return
+      }
+
+      if (section === 'experience') {
+        setActiveSection(section)
+        router.push(`${basePath}/experience`)
+        return
+      }
+
+      if (section === 'about') {
+        setActiveSection(section)
+        router.push(`${basePath}/about`)
+        return
+      }
+
+      setActiveSection(section)
+      router.push(`${basePath}/category/${encodeURIComponent(section)}`)
+    },
+    [activeTab, basePath, router]
+  )
+
   useEffect(() => {
     if (activeTab !== 'projects') return
 
-    const staticProjectSections = new Set(['all-projects', 'experience', 'about'])
-    if (staticProjectSections.has(activeSection)) return
+    if (techStackConfig.loading) return
+
+    const staticSections = new Set(['all-projects', 'experience', 'about'])
+    if (staticSections.has(activeSection)) return
 
     const allChildIds = techStackStructure.flatMap(category => category.children?.map(child => child.id) ?? [])
     if (!allChildIds.includes(activeSection)) {
-      setActiveSection('all-projects')
+      handleSectionChange('all-projects', 'projects')
     }
-  }, [activeTab, activeSection, techStackStructure])
+  }, [activeTab, activeSection, techStackStructure, handleSectionChange, techStackConfig.loading])
 
-  // 显示加载状态
+  const handleTabChange = useCallback(
+    (tab: 'projects' | 'timeline') => {
+      setActiveTab(tab)
+      if (tab === 'projects') {
+        setActiveSection('all-projects')
+        router.push(basePath)
+      } else {
+        setActiveSection('all-timeline')
+        router.push(`${basePath}/timeline`)
+      }
+    },
+    [basePath, router]
+  )
+
+  const handleSidebarToggle = () => {
+    setSidebarCollapsed(prev => !prev)
+  }
+
+  const handleCategoryToggle = (categoryId: string) => {
+    setExpandedCategories(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    )
+  }
+
+  const handleYearToggle = (year: string) => {
+    setExpandedYears(prev =>
+      prev.includes(year)
+        ? prev.filter(item => item !== year)
+        : [...prev, year]
+    )
+  }
+
+  const toggleProjectExpansion = (projectId: string) => {
+    setExpandedProjects(prev =>
+      prev.includes(projectId)
+        ? prev.filter(id => id !== projectId)
+        : [...prev, projectId]
+    )
+  }
+
   if (userStatus.loading || profileData.loading || projectsAndTimeline.loading || techStackConfig.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     )
   }
 
-  // 显示错误状态
   if (userStatus.error || profileData.error || projectsAndTimeline.error || techStackConfig.error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -160,18 +326,14 @@ export default function UserProjectPage() {
     )
   }
 
-  // 用户验证通过，继续渲染页面
-
-
-  // 从时间线数据中生成时间分类结构
   const generateTimelineStructure = () => {
     const timelineByYear: { [key: string]: { [key: string]: typeof timelineItems } } = {}
-    
+
     timelineItems.forEach(item => {
       const date = new Date(item.publishedAt)
       const year = date.getFullYear().toString()
       const month = (date.getMonth() + 1).toString().padStart(2, '0')
-      
+
       if (!timelineByYear[year]) {
         timelineByYear[year] = {}
       }
@@ -180,7 +342,7 @@ export default function UserProjectPage() {
       }
       timelineByYear[year][month].push(item)
     })
-    
+
     return timelineByYear
   }
 
@@ -190,59 +352,16 @@ export default function UserProjectPage() {
     return `${parseInt(month)}月`
   }
 
-
-
-  const toggleProjectExpansion = (projectId: string) => {
-    setExpandedProjects(prev =>
-      prev.includes(projectId)
-        ? prev.filter(id => id !== projectId)
-        : [...prev, projectId]
-    )
-  }
-
-  // 事件处理函数
-  const handleTabChange = (tab: 'projects' | 'timeline') => {
-    setActiveTab(tab)
-  }
-
-  const handleSectionChange = (section: string) => {
-    setActiveSection(section)
-  }
-
-  const handleSidebarToggle = () => {
-    setSidebarCollapsed(!sidebarCollapsed)
-  }
-
-  const handleCategoryToggle = (categoryId: string) => {
-    setExpandedCategories(prev =>
-      prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
-    )
-  }
-
-
-  const handleYearToggle = (year: string) => {
-    setExpandedYears(prev =>
-      prev.includes(year)
-        ? prev.filter(y => y !== year)
-        : [...prev, year]
-    )
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      {/* 顶部导航栏 */}
       <HeaderNavigation
         username={username}
         avatar={headerAvatar}
         displayName={headerDisplayName}
-        titleHref={`/project/${encodedUsername}`}
+        titleHref={basePath}
       />
 
-      {/* 主体内容区 */}
       <div className="flex">
-        {/* 左侧目录栏 - 桌面端显示 */}
         <div className="hidden lg:block">
           <SidebarNavigation
             activeTab={activeTab}
@@ -262,9 +381,7 @@ export default function UserProjectPage() {
           />
         </div>
 
-        {/* 右侧内容区 */}
         <main className={`flex-1 min-w-0 relative min-h-[calc(100vh-3.5rem)] ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-56'}`}>
-          {/* 背景装饰 */}
           <BackgroundDecorations />
 
           <div className="relative z-10">
@@ -280,7 +397,6 @@ export default function UserProjectPage() {
                 getMonthName={getMonthName}
                 profileData={profileData}
                 techStackStructure={techStackStructure}
-                // 移动端需要的导航控制
                 mobileNavigation={{
                   techStackStructure,
                   expandedCategories,
@@ -296,6 +412,7 @@ export default function UserProjectPage() {
           </div>
         </main>
       </div>
+      {children}
     </div>
   )
 }

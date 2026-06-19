@@ -22,7 +22,7 @@ interface SidebarNavigationProps {
   timelineStructure: { [key: string]: { [key: string]: unknown[] } }
   techStackStructure: TechStackCategory[]
   onTabChange: (tab: 'projects' | 'timeline') => void
-  onSectionChange: (section: string) => void
+  onSectionChange: (section: string, tabOverride?: 'projects' | 'timeline') => void
   onSidebarToggle: () => void
   onCategoryToggle: (categoryId: string) => void
   onYearToggle: (year: string) => void
@@ -54,10 +54,10 @@ export default function SidebarNavigation({
 }: SidebarNavigationProps) {
 
   return (
-    <aside className={`border-r bg-muted/10 transition-all duration-300 fixed h-[calc(100vh-3.5rem)] z-40 ${
+    <aside className={`border-r bg-muted/10 transition-all duration-300 fixed top-14 h-[calc(100vh-3.5rem)] z-40 ${
       sidebarCollapsed ? 'w-16' : 'w-56'
     }`}>
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col min-h-0">
         {/* 项目/时间线 切换标签 */}
         {!sidebarCollapsed && (
           <div className="p-4 pb-2">
@@ -65,7 +65,7 @@ export default function SidebarNavigation({
               <button
                 onClick={() => {
                   onTabChange('projects')
-                  onSectionChange('all-projects')
+                  onSectionChange('all-projects', 'projects')
                 }}
                 className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   activeTab === 'projects' 
@@ -78,7 +78,7 @@ export default function SidebarNavigation({
               <button
                 onClick={() => {
                   onTabChange('timeline')
-                  onSectionChange('all-timeline')
+                  onSectionChange('all-timeline', 'timeline')
                 }}
                 className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                   activeTab === 'timeline' 
@@ -92,13 +92,13 @@ export default function SidebarNavigation({
           </div>
         )}
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-4 pt-2">
             {activeTab === 'projects' ? (
               <div className="space-y-2">
                 {/* 所有项目选项 */}
                 <button
-                  onClick={() => onSectionChange('all-projects')}
+                  onClick={() => onSectionChange('all-projects', 'projects')}
                   className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
                     activeSection === 'all-projects' 
                       ? 'bg-primary/10 text-primary font-medium' 
@@ -147,7 +147,7 @@ export default function SidebarNavigation({
                             return (
                               <button
                                 key={child.id}
-                                onClick={() => onSectionChange(child.id)}
+                                onClick={() => onSectionChange(child.id, 'projects')}
                                 className={`w-full flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
                                   isActive 
                                     ? 'bg-primary/10 text-primary font-medium' 
@@ -171,7 +171,7 @@ export default function SidebarNavigation({
                 {/* 单独的页面项 */}
                 <div className="space-y-1">
                   <button
-                    onClick={() => onSectionChange('experience')}
+                    onClick={() => onSectionChange('experience', 'projects')}
                     className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
                       activeSection === 'experience' 
                         ? 'bg-primary/10 text-primary font-medium' 
@@ -183,7 +183,7 @@ export default function SidebarNavigation({
                   </button>
                   
                   <button
-                    onClick={() => onSectionChange('about')}
+                    onClick={() => onSectionChange('about', 'projects')}
                     className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
                       activeSection === 'about' 
                         ? 'bg-primary/10 text-primary font-medium' 
@@ -199,7 +199,7 @@ export default function SidebarNavigation({
               <div className="space-y-2">
                 {/* 全部时间线 */}
                 <button
-                  onClick={() => onSectionChange('all-timeline')}
+                  onClick={() => onSectionChange('all-timeline', 'timeline')}
                   className={`w-full flex items-center space-x-2 px-3 py-2 rounded-md text-sm transition-colors ${
                     activeSection === 'all-timeline' 
                       ? 'bg-primary/10 text-primary font-medium' 
@@ -262,7 +262,7 @@ export default function SidebarNavigation({
                                   return (
                                     <button
                                       key={month}
-                                      onClick={() => onSectionChange(sectionId)}
+                                      onClick={() => onSectionChange(sectionId, 'timeline')}
                                       className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-sm transition-colors ${
                                         activeSection === sectionId 
                                           ? 'bg-primary/10 text-primary font-medium' 
