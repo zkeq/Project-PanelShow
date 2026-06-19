@@ -69,6 +69,8 @@ export interface AuthResponse {
     auth_type: string;
     github_id?: number;
     github_username?: string;
+    tdp_id?: string;
+    tdp_username?: string;
   };
 }
 
