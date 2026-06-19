@@ -115,33 +115,43 @@ function TdpCallbackContent() {
 
           {/* 步骤进度 */}
           {status !== "error" && (
-            <div className="w-full space-y-2">
-              {steps.map((step, i) => {
-                const stepNum = i + 1;
-                const done = currentStep > stepNum;
-                const active = currentStep === stepNum;
-                return (
-                  <div key={step} className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium transition-all",
-                      done ? "bg-green-500 text-white" :
-                      active ? "bg-primary text-primary-foreground" :
-                      "bg-muted text-muted-foreground"
-                    )}>
-                      {done ? <CheckCircle2 className="w-3 h-3" /> : stepNum}
+            <div className="w-full space-y-3">
+              <div className="space-y-2">
+                {steps.map((step, i) => {
+                  const stepNum = i + 1;
+                  const done = currentStep > stepNum;
+                  const active = currentStep === stepNum;
+                  return (
+                    <div key={step} className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-medium transition-all",
+                        done ? "bg-green-500 text-white" :
+                        active ? "bg-primary text-primary-foreground" :
+                        "bg-muted text-muted-foreground"
+                      )}>
+                        {done ? <CheckCircle2 className="w-3 h-3" /> : stepNum}
+                      </div>
+                      <span className={cn(
+                        "text-sm transition-colors",
+                        done ? "text-green-600 dark:text-green-400" :
+                        active ? "text-foreground font-medium" :
+                        "text-muted-foreground"
+                      )}>
+                        {step}
+                      </span>
+                      {active && <Loader2 className="w-3 h-3 animate-spin text-primary ml-auto" />}
                     </div>
-                    <span className={cn(
-                      "text-sm transition-colors",
-                      done ? "text-green-600 dark:text-green-400" :
-                      active ? "text-foreground font-medium" :
-                      "text-muted-foreground"
-                    )}>
-                      {step}
-                    </span>
-                    {active && <Loader2 className="w-3 h-3 animate-spin text-primary ml-auto" />}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+
+              {/* 底部进度条 */}
+              <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-foreground rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${Math.min((currentStep / steps.length) * 100, 100)}%` }}
+                />
+              </div>
             </div>
           )}
 
