@@ -119,7 +119,7 @@ export function AdminLogin() {
         <div className="absolute bottom-1/3 left-1/2 w-28 h-28 bg-muted/20 rounded-full blur-2xl opacity-60" />
       </div>
 
-      <Card className="w-full max-w-3xl shadow-xl backdrop-blur-sm bg-card/90 border relative z-10 overflow-hidden">
+      <Card className="w-full max-w-3xl shadow-xl backdrop-blur-sm bg-card/90 border relative z-10 overflow-hidden py-0">
         <div className="flex min-h-[480px]">
 
           {/* 左侧：品牌区 */}
