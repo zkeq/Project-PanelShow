@@ -1,5 +1,5 @@
 """
-JWT认证系统 + GitHub OAuth + 用户名绑定
+JWT认证系统 + GitHub OAuth + TDP OIDC + 用户名绑定
 """
 import yaml
 import httpx
@@ -26,6 +26,16 @@ ACCESS_TOKEN_EXPIRE_MINUTES = config['jwt']['access_token_expire_minutes']
 GITHUB_CLIENT_ID = config['github']['client_id']
 GITHUB_CLIENT_SECRET = config['github']['client_secret']
 GITHUB_REDIRECT_URI = config['github']['redirect_uri']
+
+# TDP OIDC 配置
+TDP_CLIENT_ID = config['tdp']['client_id']
+TDP_CLIENT_SECRET = config['tdp']['client_secret']
+TDP_REDIRECT_URI = config['tdp']['redirect_uri']
+TDP_ISSUER = config['tdp']['issuer']
+TDP_AUTH_ENDPOINT = f"{TDP_ISSUER}/authorize"
+TDP_TOKEN_ENDPOINT = f"{TDP_ISSUER}/oauth/token"
+TDP_USERINFO_ENDPOINT = f"{TDP_ISSUER}/userinfo"
+TDP_FRONTEND_CALLBACK = config['tdp']['frontend_callback']
 
 # 密码加密
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -101,6 +111,23 @@ def _build_user_from_payload(payload: dict) -> dict:
             "github_id": github_id,
             "github_username": github_username,
             "bound_username": get_user_binding(github_id)
+        }
+    elif auth_type == "tdp":
+        tdp_id = payload.get("tdp_id")
+        tdp_username = payload.get("tdp_username")
+
+        if not tdp_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="无效的认证凭证"
+            )
+
+        return {
+            "role": "user",
+            "auth_type": "tdp",
+            "tdp_id": tdp_id,
+            "tdp_username": tdp_username,
+            "bound_username": get_user_binding(tdp_id)
         }
     else:
         raise HTTPException(
@@ -319,3 +346,59 @@ def require_admin(current_user: dict = Depends(get_current_user)):
             detail="需要管理员权限"
         )
     return current_user
+
+
+async def tdp_get_access_token(code: str) -> str:
+    """通过 TDP code 换取 access_token"""
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
+        try:
+            response = await client.post(
+                TDP_TOKEN_ENDPOINT,
+                data={
+                    "grant_type": "authorization_code",
+                    "code": code,
+                    "redirect_uri": TDP_REDIRECT_URI,
+                    "client_id": TDP_CLIENT_ID,
+                    "client_secret": TDP_CLIENT_SECRET,
+                },
+                headers={"Accept": "application/json"},
+            )
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="TDP 授权请求超时，请检查网络后重试")
+        except httpx.RequestError:
+            raise HTTPException(status_code=503, detail="TDP 授权请求失败，请稍后重试")
+
+        if response.status_code != 200:
+            print(f"[TDP] token exchange failed, status={response.status_code}, body={response.text}")
+            raise HTTPException(status_code=400, detail="TDP 授权失败")
+
+        data = response.json()
+        print(f"[TDP] token exchange success, data={data}")
+        access_token = data.get("access_token")
+        if not access_token:
+            raise HTTPException(status_code=400, detail="未获取到 TDP access_token")
+
+        return access_token
+
+
+async def tdp_get_user_info(access_token: str) -> dict:
+    """通过 access_token 获取 TDP 用户信息"""
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
+        try:
+            response = await client.get(
+                TDP_USERINFO_ENDPOINT,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json",
+                },
+            )
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="获取 TDP 用户信息超时，请检查网络后重试")
+        except httpx.RequestError:
+            raise HTTPException(status_code=503, detail="获取 TDP 用户信息失败，请稍后重试")
+
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail="获取 TDP 用户信息失败")
+
+        return response.json()
+

@@ -118,6 +118,10 @@ export function githubExchangeCode(code: string) {
   return request<AuthResponse>(url);
 }
 
+export function tdpGetAuthUrl() {
+  return request<GithubLoginResponse>('/api/auth/tdp/login');
+}
+
 export function fetchCurrentUser(token: string) {
   return request<CurrentUserResponse>('/api/auth/me', { token });
 }

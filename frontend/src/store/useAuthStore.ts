@@ -9,6 +9,7 @@ import {
   fetchCurrentUser,
   githubExchangeCode,
   githubGetAuthUrl,
+  tdpGetAuthUrl,
 } from '@/lib/api';
 
 const getStatusCode = (error: unknown): number | undefined => {
@@ -32,15 +33,19 @@ interface AuthState {
   error: string | null;
   hydrated: boolean;
   pendingGithubState: string | null;
+  pendingTdpState: string | null;
   getGithubAuthUrl: () => Promise<string>;
+  getTdpAuthUrl: () => Promise<string>;
   loginWithPassword: (username: string, password: string) => Promise<void>;
   loginWithGithubCode: (code: string) => Promise<void>;
+  loginWithTdpToken: (token: string) => Promise<void>;
   fetchUser: () => Promise<void>;
   bindUsername: (username: string) => Promise<void>;
   logout: () => void;
   setHydrated: (value: boolean) => void;
   clearError: () => void;
   setGithubState: (state: string | null) => void;
+  setTdpState: (state: string | null) => void;
 }
 
 function mapAuthResponse(response: AuthResponse): { token: string; user: AuthUser } {
@@ -66,15 +71,27 @@ export const useAuthStore = create<AuthState>()(
       error: null,
       hydrated: false,
       pendingGithubState: null,
+      pendingTdpState: null,
       setHydrated: (value) => set({ hydrated: value }),
       clearError: () => set({ error: null }),
       setGithubState: (state) => set({ pendingGithubState: state }),
+      setTdpState: (state) => set({ pendingTdpState: state }),
       getGithubAuthUrl: async () => {
         try {
           const result = await githubGetAuthUrl();
           return result.auth_url;
         } catch (error) {
           const message = error instanceof Error ? error.message : '获取GitHub登录地址失败';
+          set({ error: message });
+          throw error;
+        }
+      },
+      getTdpAuthUrl: async () => {
+        try {
+          const result = await tdpGetAuthUrl();
+          return result.auth_url;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : '获取TDP登录地址失败';
           set({ error: message });
           throw error;
         }
@@ -101,6 +118,17 @@ export const useAuthStore = create<AuthState>()(
           await get().fetchUser();
         } catch (error) {
           const message = error instanceof Error ? error.message : 'GitHub 登录失败';
+          set({ isLoading: false, error: message });
+          throw error;
+        }
+      },
+      loginWithTdpToken: async (token) => {
+        set({ isLoading: true, error: null });
+        try {
+          set({ token, user: null, isLoading: false, error: null });
+          await get().fetchUser();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'TDP 登录失败';
           set({ isLoading: false, error: message });
           throw error;
         }
@@ -142,7 +170,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       logout: () => {
-        set({ token: null, user: null, error: null, pendingGithubState: null });
+        set({ token: null, user: null, error: null, pendingGithubState: null, pendingTdpState: null });
       },
     }),
     {
@@ -152,6 +180,7 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         user: state.user,
         pendingGithubState: state.pendingGithubState,
+        pendingTdpState: state.pendingTdpState,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

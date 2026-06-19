@@ -172,13 +172,9 @@ async def github_login():
 @app.get("/api/auth/github/callback", tags=["认证系统"])
 async def github_callback(code: str):
     """GitHub OAuth 回调"""
-    # 获取 access_token
     access_token = await auth.github_get_access_token(code)
-
-    # 获取用户信息
     github_user = await auth.github_get_user_info(access_token)
 
-    # 创建 JWT token
     jwt_token = auth.create_access_token(
         data={
             "auth_type": "github",
@@ -198,6 +194,46 @@ async def github_callback(code: str):
             "github_username": github_user["login"]
         }
     }
+
+
+@app.get("/api/auth/tdp/login", tags=["认证系统"])
+async def tdp_login():
+    """TDP OIDC 登录 - 返回授权URL"""
+    tdp_auth_url = (
+        f"{auth.TDP_AUTH_ENDPOINT}"
+        f"?client_id={auth.TDP_CLIENT_ID}"
+        f"&redirect_uri={auth.TDP_REDIRECT_URI}"
+        f"&response_type=code"
+        f"&scope=openid profile"
+    )
+    return {"auth_url": tdp_auth_url}
+
+
+@app.get("/api/auth/tdp/callback", tags=["认证系统"])
+async def tdp_callback(code: str):
+    """TDP OIDC 回调"""
+    access_token = await auth.tdp_get_access_token(code)
+    tdp_user = await auth.tdp_get_user_info(access_token)
+
+    tdp_id = str(tdp_user.get("sub") or tdp_user.get("id") or "")
+    tdp_username = tdp_user.get("preferred_username") or tdp_user.get("name") or tdp_user.get("nickname") or ""
+
+    if not tdp_id:
+        raise HTTPException(status_code=400, detail="无法获取 TDP 用户唯一标识")
+
+    jwt_token = auth.create_access_token(
+        data={
+            "auth_type": "tdp",
+            "tdp_id": tdp_id,
+            "tdp_username": tdp_username,
+        },
+        expires_delta=timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+
+    # 回调完成后重定向到前端 callback 页面，携带 token
+    from fastapi.responses import RedirectResponse
+    frontend_callback = f"{auth.TDP_FRONTEND_CALLBACK}?token={jwt_token}"
+    return RedirectResponse(url=frontend_callback)
 
 
 @app.post("/api/auth/bind-username", tags=["认证系统"])
@@ -223,23 +259,38 @@ async def bind_username(
     elif current_user["auth_type"] == "github":
         # GitHub 用户不能绑定已被他人绑定的用户名
         if is_bound:
-            # 检查是否是当前用户自己之前绑定的
             github_id = current_user["github_id"]
             current_binding = auth.get_user_binding(github_id)
             if current_binding == username:
-                # 是自己之前绑定的，允许重新绑定
                 auth.save_user_binding(github_id, username)
                 return {"message": f"用户已绑定用户名: {username}", "username": username}
             else:
-                # 是其他人绑定的，拒绝
                 raise HTTPException(status_code=403, detail="该用户名已被他人绑定")
 
-        # 用户名未被绑定，正常绑定
         github_id = current_user["github_id"]
         user_existed = db.user_exists(username)
         if not user_existed:
             db.create_user(username)
         auth.save_user_binding(github_id, username)
+        if not user_existed:
+            asyncio.create_task(notifications.notify_site_initialized(username))
+        return {"message": f"用户已绑定用户名: {username}", "username": username}
+
+    elif current_user["auth_type"] == "tdp":
+        if is_bound:
+            tdp_id = current_user["tdp_id"]
+            current_binding = auth.get_user_binding(tdp_id)
+            if current_binding == username:
+                auth.save_user_binding(tdp_id, username)
+                return {"message": f"用户已绑定用户名: {username}", "username": username}
+            else:
+                raise HTTPException(status_code=403, detail="该用户名已被他人绑定")
+
+        tdp_id = current_user["tdp_id"]
+        user_existed = db.user_exists(username)
+        if not user_existed:
+            db.create_user(username)
+        auth.save_user_binding(tdp_id, username)
         if not user_existed:
             asyncio.create_task(notifications.notify_site_initialized(username))
         return {"message": f"用户已绑定用户名: {username}", "username": username}
