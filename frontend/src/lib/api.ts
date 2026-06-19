@@ -78,6 +78,8 @@ export interface CurrentUserResponse {
   bound_username?: string | null;
   github_id?: number;
   github_username?: string;
+  tdp_id?: string;
+  tdp_username?: string;
 }
 
 export interface BindUsernameResponse {
