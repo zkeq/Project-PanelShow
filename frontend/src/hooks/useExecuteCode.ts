@@ -19,12 +19,6 @@ function executeNextInQueue() {
   }
 }
 
-/**
- * 执行 JS 代码并返回结果的 Hook
- * @param code - 要执行的 JS 代码
- * @param fallback - 代码执行失败时的回退值
- * @returns 执行结果、加载状态和错误信息
- */
 export function useExecuteCode(code: string | undefined, fallback: string = ''): UseExecuteCodeResult {
   const [value, setValue] = useState<string>(fallback);
   const [loading, setLoading] = useState<boolean>(false);
@@ -43,6 +37,12 @@ export function useExecuteCode(code: string | undefined, fallback: string = ''):
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
     const execute = async () => {
+      // 如果组件已卸载，跳过执行并让队列继续
+      if (cancelled) {
+        executeNextInQueue();
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -50,12 +50,8 @@ export function useExecuteCode(code: string | undefined, fallback: string = ''):
 
       for (let attempt = 0; attempt <= maxRetries && !cancelled; attempt++) {
         try {
-          // 增加请求计数
           activeRequests++;
-
           const response = await executeJsCode(code);
-
-          // 减少请求计数并处理队列
           activeRequests--;
           executeNextInQueue();
 
@@ -73,7 +69,6 @@ export function useExecuteCode(code: string | undefined, fallback: string = ''):
 
           throw new Error('执行失败');
         } catch (err) {
-          // 减少请求计数并处理队列
           activeRequests--;
           executeNextInQueue();
 
@@ -87,12 +82,11 @@ export function useExecuteCode(code: string | undefined, fallback: string = ''):
 
           const isLastAttempt = attempt === maxRetries;
 
-          // 如果是网络/CORS错误，不要重试,直接失败
           if (isNetworkError || isLastAttempt) {
             setError(errorMessage);
             setValue(fallback);
             setLoading(false);
-            return; // 停止重试
+            return;
           } else {
             await delay(500 * (attempt + 1));
           }
@@ -100,7 +94,6 @@ export function useExecuteCode(code: string | undefined, fallback: string = ''):
       }
     };
 
-    // 如果当前活跃请求数已达上限，加入队列
     if (activeRequests >= MAX_CONCURRENT_REQUESTS) {
       requestQueue.push(execute);
     } else {
