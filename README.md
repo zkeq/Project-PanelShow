@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">Portfolio</h1>
+  <h1 align="center">Project-PanelShow</h1>
   <p align="center">现代化个人作品集系统 · 支持多用户、时间线展示与后台管理</p>
 
   <p align="center">
@@ -181,5 +181,5 @@ vim backend/config.yaml   # 按注释填写各字段
 ---
 
 <p align="center">
-  Made with ❤️ by the community · <a href="./LICENSE">MIT Licensed</a>
+  Made with ❤️ by zkeq · <a href="./LICENSE">MIT Licensed</a>
 </p>
