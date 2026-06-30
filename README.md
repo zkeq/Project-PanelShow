@@ -78,7 +78,7 @@
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/your-org/portfolio.git
+git clone https://github.com/zkeq/Project-PanelShow.git
 cd portfolio
 
 # 2. 准备环境变量
