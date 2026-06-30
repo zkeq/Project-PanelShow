@@ -79,7 +79,7 @@
 ```bash
 # 1. 克隆仓库
 git clone https://cnb.cool/onmicrosoft/Project-PanelShow.git
-cd portfolio
+cd Project-PanelShow
 
 # 2. 准备环境变量
 cp .env.example .env
