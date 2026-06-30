@@ -41,6 +41,7 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileUpdating, setProfileUpdating] = useState(false);
   const siteAddressCheckTimeout = useRef<NodeJS.Timeout | null>(null);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
     if (isSubmitting) return;
@@ -59,22 +60,25 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
   }, [user?.auth_type, user?.github_username, user?.tdp_username]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || hasInitialized.current) return;
+
     if (!user.bound_username) {
       if (user.auth_type === 'github' && user.github_username) {
-        if (!username) setUsername(user.github_username);
-        if (!siteAddress) setSiteAddress(user.github_username);
+        setUsername(user.github_username);
+        setSiteAddress(user.github_username);
       }
       if (user.auth_type === 'tdp' && user.tdp_username) {
-        if (!username) setUsername(user.tdp_username);
-        if (!siteAddress) setSiteAddress(user.tdp_username);
+        setUsername(user.tdp_username);
+        setSiteAddress(user.tdp_username);
       }
     }
     if (user.bound_username) {
-      if (user.bound_username !== username) setUsername(user.bound_username);
-      if (!siteAddress) setSiteAddress(user.bound_username);
+      setUsername(user.bound_username);
+      setSiteAddress(user.bound_username);
     }
-  }, [user, username, siteAddress]);
+
+    hasInitialized.current = true;
+  }, [user]);
 
   useEffect(() => {
     if (siteAddressCheckTimeout.current) clearTimeout(siteAddressCheckTimeout.current);
