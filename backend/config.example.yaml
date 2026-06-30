@@ -1,0 +1,40 @@
+# ============================================================
+# 系统配置文件（示例模板）
+# 使用方法: 复制为 config.yaml 并填入真实值
+#   cp config.example.yaml config.yaml
+# ============================================================
+
+# 管理员配置
+admin:
+  username: "admin"
+  password: "your-secure-password"  # 请修改为强密码
+
+# GitHub OAuth 配置（可选）
+github:
+  client_id: "your-github-client-id"
+  client_secret: "your-github-client-secret"
+  redirect_uri: "http://localhost:3000/admin/login/github/callback"
+
+# TDP OIDC 配置（可选）
+tdp:
+  client_id: "your-tdp-client-id"
+  client_secret: "your-tdp-client-secret"
+  redirect_uri: "https://your-domain.com/api/auth/tdp/callback"
+  issuer: "https://tdp.fan/oidc"
+  frontend_callback: "http://localhost:3001/admin/login/tdp/callback"
+
+# JWT 配置
+jwt:
+  secret_key: "change-this-to-a-random-secret-key-at-least-32-chars"
+  algorithm: "HS256"
+  access_token_expire_minutes: 1440  # 24小时
+
+# 腾讯云 COS 对象存储配置（可选，用于文件上传）
+cos:
+  secret_id: "your-cos-secret-id"
+  secret_key: "your-cos-secret-key"
+  bucket: "your-bucket-name"
+  region: "ap-shanghai"
+  public_base_url: "https://your-cos-domain.com"
+  bucket_base_url: "https://your-bucket.cos.ap-shanghai.myqcloud.com"
+  folder_prefix: "/uploads/"

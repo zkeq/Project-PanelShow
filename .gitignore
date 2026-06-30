@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+backend/config.yaml
+backend/data/
+
+# Build outputs
+frontend/.next/
+frontend/out/
+dist/
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git filter-branch backup refs (可安全删除)
+refs/original/

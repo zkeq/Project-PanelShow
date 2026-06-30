@@ -2,3 +2,9 @@
 
 # dependencies
 *.pyc
+
+# Config (contains secrets)
+config.yaml
+
+# Data directory (runtime data)
+data/
