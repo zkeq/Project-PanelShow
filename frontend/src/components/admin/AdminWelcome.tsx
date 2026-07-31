@@ -16,6 +16,7 @@ import {
   updateProfileSection,
   syncGithubProfile,
 } from '@/lib/api';
+import { slugifyUsername } from '@/lib/username-slug';
 
 interface AdminWelcomeProps {
   className?: string;
@@ -63,16 +64,16 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
     if (!user.bound_username) {
       if (user.auth_type === 'github' && user.github_username) {
         if (!username) setUsername(user.github_username);
-        if (!siteAddress) setSiteAddress(user.github_username);
+        if (!siteAddress) setSiteAddress(slugifyUsername(user.github_username));
       }
       if (user.auth_type === 'tdp' && user.tdp_username) {
         if (!username) setUsername(user.tdp_username);
-        if (!siteAddress) setSiteAddress(user.tdp_username);
+        if (!siteAddress) setSiteAddress(slugifyUsername(user.tdp_username));
       }
     }
     if (user.bound_username) {
       if (user.bound_username !== username) setUsername(user.bound_username);
-      if (!siteAddress) setSiteAddress(user.bound_username);
+      if (!siteAddress) setSiteAddress(slugifyUsername(user.bound_username) || user.bound_username);
     }
   }, [user, username, siteAddress]);
 
@@ -124,7 +125,9 @@ export function AdminWelcome({ className }: AdminWelcomeProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetUsername = username.trim();
-    const targetSiteAddress = siteAddress.trim().toLowerCase();
+    // 兜底：即使默认填充时漏掉了转换，提交前也确保中文用户名转为拼音 slug，
+    // 避免站点地址出现很长的百分号编码（如 /project/%E5%BC%A0%E4%B8%89）
+    const targetSiteAddress = slugifyUsername(siteAddress) || siteAddress.trim().toLowerCase();
     if (!targetUsername) { setLocalError('请输入要绑定的用户名'); return; }
     if (!targetSiteAddress) { setLocalError('请输入站点地址'); return; }
     setLocalError(''); setSuccessMessage(''); clearError();

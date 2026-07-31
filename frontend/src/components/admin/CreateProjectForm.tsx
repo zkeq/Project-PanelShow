@@ -1046,7 +1046,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* 作品信息 */}
-        <Card>
+        <Card data-tour="basic-info">
           <CardHeader>
             <CardTitle>
               <FolderOpen className="inline h-5 w-5 mr-2" />
@@ -1260,7 +1260,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
           </CardContent>
         </Card>
         {/* 作品截图展示 */}
-        <Card>
+        <Card data-tour="screenshots">
           <CardHeader>
             <CardTitle>
               <Image className="inline h-5 w-5 mr-2" />
@@ -1277,7 +1277,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
         </Card>
 
         {/* 项目概览 - 信息展示区域 */}
-        <Card>
+        <Card data-tour="overview">
           <CardHeader>
             <CardTitle>
               <Layers className="inline h-5 w-5 mr-2" />
@@ -1328,7 +1328,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="ai-prompt">
           <CardHeader>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -1364,7 +1364,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-tour="ai-json">
           <CardHeader>
             <CardTitle>
               <FileCode className="inline h-5 w-5 mr-2" />
@@ -1405,7 +1405,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
         </Card>
 
         {/* 提交按钮 */}
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-4" data-tour="submit">
           <Button
             type="button"
             variant="outline"
