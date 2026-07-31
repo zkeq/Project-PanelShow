@@ -6,7 +6,8 @@ import {
   Settings,
   Sun,
   Moon,
-  LogOut
+  LogOut,
+  BookOpen
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname, useRouter } from 'next/navigation';
@@ -18,6 +19,7 @@ const getPageTitle = (pathname: string): string => {
   if (pathname === '/admin/projects/create') return '新建作品集';
   if (pathname === '/admin/settings') return '系统设置';
   if (pathname === '/admin/dynamic') return '动态管理';
+  if (pathname === '/admin/tutorial') return '使用教程';
   if (pathname.startsWith('/admin/projects')) return '项目管理';
   return '管理控制台';
 };
@@ -95,6 +97,12 @@ export function AdminHeader({
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">切换主题</span>
+          </Button>
+
+          {/* 使用教程 */}
+          <Button variant="ghost" size="sm" onClick={() => router.push('/admin/tutorial')}>
+            <BookOpen className="w-4 h-4 mr-2" />
+            使用教程
           </Button>
 
           {/* 设置按钮 */}

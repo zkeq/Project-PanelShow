@@ -14,7 +14,9 @@ import {
   Users,
   Loader2,
   Globe2,
+  BookOpen,
 } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useGlobalStore } from '@/store/useGlobalStore';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -520,21 +522,34 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
               )}
             </div>
           </div>
-          {siteUrl ? (
+          <div className="flex items-center gap-2">
             <Button
               asChild
               size="sm"
-              className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400"
+              variant="outline"
+              className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-500/40 dark:text-emerald-100 dark:hover:bg-emerald-500/20"
             >
-              <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+              <Link href="/admin/tutorial">
+                <BookOpen className="mr-1.5 h-3.5 w-3.5" />
+                使用教程
+              </Link>
+            </Button>
+            {siteUrl ? (
+              <Button
+                asChild
+                size="sm"
+                className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400"
+              >
+                <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+                  前往
+                </a>
+              </Button>
+            ) : (
+              <Button size="sm" disabled className="bg-emerald-500/60 text-white dark:bg-emerald-500/30 dark:text-emerald-200">
                 前往
-              </a>
-            </Button>
-          ) : (
-            <Button size="sm" disabled className="bg-emerald-500/60 text-white dark:bg-emerald-500/30 dark:text-emerald-200">
-              前往
-            </Button>
-          )}
+              </Button>
+            )}
+          </div>
         </div>
         {(fetchError || isFetchingRemote) && (
           <div className="space-y-3">
