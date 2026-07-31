@@ -14,10 +14,13 @@ import {
   Users,
   Loader2,
   Globe2,
+  Sparkles,
 } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useGlobalStore } from '@/store/useGlobalStore';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useTourStore } from '@/components/admin/tour/useTourStore';
 import { ProjectManagementList } from './ProjectManagementList';
 import { TimelineManagementList } from './TimelineManagementList';
 import { SearchAndFilter } from './SearchAndFilter';
@@ -502,7 +505,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
     <>
         {/* 主内容区域 */}
         <div className={cn('relative z-10 container mx-auto p-6 space-y-6 pt-6', className)}>
-        <div className="flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-emerald-900 shadow-sm dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-emerald-900 shadow-sm dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100 sm:flex-row sm:items-center sm:justify-between" data-tour="site-banner">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
               <Globe2 className="h-4 w-4" />
@@ -520,21 +523,32 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
               )}
             </div>
           </div>
-          {siteUrl ? (
+          <div className="flex items-center gap-2">
             <Button
-              asChild
               size="sm"
-              className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400"
+              variant="outline"
+              onClick={() => useTourStore.getState().start(0)}
+              className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-500/40 dark:text-emerald-100 dark:hover:bg-emerald-500/20"
             >
-              <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+              互动引导
+            </Button>
+            {siteUrl ? (
+              <Button
+                asChild
+                size="sm"
+                className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400"
+              >
+                <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+                  前往
+                </a>
+              </Button>
+            ) : (
+              <Button size="sm" disabled className="bg-emerald-500/60 text-white dark:bg-emerald-500/30 dark:text-emerald-200">
                 前往
-              </a>
-            </Button>
-          ) : (
-            <Button size="sm" disabled className="bg-emerald-500/60 text-white dark:bg-emerald-500/30 dark:text-emerald-200">
-              前往
-            </Button>
-          )}
+              </Button>
+            )}
+          </div>
         </div>
         {(fetchError || isFetchingRemote) && (
           <div className="space-y-3">
@@ -563,7 +577,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
           </div>
         )}
         {/* 统计卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-tour="stats-grid">
           <Card className="bg-card/30 backdrop-blur-sm border border-white/20 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-blue-50/40 to-white/20 dark:from-blue-950/20 dark:to-background/20" />
             <CardContent className="relative z-10 p-6">
@@ -646,7 +660,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
                   onCategoryChange={setCategoryFilter}
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" data-tour="quick-actions">
                 <Button size="sm" onClick={handleCreateProject}>
                   <Plus className="w-4 h-4 mr-2" />
                   新建项目
