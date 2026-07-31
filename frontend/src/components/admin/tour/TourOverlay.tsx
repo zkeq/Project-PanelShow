@@ -19,8 +19,11 @@ import { FLAT_STEPS } from './tour-steps';
 import { useTourStore } from './useTourStore';
 import type { FlatStep } from './tour-steps';
 
-/** 右侧预览区 iframe 加载动画时长（毫秒） */
-const PREVIEW_LOADING_MS = 900;
+/** iframe 未触发 load 时解除遮罩，避免异常页面让预览永久停在加载中 */
+const PREVIEW_LOADING_TIMEOUT_MS = 10_000;
+const HIGHLIGHT_RETRY_INTERVAL_MS = 120;
+const HIGHLIGHT_RETRY_MAX = 30;
+const HIGHLIGHT_PADDING = 8;
 
 export function TourOverlay() {
   const router = useRouter();
@@ -41,6 +44,151 @@ export function TourOverlay() {
   /** 当前实际展示在预览窗里的路由（用于过渡动画） */
   const [previewRoute, setPreviewRoute] = useState<string | null>(null);
   const loadingTimerRef = useRef<number | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const highlightCleanupRef = useRef<(() => void) | null>(null);
+
+  const clearLoadingTimer = useCallback(() => {
+    if (loadingTimerRef.current === null) return;
+    window.clearTimeout(loadingTimerRef.current);
+    loadingTimerRef.current = null;
+  }, []);
+
+  const clearPreviewHighlight = useCallback(() => {
+    highlightCleanupRef.current?.();
+    highlightCleanupRef.current = null;
+  }, []);
+
+  const highlightPreviewTarget = useCallback(
+    (targetName?: string) => {
+      clearPreviewHighlight();
+      if (!targetName) return;
+
+      const iframe = iframeRef.current;
+      const frameWindow = iframe?.contentWindow;
+      const frameDocument = iframe?.contentDocument;
+      if (!frameWindow || !frameDocument) return;
+
+      let disposed = false;
+      let retryTimer: number | null = null;
+      let settleTimer: number | null = null;
+      let animationFrame: number | null = null;
+      let resizeObserver: ResizeObserver | null = null;
+      let spotlight: HTMLDivElement | null = null;
+
+      const updateSpotlight = (target: HTMLElement) => {
+        if (disposed || !spotlight) return;
+        const rect = target.getBoundingClientRect();
+        const top = Math.max(0, rect.top - HIGHLIGHT_PADDING);
+        const left = Math.max(0, rect.left - HIGHLIGHT_PADDING);
+        const width = Math.min(
+          frameWindow.innerWidth - left,
+          rect.width + HIGHLIGHT_PADDING * 2
+        );
+        const height = Math.min(
+          frameWindow.innerHeight - top,
+          rect.height + HIGHLIGHT_PADDING * 2
+        );
+
+        spotlight.style.top = `${top}px`;
+        spotlight.style.left = `${left}px`;
+        spotlight.style.width = `${Math.max(0, width)}px`;
+        spotlight.style.height = `${Math.max(0, height)}px`;
+      };
+
+      const scheduleUpdate = (target: HTMLElement) => {
+        if (animationFrame !== null) frameWindow.cancelAnimationFrame(animationFrame);
+        animationFrame = frameWindow.requestAnimationFrame(() => {
+          animationFrame = null;
+          updateSpotlight(target);
+        });
+      };
+
+      const mountSpotlight = (target: HTMLElement) => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        settleTimer = frameWindow.setTimeout(() => {
+          if (disposed) return;
+
+          spotlight = frameDocument.createElement('div');
+          spotlight.setAttribute('data-tour-spotlight', targetName);
+          Object.assign(spotlight.style, {
+            position: 'fixed',
+            zIndex: '2147483646',
+            boxSizing: 'border-box',
+            border: '2px solid rgb(59 130 246)',
+            borderRadius: '12px',
+            boxShadow:
+              '0 0 0 9999px rgb(2 6 23 / 62%), 0 0 0 5px rgb(59 130 246 / 24%), 0 0 32px rgb(59 130 246 / 45%)',
+            pointerEvents: 'none',
+            transition: 'top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease',
+          });
+
+          const label = frameDocument.createElement('span');
+          label.textContent = '当前引导重点';
+          Object.assign(label.style, {
+            position: 'absolute',
+            top: '-30px',
+            left: '0',
+            padding: '4px 8px',
+            borderRadius: '6px',
+            background: 'rgb(37 99 235)',
+            color: 'white',
+            fontSize: '12px',
+            fontWeight: '600',
+            lineHeight: '18px',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 4px 12px rgb(0 0 0 / 24%)',
+          });
+          spotlight.appendChild(label);
+          frameDocument.body.appendChild(spotlight);
+          updateSpotlight(target);
+
+          const onViewportChange = () => scheduleUpdate(target);
+          frameWindow.addEventListener('scroll', onViewportChange, true);
+          frameWindow.addEventListener('resize', onViewportChange);
+          const targetResizeObserver = new ResizeObserver(onViewportChange);
+          resizeObserver = targetResizeObserver;
+          targetResizeObserver.observe(target);
+
+          const previousCleanup = highlightCleanupRef.current;
+          highlightCleanupRef.current = () => {
+            frameWindow.removeEventListener('scroll', onViewportChange, true);
+            frameWindow.removeEventListener('resize', onViewportChange);
+            resizeObserver?.disconnect();
+            previousCleanup?.();
+            spotlight?.remove();
+          };
+        }, 360);
+      };
+
+      const locateTarget = (attempt: number) => {
+        if (disposed) return;
+        const target = frameDocument.querySelector<HTMLElement>(
+          `[data-tour="${targetName}"]`
+        );
+        if (target) {
+          mountSpotlight(target);
+          return;
+        }
+        if (attempt >= HIGHLIGHT_RETRY_MAX) return;
+        retryTimer = frameWindow.setTimeout(
+          () => locateTarget(attempt + 1),
+          HIGHLIGHT_RETRY_INTERVAL_MS
+        );
+      };
+
+      locateTarget(0);
+
+      highlightCleanupRef.current = () => {
+        disposed = true;
+        if (retryTimer !== null) frameWindow.clearTimeout(retryTimer);
+        if (settleTimer !== null) frameWindow.clearTimeout(settleTimer);
+        if (animationFrame !== null) frameWindow.cancelAnimationFrame(animationFrame);
+        resizeObserver?.disconnect();
+        spotlight?.remove();
+      };
+    },
+    [clearPreviewHighlight]
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -60,26 +208,46 @@ export function TourOverlay() {
     return step.route ?? pathname ?? '/admin';
   }, [active, step, pathname]);
 
-  // 预览路由切换时的简短过渡（骨架屏），避免生硬跳变
+  // 路由变化时显示骨架屏，由 iframe load 事件结束；超时仅作为异常兜底。
   useEffect(() => {
     if (!active) return;
-    if (previewRoute === targetPreviewRoute) return;
+
     setPreviewLoading(true);
-    if (loadingTimerRef.current !== null) {
-      window.clearTimeout(loadingTimerRef.current);
-    }
     setPreviewRoute(targetPreviewRoute);
+
+    clearLoadingTimer();
     loadingTimerRef.current = window.setTimeout(() => {
       setPreviewLoading(false);
       loadingTimerRef.current = null;
-    }, PREVIEW_LOADING_MS);
-    return () => {
-      if (loadingTimerRef.current !== null) {
-        window.clearTimeout(loadingTimerRef.current);
-        loadingTimerRef.current = null;
-      }
-    };
-  }, [active, targetPreviewRoute, previewRoute]);
+    }, PREVIEW_LOADING_TIMEOUT_MS);
+
+    return clearLoadingTimer;
+  }, [active, targetPreviewRoute, clearLoadingTimer]);
+
+  const handlePreviewLoad = useCallback(
+    (loadedRoute: string) => {
+      if (loadedRoute !== targetPreviewRoute) return;
+      clearLoadingTimer();
+      setPreviewLoading(false);
+    },
+    [clearLoadingTimer, targetPreviewRoute]
+  );
+
+  useEffect(() => {
+    if (!active || previewLoading) {
+      clearPreviewHighlight();
+      return;
+    }
+    highlightPreviewTarget(step?.target);
+    return clearPreviewHighlight;
+  }, [
+    active,
+    previewLoading,
+    previewRoute,
+    step?.target,
+    highlightPreviewTarget,
+    clearPreviewHighlight,
+  ]);
 
   // 键盘导航：← → 切换，Esc 跳过
   useEffect(() => {
@@ -313,9 +481,11 @@ export function TourOverlay() {
               )}
               {previewRoute && (
                 <iframe
+                  ref={iframeRef}
                   key={previewRoute}
                   src={previewRoute}
                   title="管理后台实时预览"
+                  onLoad={() => handlePreviewLoad(previewRoute)}
                   className={cn(
                     'h-full w-full border-0 transition-opacity duration-300',
                     previewLoading ? 'opacity-0' : 'opacity-100'
