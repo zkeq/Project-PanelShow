@@ -7,11 +7,12 @@ import {
   Sun,
   Moon,
   LogOut,
-  BookOpen
+  Sparkles
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useTourStore } from '@/components/admin/tour/useTourStore';
 
 const getPageTitle = (pathname: string): string => {
   if (pathname === '/admin') return '管理控制台';
@@ -19,7 +20,6 @@ const getPageTitle = (pathname: string): string => {
   if (pathname === '/admin/projects/create') return '新建作品集';
   if (pathname === '/admin/settings') return '系统设置';
   if (pathname === '/admin/dynamic') return '动态管理';
-  if (pathname === '/admin/tutorial') return '使用教程';
   if (pathname.startsWith('/admin/projects')) return '项目管理';
   return '管理控制台';
 };
@@ -37,6 +37,7 @@ export function AdminHeader({
   const { theme, setTheme } = useTheme();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const startTour = useTourStore((state) => state.start);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -99,10 +100,10 @@ export function AdminHeader({
             <span className="sr-only">切换主题</span>
           </Button>
 
-          {/* 使用教程 */}
-          <Button variant="ghost" size="sm" onClick={() => router.push('/admin/tutorial')}>
-            <BookOpen className="w-4 h-4 mr-2" />
-            使用教程
+          {/* 互动引导 */}
+          <Button variant="ghost" size="sm" onClick={() => startTour(0)}>
+            <Sparkles className="w-4 h-4 mr-2" />
+            互动引导
           </Button>
 
           {/* 设置按钮 */}
