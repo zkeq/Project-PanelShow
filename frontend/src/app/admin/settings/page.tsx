@@ -72,9 +72,12 @@ export default function SettingsPage() {
             </div>
 
             {/* Navigation */}
-            <nav className="space-y-8">
+            <nav className="space-y-8" data-tour="settings-navigation">
               {sidebarSections.map((section) => (
-                <div key={section.title}>
+                <div
+                  key={section.title}
+                  data-tour={section.title === "个人资料" ? "settings-profile-navigation" : undefined}
+                >
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4 px-3">
                     {section.title}
                   </h3>
@@ -86,6 +89,7 @@ export default function SettingsPage() {
                       return (
                         <button
                           key={item.id}
+                          data-tour={`settings-nav-${item.id}`}
                           onClick={() => setActiveSection(item.id)}
                           className={`group w-full flex items-start gap-4 px-4 py-3 text-left rounded-xl transition-all duration-200 ${
                             isActive
@@ -131,4 +135,3 @@ export default function SettingsPage() {
       </div>
     )
   }
-

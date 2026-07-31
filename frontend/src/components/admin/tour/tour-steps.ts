@@ -4,9 +4,12 @@ import {
   FolderPlus,
   Globe2,
   LayoutDashboard,
+  Layers,
   Rocket,
   Send,
+  Settings,
   Sparkles,
+  UserRound,
   Wand2,
 } from 'lucide-react';
 import type { TourChapter, TourStep } from './tour-types';
@@ -47,6 +50,44 @@ const dashboardSteps: TourStep[] = [
     actions: [
       { label: '去看看新建项目', href: '/admin/projects/create', icon: FolderPlus },
     ],
+  },
+];
+
+/** 站点资料与作品集展示设置 */
+const settingsSteps: TourStep[] = [
+  {
+    id: 'settings-intro',
+    target: 'settings-navigation',
+    title: '先把你的站点资料补完整',
+    subtitle: '设置会直接影响公开主页',
+    body: '右侧已进入系统设置。这里分为个人资料与作品集两组：基本信息、关于我、工作经历、联系方式决定访客如何认识你，技术栈分类决定项目如何被组织和浏览。',
+    icon: Settings,
+    route: '/admin/settings',
+  },
+  {
+    id: 'settings-basic-info',
+    target: 'settings-nav-basic-info',
+    title: '基本信息：先完成主页门面',
+    body: '点击高亮的「基本信息」，优先填写网站标题、头像、作者名称和一句话介绍；填入 GitHub 用户名后还能一键同步关注者、Star 与公开仓库数据。修改完成后记得点击页面底部「保存更改」。',
+    icon: UserRound,
+    route: '/admin/settings',
+  },
+  {
+    id: 'settings-profile-sections',
+    target: 'settings-profile-navigation',
+    title: '补充关于我、经历与联系方式',
+    body: '左侧这组入口共同组成你的个人叙事：在「关于我」介绍自己，在「工作经历」维护职业历程，在「联系方式」添加邮箱与社交链接。你可以直接在预览中点击切换并填写。',
+    icon: UserRound,
+    route: '/admin/settings',
+  },
+  {
+    id: 'settings-tech-stacks',
+    target: 'settings-nav-tech-stacks',
+    title: '最后整理技术栈分类',
+    subtitle: '分类、二级菜单与项目关联',
+    body: '点击高亮的「技术栈分类」，可以自定义主页的技术分类和二级菜单，并把已发布项目分配进去。保存配置后，访客就能按技术方向快速浏览你的作品。',
+    icon: Layers,
+    route: '/admin/settings',
   },
 ];
 
@@ -133,7 +174,7 @@ const finishSteps: TourStep[] = [
     id: 'finish',
     title: '引导完成，去点亮你的主页吧',
     subtitle: '互动引导 · 随时可重播',
-    body: '建议路径：新建项目（用 AI 提示词）→ 发布首条动态 → 点顶部横幅「前往」欣赏你的主页。这个引导随时可以点右上角「互动引导」重新播放。',
+    body: '建议路径：完善站点设置 → 新建项目（用 AI 提示词）→ 发布首条动态 → 点顶部横幅「前往」欣赏你的主页。这个引导随时可以点右上角「互动引导」重新播放。',
     icon: Sparkles,
     route: '/admin',
   },
@@ -141,8 +182,9 @@ const finishSteps: TourStep[] = [
 
 export const TOUR_CHAPTERS: TourChapter[] = [
   { id: 'dashboard', label: '认识控制台', title: '第一章 · 认识控制台', steps: dashboardSteps },
-  { id: 'create', label: '新建项目（重点）', title: '第二章 · 新建项目与 AI 提示词', steps: createProjectSteps },
-  { id: 'dynamic', label: '发布动态', title: '第三章 · 发布动态', steps: dynamicSteps },
+  { id: 'settings', label: '完善站点资料', title: '第二章 · 完善站点资料', steps: settingsSteps },
+  { id: 'create', label: '新建项目（重点）', title: '第三章 · 新建项目与 AI 提示词', steps: createProjectSteps },
+  { id: 'dynamic', label: '发布动态', title: '第四章 · 发布动态', steps: dynamicSteps },
   { id: 'finish', label: '完成', title: '终章 · 出发', steps: finishSteps },
 ];
 
