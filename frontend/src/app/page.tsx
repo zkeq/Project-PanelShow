@@ -6,6 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Code2, Database, Globe, Monitor, Rocket, Shield, Star, Users, Zap, Menu, X } from "lucide-react";
 import { ThemeSwitch } from "@/components/theme-switch";
+import {
+  OpenSourceHeaderMenu,
+  OpenSourceMobileLinks,
+  OpenSourceStarBanner,
+  OpenSourceStarSection,
+} from "@/components/home/OpenSourceStarGuide";
+import { CNB_REPO_URL, GITHUB_REPO_URL } from "@/constants/open-source";
 import { useState } from "react";
 
 function MobileMenu() {
@@ -60,6 +67,14 @@ function MobileMenu() {
             >
               编辑器演示
             </a>
+            <a 
+              href="#open-source" 
+              className="block text-sm font-medium text-foreground/60 hover:text-foreground/80 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              开源
+            </a>
+            <OpenSourceMobileLinks onNavigate={() => setIsOpen(false)} />
           </nav>
         </div>
       )}
@@ -107,12 +122,13 @@ export default function Home() {
             <a href="/editor-demo" className="transition-colors hover:text-foreground/80 text-foreground/60">
               编辑器演示
             </a>
+            <a href="#open-source" className="transition-colors hover:text-foreground/80 text-foreground/60">
+              开源
+            </a>
           </nav>
           <div className="flex items-center space-x-1 sm:space-x-2">
             <ThemeSwitch />
-            <Button variant="ghost" size="sm">
-              GitHub
-            </Button>
+            <OpenSourceHeaderMenu />
             <Button size="sm" className="text-xs sm:text-sm px-2 sm:px-4" onClick={handleStartExperience}>
               开始体验
             </Button>
@@ -120,6 +136,8 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      <OpenSourceStarBanner />
 
       <main>
         {/* Hero Section */}
@@ -189,6 +207,26 @@ export default function Home() {
                   查看演示
                 </Button>
               </div>
+              <p className="mt-6 text-sm text-muted-foreground">
+                开源免费 · MIT License ·{" "}
+                <a
+                  href={GITHUB_REPO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-foreground/80 underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  GitHub
+                </a>
+                {" · "}
+                <a
+                  href={CNB_REPO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-foreground/80 underline-offset-4 hover:text-foreground hover:underline"
+                >
+                  CNB
+                </a>
+              </p>
 
               {/* Stats */}
               <div className="mt-16 grid grid-cols-2 gap-8 sm:grid-cols-4">
@@ -672,6 +710,10 @@ export default function Home() {
           </div>
         </section>
 
+        <Separator />
+
+        <OpenSourceStarSection />
+
         {/* CTA Section */}
         <section className="py-24 bg-muted/50">
           <div className="container">
@@ -708,9 +750,9 @@ export default function Home() {
             <div>
               <h3 className="font-semibold">开发者</h3>
               <ul className="mt-4 space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-foreground">API 文档</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-foreground">SDK</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-foreground">集成指南</a></li>
+                <li><a href={GITHUB_REPO_URL} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">GitHub</a></li>
+                <li><a href={CNB_REPO_URL} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">CNB</a></li>
+                <li><a href="#open-source" className="text-muted-foreground hover:text-foreground">为项目点 Star</a></li>
               </ul>
             </div>
             <div>
