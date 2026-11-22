@@ -1,3 +1,5 @@
+import { CANONICAL_API_ORIGIN } from "@/lib/site-domain";
+
 export function agentPublishPrompt({
   apiOrigin,
   key,
@@ -25,7 +27,12 @@ export function agentPublishPrompt({
 
 ### 2. 写一份可扫读的作品说明
 
-一句话简介说明项目做了什么。正文面向浏览作品集的人，先给最值得看的实现，再用短标题、列表、技术栈表格和短段落说明关键技术、运行原理、取舍与可见结果。按项目实际情况选择栏目，为每个核心亮点写清输入、处理与结果。复杂项目的说明可参考 SparkAI 视频生成平台与 SparkAI 前端作品的结构，正文通常约 2,500–4,000 个字符，以讲清各核心模块为准。尊重用户明确的公开范围，第三方接入按可公开的 SDK 或接口边界介绍。用已实现与已验证的事实支撑结论，未执行的测试只描述覆盖范围。
+一句话简介说明项目做了什么。正文面向浏览作品集的人，先给最值得看的实现，再用短标题、列表、技术栈表格和短段落说明关键技术、运行原理、取舍与可见结果。按项目实际情况选择栏目，为每个核心亮点写清输入、处理与结果。复杂项目的正文通常约 2,500–4,000 个字符，以讲清各核心模块为准。尊重用户明确的公开范围，第三方接入按可公开的 SDK 或接口边界介绍。用已实现与已验证的事实支撑结论，未执行的测试只描述覆盖范围。
+
+写复杂项目的说明前，先 GET 以下两个公开 API，读取 JSON 响应中的 data.projectIntroduction，参考项目说明的结构和技术深度。正文内容以当前项目的实际实现为准。
+
+- SparkAI 视频生成平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/sparkai-video-extend-v6.6.4
+- SparkAI 前端 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/sparkai-frontend-v6.6.4-new
 
 复杂项目应在 introduction 的 Markdown 正文中用标记为 mermaid 的代码围栏画一张架构图，PanelShow 会渲染它。图应按实际实现标出关键模块、前后端或外部接口的边界，并用箭头说明数据流或职责关系。简单项目可按需要省略架构图。
 
