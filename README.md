@@ -160,7 +160,7 @@ vim backend/config.yaml   # 按注释填写各字段
 
 登录并绑定作品集后，在后台打开「Agent 发布」并复制提示词。编辑已发布的作品时，可以从该作品的编辑页生成专用密钥。发布密钥有效期一小时，支持撤销及使用同一幂等键重试。项目归属由密钥确定。
 
-Agent 先读取 `GET /api/agent/v1/schema`，用 `POST /api/agent/v1/assets` 上传截图，再用 `POST /api/agent/v1/publish` 创建或更新作品。服务使用 `FRONTEND_BASE_URL` 生成公开作品链接。自托管时，后端持久化 `backend/data/` 并对外提供 `/uploads/`，用于保存发布密钥记录和截图。
+Agent 先读取 `GET /api/agent/v1/schema`，用 `POST /api/agent/v1/assets` 上传截图，再用 `POST /api/agent/v1/publish` 创建或更新作品。服务使用 `FRONTEND_BASE_URL` 生成公开作品链接。反向代理部署可设置 `AGENT_API_ORIGIN` 为公开 API 的 HTTPS Origin，以生成截图地址。自托管时，后端持久化 `backend/data/` 并对外提供 `/uploads/`，用于保存发布密钥记录和截图。
 
 ## 🤝 参与贡献
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import secrets
 import sqlite3
@@ -400,7 +401,8 @@ async def publish(
         asset_paths = dict(connection.execute(
             "SELECT id, path FROM agent_assets WHERE key_id = ?", (key["id"],)
         ).fetchall())
-        fields = project_fields(payload, asset_paths, str(request.base_url).rstrip("/"))
+        api_origin = os.getenv("AGENT_API_ORIGIN") or str(request.base_url)
+        fields = project_fields(payload, asset_paths, api_origin.rstrip("/"))
         if not fields:
             raise HTTPException(422, "请提供需要更新的字段")
         projects = db.read_json(site, "projects.json")
