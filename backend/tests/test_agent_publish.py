@@ -59,8 +59,9 @@ def sample():
         "description": "A reproducible example.",
         "introduction": "## Overview\n\nThe project has a verified workflow.",
         "highlights": [{"title": "Workflow", "description": "Run and inspect the result."}],
-        "overview": [{"label": "Runtime", "value": "FastAPI"}] + [
-            {"label": f"Aspect {number}", "value": f"Verified {number}"} for number in range(2, 25)
+        "overview": [{"label": "Runtime", "value": "FastAPI", "icon": "lucide:server"}] + [
+            {"label": f"Aspect {number}", "value": f"Verified {number}", "icon": "logos:vue"}
+            for number in range(2, 25)
         ],
     }
 
@@ -92,6 +93,8 @@ def test_create_from_agent_and_retry(panelshow):
     assert project["screenshots"][0]["description"] == "The main screen"
     assert project["screenshots"][0]["name"] == "Main screen"
     assert project["heroAttributes"][0]["value"] == "FastAPI"
+    assert project["heroAttributes"][0]["icon"] == "lucide:server"
+    assert project["sidebarAttributes"][1]["icon"] == "logos:vue"
     assert len(project["projectInfos"]) == 24
     assert len(project["homeAttributes"]) == 4
     assert len(project["sidebarAttributes"]) == 8
@@ -176,3 +179,22 @@ def test_overview_requires_24_distinct_items(panelshow):
     assert client.post("/api/agent/v1/publish", headers=agent, json={
         **body, "overview": repeated
     }).status_code == 422
+
+    body["overview"][0]["icon"] = "server"
+    assert client.post("/api/agent/v1/publish", headers=agent, json=body).status_code == 422
+    del body["overview"][0]["icon"]
+    assert client.post("/api/agent/v1/publish", headers=agent, json=body).status_code == 422
+
+
+def test_create_without_screenshots_goes_first(panelshow):
+    client, bind, db = panelshow
+    owner = bind("1", "first-site")
+    db.write_json("first-site", "projects.json", [
+        {"id": "formerly-first", "order": "-3"}, {"id": "legacy"}, {"id": "last", "order": 10}
+    ])
+    _, agent = issue(client, owner)
+    response = client.post("/api/agent/v1/publish", headers=agent, json=sample())
+    assert response.status_code == 200, response.text
+    project_id = response.json()["project_id"]
+    records = client.get("/api/projects/first-site").json()["data"]
+    assert [record["id"] for record in records] == [project_id, "formerly-first", "legacy", "last"]

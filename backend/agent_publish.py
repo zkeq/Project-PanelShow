@@ -28,10 +28,14 @@ MAX_ASSETS = 48
 OVERVIEW_SIZE = 24
 HOMEPAGE_OVERVIEW_SIZE = 4
 SIDEBAR_OVERVIEW_SIZE = 8
+HERO_OVERVIEW_SIZE = 3
 SITE_NAME = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}")
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 Summary = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=400)]
 AssetId = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{32}$")]
+IconifyId = Annotated[str, StringConstraints(
+    strip_whitespace=True, max_length=128, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$"
+)]
 
 
 class Input(BaseModel):
@@ -43,38 +47,55 @@ class IssueKey(Input):
 
 
 class Screenshot(Input):
-    asset_id: AssetId
-    title: ShortText | None = None
-    caption: Summary
+    asset_id: AssetId = Field(description="从本次 SK 的图片上传响应取得的 asset_id。")
+    title: ShortText | None = Field(default=None, description="在图集中展示的简短图片标题。")
+    caption: Summary = Field(description="说明画面中的具体功能、操作或状态。")
 
 
 class Highlight(Input):
-    title: ShortText
-    description: Summary
-    technologies: list[ShortText] = Field(default_factory=list, max_length=6)
-    screenshots: list[Screenshot] = Field(default_factory=list, max_length=8)
-    demo_url: AnyHttpUrl | None = None
+    title: ShortText = Field(description="亮点名称，按项目区分度从高到低排列。")
+    description: Summary = Field(description="可快速扫读的关键机制和可见结果。")
+    technologies: list[ShortText] = Field(default_factory=list, max_length=6, description="这一亮点实际用到的技术。")
+    screenshots: list[Screenshot] = Field(default_factory=list, max_length=8, description="该亮点的图集。没有截图能力时可省略。")
+    demo_url: AnyHttpUrl | None = Field(default=None, description="打开即可体验此功能的公开链接。")
+    icon: IconifyId | None = Field(default=None, description="从 Iconify 官方目录选择的亮点图标。")
 
 
 class ProjectInfo(Input):
-    label: ShortText
-    value: ShortText
+    label: ShortText = Field(description="概览卡片的唯一短标题。", examples=["数据存储"])
+    value: ShortText = Field(description="用于概览、首页及侧栏的简短静态文字。", examples=["MySQL"])
+    icon: IconifyId = Field(
+        description="概览、首页和侧栏共用的 Iconify 图标。先查官方目录，再填图标集:图标名。",
+        examples=["lucide:database", "logos:vue"],
+    )
 
 
 class Submission(Input):
-    slug: str | None = Field(default=None, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", max_length=64)
-    name: ShortText | None = None
-    description: Summary | None = None
-    introduction: str | None = Field(default=None, max_length=24000)
-    tags: list[ShortText] | None = Field(default=None, max_length=8)
-    status: Literal["active", "building", "iterated", "archived"] | None = None
-    source_url: AnyHttpUrl | None = None
-    demo_url: AnyHttpUrl | None = None
-    is_open_source: bool | None = None
-    screenshots: list[Screenshot] | None = Field(default=None, max_length=12)
-    highlights: list[Highlight] | None = Field(default=None, max_length=8)
+    slug: str | None = Field(
+        default=None, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", max_length=64,
+        description="仅新建可用的链接前缀，服务会补上唯一后缀。",
+    )
+    name: ShortText | None = Field(default=None, description="公开作品名称。")
+    description: Summary | None = Field(default=None, description="首页卡片上的一句话项目简介。")
+    introduction: str | None = Field(
+        default=None, max_length=24000, description="详情页的 Markdown 项目说明，便于扫读关键技术、机制和亮点。"
+    )
+    tags: list[ShortText] | None = Field(default=None, max_length=8, description="项目分类标签。")
+    status: Literal["active", "building", "iterated", "archived"] | None = Field(
+        default=None, description="项目状态，按实际进展填写。"
+    )
+    source_url: AnyHttpUrl | None = Field(default=None, description="可公开访问的源代码地址。")
+    demo_url: AnyHttpUrl | None = Field(default=None, description="项目的主要公开演示入口。")
+    is_open_source: bool | None = Field(default=None, description="为 true 时需要公开源码地址。")
+    screenshots: list[Screenshot] | None = Field(
+        default=None, max_length=12, description="项目主图集，首张为封面。没有截图能力时可省略。"
+    )
+    highlights: list[Highlight] | None = Field(
+        default=None, max_length=8, description="特色功能卡片，可各自提供演示链接和图集。"
+    )
     overview: list[ProjectInfo] | None = Field(
-        default=None, min_length=OVERVIEW_SIZE, max_length=OVERVIEW_SIZE
+        default=None, min_length=OVERVIEW_SIZE, max_length=OVERVIEW_SIZE,
+        description="依展示优先级排列的 24 个概览项，每项包含标题、静态值和图标。",
     )
 
     @field_validator("overview")
@@ -269,18 +290,31 @@ async def publication_schema() -> dict:
         "asset_upload": {
             "method": "POST", "path": "/api/agent/v1/assets", "multipart_field": "file",
             "max_assets_per_key": MAX_ASSETS,
+            "max_bytes": MAX_ASSET_BYTES,
+            "formats": ["PNG", "JPEG", "WebP"],
+            "desktop_capture": {"width": 2560, "height": 1440},
         },
         "publish": {
             "method": "POST",
             "path": "/api/agent/v1/publish",
             "idempotency_header": "Idempotency-Key",
             "create_required": ["name", "description", "introduction", "highlights", "overview"],
+            "ordering": "新建排在作品集最前；定向更新保留原有位置。",
         },
         "overview_display": {
             "total": OVERVIEW_SIZE,
             "homepage": HOMEPAGE_OVERVIEW_SIZE,
             "sidebar": SIDEBAR_OVERVIEW_SIZE,
+            "hero": HERO_OVERVIEW_SIZE,
             "ordering": "First 4 on the homepage, first 8 in the sidebar, all 24 in the detail grid.",
+        },
+        "icons": {
+            "library": "Iconify",
+            "format": "prefix:name",
+            "documentation": "https://iconify.design/docs/api/queries.html",
+            "collections_url": "https://api.iconify.design/collections",
+            "collection_url_template": "https://api.iconify.design/collection?prefix={prefix}",
+            "search_url_template": "https://api.iconify.design/search?query={keyword}",
         },
         "authorization": "Bearer <Agent SK>",
         "result_fields": ["project_id", "url", "operation"],
@@ -377,6 +411,7 @@ def project_fields(payload: Submission, assets: dict[str, str], api_origin: str)
                 "id": f"feature-{index}",
                 "title": item.title,
                 "description": item.description,
+                **({"icon": item.icon} if item.icon else {}),
                 "previewUrl": str(item.demo_url) if item.demo_url else "",
                 "techStack": [{"id": f"tech-{i}", "name": name} for i, name in enumerate(item.technologies)],
                 "screenshots": screenshots(item.screenshots),
@@ -386,10 +421,10 @@ def project_fields(payload: Submission, assets: dict[str, str], api_origin: str)
         fields["projectInfos"] = [
             {
                 "id": f"info-{index}", "label": item.label, "value": item.value,
-                "valueCode": "", "icon": "lucide:info", "order": index,
+                "valueCode": "", "icon": item.icon, "order": index,
                 "showInHomepage": index < HOMEPAGE_OVERVIEW_SIZE,
                 "showInSidebar": index < SIDEBAR_OVERVIEW_SIZE,
-                "showInHero": index < 3,
+                "showInHero": index < HERO_OVERVIEW_SIZE,
             }
             for index, item in enumerate(payload.overview)
         ]
@@ -452,11 +487,11 @@ async def publish(
             if target:
                 projects[projects.index(existing)] = project
             else:
-                highest = max(
+                first_order = min(
                     (db.parse_order_value(p.get("order"), i) for i, p in enumerate(projects) if isinstance(p, dict)),
-                    default=-1,
+                    default=1,
                 )
-                project.update(createdAt=now, order=highest + 1)
+                project.update(createdAt=now, order=first_order - 1)
                 projects.append(project)
             db.write_json(site, "projects.json", projects)
 

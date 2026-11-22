@@ -1,0 +1,40 @@
+.firework {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.spark {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--spark-color);
+  box-shadow: 0 0 7px var(--spark-color);
+  animation: spark-flight 760ms cubic-bezier(.15, .54, .35, .99) var(--spark-delay) both;
+}
+
+@keyframes spark-flight {
+  0% {
+    opacity: 0;
+    transform: translate(var(--spark-start), 0) scale(.4);
+  }
+  15% {
+    opacity: 1;
+  }
+  65% {
+    opacity: .9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--spark-x), var(--spark-y)) scale(.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .firework {
+    display: none;
+  }
+}
