@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminGuard } from '@/components/admin/AdminGuard';
 import { TourOverlay } from '@/components/admin/tour/TourOverlay';
+import { TourPreviewReady } from '@/components/admin/tour/TourPreview';
 
 export default function AdminLayout({
   children,
@@ -23,7 +24,8 @@ export default function AdminLayout({
         <AdminHeader />
         <TourOverlay />
         
-        <div className="min-h-screen relative overflow-hidden bg-background">
+        <div data-tour-preview-content className="min-h-screen relative overflow-hidden bg-background">
+          <TourPreviewReady />
           {/* 背景装饰网格 */}
           <div className="absolute inset-0 bg-grid-gray-100/40 dark:bg-grid-slate-800/20 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] pointer-events-none" />
           

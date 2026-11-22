@@ -538,6 +538,9 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
             <Button
               size="sm"
               variant="outline"
+              data-tour-launcher
+              onPointerEnter={() => useTourStore.getState().preload()}
+              onFocus={() => useTourStore.getState().preload()}
               onClick={() => useTourStore.getState().start()}
               className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-500/40 dark:text-emerald-100 dark:hover:bg-emerald-500/20"
             >

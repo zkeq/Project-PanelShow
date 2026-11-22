@@ -43,6 +43,7 @@ export function AdminHeader({
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const startTour = useTourStore((state) => state.start);
+  const preloadTour = useTourStore((state) => state.preload);
   const [migrationOrigin, setMigrationOrigin] = useState(configuredMigrationOrigin);
 
   useEffect(() => {
@@ -127,7 +128,7 @@ export function AdminHeader({
           </Button>
 
           {/* 互动引导 */}
-          <Button variant="ghost" size="sm" onClick={startTour}>
+          <Button data-tour-launcher variant="ghost" size="sm" onPointerEnter={preloadTour} onFocus={preloadTour} onClick={startTour}>
             <Sparkles className="w-4 h-4 mr-2" />
             互动引导
           </Button>
