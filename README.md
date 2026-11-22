@@ -162,7 +162,7 @@ vim backend/config.yaml   # 按注释填写各字段
 
 登录并绑定作品集后，在后台打开「Agent 发布」并复制提示词。编辑已发布的作品时，可以从该作品的编辑页生成专用密钥。密钥七天内可重复上传素材和提交作品，也可随时撤销。每次新提交使用新的幂等键，同一笔重试沿用原键。项目归属由密钥确定。
 
-Agent 先读取 `GET /api/agent/v1/schema`。有截图时，向 `POST /api/agent/v1/assets` 发送图片类型和字节数，按返回的签名将图片直接 PUT 到腾讯云 COS，再调用 `POST /api/agent/v1/assets/{asset_id}/complete` 确认上传。使用 `POST /api/agent/v1/publish` 创建或更新作品。自托管时，后端使用 `config.yaml` 中的 COS 配置和公开访问域名，持久化 `backend/data/` 中的密钥和发布记录，并使用 `FRONTEND_BASE_URL` 生成公开作品链接。
+Agent 先读取 `GET /api/agent/v1/schema`。具备截图能力时，主动运行或打开项目并拍摄真实画面，再向 `POST /api/agent/v1/assets` 发送图片类型和字节数，按返回的签名将图片直接 PUT 到腾讯云 COS。调用 `POST /api/agent/v1/assets/{asset_id}/complete` 确认上传后，将 `asset_id` 填入图集。使用 `POST /api/agent/v1/publish` 创建或更新作品。自托管时，后端使用 `config.yaml` 中的 COS 配置和公开访问域名，持久化 `backend/data/` 中的密钥和发布记录，并使用 `FRONTEND_BASE_URL` 生成公开作品链接。
 
 ## 🤝 参与贡献
 
