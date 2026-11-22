@@ -133,6 +133,8 @@ npm run dev
 
 > ⚠️ **安全提示**：这两个文件已加入 `.gitignore`，绝不要将含真实密钥的版本提交到仓库。部署时通过环境变量或挂载卷注入。
 
+新域名可用后，在前端构建环境设置 `NEXT_PUBLIC_DOMAIN_MIGRATION_ORIGIN`（完整的 HTTPS 站点地址）即可在管理后台顶部显示域名迁移通知。
+
 ### 配置模板
 
 ```bash
@@ -153,6 +155,12 @@ vim backend/config.yaml   # 按注释填写各字段
 | 通知 | `/api/notifications/*` | 消息推送与读取 |
 
 完整文档启动后访问：`http://localhost:8000/docs`
+
+### 用 Agent 发布作品
+
+登录并绑定作品集后，在后台打开「Agent 发布」并复制提示词。编辑已发布的作品时，可以从该作品的编辑页生成专用密钥。发布密钥有效期一小时，支持撤销及使用同一幂等键重试。项目归属由密钥确定。
+
+Agent 先读取 `GET /api/agent/v1/schema`，用 `POST /api/agent/v1/assets` 上传截图，再用 `POST /api/agent/v1/publish` 创建或更新作品。服务使用 `FRONTEND_BASE_URL` 生成公开作品链接。自托管时，后端持久化 `backend/data/` 并对外提供 `/uploads/`，用于保存发布密钥记录和截图。
 
 ## 🤝 参与贡献
 

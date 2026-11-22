@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { AdminGuard } from '@/components/admin/AdminGuard';
-import { TourLauncher } from '@/components/admin/tour/TourLauncher';
+import { TourOverlay } from '@/components/admin/tour/TourOverlay';
 
 export default function AdminLayout({
   children,
@@ -21,7 +21,7 @@ export default function AdminLayout({
     <AdminGuard>
       <>
         <AdminHeader />
-        <TourLauncher />
+        <TourOverlay />
         
         <div className="min-h-screen relative overflow-hidden bg-background">
           {/* 背景装饰网格 */}

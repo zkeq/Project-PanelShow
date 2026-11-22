@@ -7,6 +7,7 @@ import {
   Sun,
   Moon,
   LogOut,
+  Megaphone,
   Sparkles
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -14,11 +15,14 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTourStore } from '@/components/admin/tour/useTourStore';
 
+const migrationOrigin = process.env.NEXT_PUBLIC_DOMAIN_MIGRATION_ORIGIN?.trim();
+
 const getPageTitle = (pathname: string): string => {
   if (pathname === '/admin') return '管理控制台';
   if (pathname === '/admin/welcome') return '欢迎页面';
   if (pathname === '/admin/projects/create') return '新建作品集';
   if (pathname === '/admin/settings') return '系统设置';
+  if (pathname === '/admin/agent') return 'Agent 发布';
   if (pathname === '/admin/dynamic') return '动态管理';
   if (pathname.startsWith('/admin/projects')) return '项目管理';
   return '管理控制台';
@@ -69,6 +73,20 @@ export function AdminHeader({
 
   return (
     <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {migrationOrigin && (
+        <aside aria-label="域名迁移通知" className="border-b border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-100">
+          <div className="container flex items-start gap-2 px-4 py-2 text-sm">
+            <Megaphone aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <p>
+              旧域名在微信内无法打开，Project-PanelShow 已迁移至{' '}
+              <a className="font-medium break-all underline underline-offset-2" href={migrationOrigin}>
+                {migrationOrigin}
+              </a>
+              。请更新收藏。
+            </p>
+          </div>
+        </aside>
+      )}
       <div className="container flex h-16 items-center justify-between px-4">
         {/* 左侧 - 标题 */}
         <div className="flex items-center gap-3">
@@ -101,7 +119,7 @@ export function AdminHeader({
           </Button>
 
           {/* 互动引导 */}
-          <Button variant="ghost" size="sm" onClick={() => startTour(0)}>
+          <Button variant="ghost" size="sm" onClick={startTour}>
             <Sparkles className="w-4 h-4 mr-2" />
             互动引导
           </Button>

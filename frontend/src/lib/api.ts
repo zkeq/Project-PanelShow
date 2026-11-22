@@ -61,6 +61,44 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return data as T;
 }
 
+export interface AgentPublication {
+  project_id: string;
+  url: string;
+  operation: 'create' | 'update';
+}
+
+export interface AgentKey {
+  id: string;
+  project_id: string | null;
+  expires_at: number;
+  status: 'ready' | 'published' | 'expired' | 'revoked';
+  result: AgentPublication | null;
+}
+
+export function fetchAgentOnboarding(token: string, signal?: AbortSignal) {
+  return request<{ show: boolean }>('/api/agent/onboarding', { token, signal, cache: 'no-store' });
+}
+
+export function dismissAgentOnboarding(token: string) {
+  return request<void>('/api/agent/onboarding/dismiss', { method: 'POST', token });
+}
+
+export function fetchAgentKeys(token: string, signal?: AbortSignal) {
+  return request<{ keys: AgentKey[]; site: string }>('/api/agent/keys', { token, signal, cache: 'no-store' });
+}
+
+export function issueAgentKey(token: string, projectId: string | null) {
+  return request<{ id: string; token: string; expires_at: number; site: string }>('/api/agent/keys', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ project_id: projectId }),
+  });
+}
+
+export function revokeAgentKey(token: string, keyId: string) {
+  return request<void>(`/api/agent/keys/${encodeURIComponent(keyId)}`, { method: 'DELETE', token });
+}
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;

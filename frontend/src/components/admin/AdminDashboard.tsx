@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { useGlobalStore } from '@/store/useGlobalStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTourStore } from '@/components/admin/tour/useTourStore';
+import { AgentOnboardingCard } from './AgentPublishing';
 import { ProjectManagementList } from './ProjectManagementList';
 import { TimelineManagementList } from './TimelineManagementList';
 import { SearchAndFilter } from './SearchAndFilter';
@@ -324,6 +325,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
   const hydratedAuth = useAuthStore((state) => state.hydrated);
   const token = useAuthStore((state) => state.token);
   const boundUsername = useAuthStore((state) => state.user?.bound_username ?? null);
+  const agentToken = useAuthStore((state) => state.token);
   const redirectingRef = useRef(false);
   const dataFetchKeyRef = useRef<string | null>(null);
 
@@ -505,6 +507,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
     <>
         {/* 主内容区域 */}
         <div className={cn('relative z-10 container mx-auto p-6 space-y-6 pt-6', className)}>
+        {boundUsername && agentToken && <AgentOnboardingCard token={agentToken} />}
         <div className="flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-emerald-900 shadow-sm dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100 sm:flex-row sm:items-center sm:justify-between" data-tour="site-banner">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
@@ -523,11 +526,14 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href="/admin/agent">Agent 发布</Link>
+            </Button>
             <Button
               size="sm"
               variant="outline"
-              onClick={() => useTourStore.getState().start(0)}
+              onClick={() => useTourStore.getState().start()}
               className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-500/40 dark:text-emerald-100 dark:hover:bg-emerald-500/20"
             >
               <Sparkles className="mr-1.5 h-3.5 w-3.5" />

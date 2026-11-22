@@ -44,6 +44,7 @@ services:
       - DATA_DIR=/app/data
     volumes:
       - ./backend/data:/app/data
+      - ./backend/config.yaml:/app/config.yaml:ro
       - ./backend/static:/app/static
     depends_on:
       - redis

@@ -47,6 +47,7 @@ export interface ProjectInfo {
   icon: string;
   label: string;
   valueCode: string;
+  value?: string;
   showInHomepage: boolean;
   showInSidebar: boolean;
   showInHero: boolean;
@@ -95,7 +96,7 @@ const colorThemes = [
 
 // 预览项组件
 function PreviewItem({ info }: { info: ProjectInfo }) {
-  const { value, loading } = useExecuteCode(info.valueCode, '计算中...');
+  const { value, loading } = useExecuteCode(info.valueCode, info.value ?? '');
 
   return (
     <div className="space-y-2">
@@ -364,8 +365,8 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
       return;
     }
 
-    if (!formData.label || !formData.valueCode) {
-      alert('请填写信息名称和代码');
+    if (!formData.label.trim() || (!formData.valueCode.trim() && !formData.value?.trim())) {
+      alert('请填写信息名称和静态值，或填写信息名称和代码');
       return;
     }
 
@@ -410,6 +411,7 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
       icon: info.icon,
       label: info.label,
       valueCode: info.valueCode,
+      value: info.value,
       showInHomepage: info.showInHomepage,
       showInSidebar: info.showInSidebar,
       showInHero: info.showInHero,
@@ -507,9 +509,19 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="staticValue">静态信息值</Label>
+            <Input
+              id="staticValue"
+              value={formData.value ?? ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, value: e.target.value }))}
+              placeholder="如：Next.js + FastAPI"
+            />
+          </div>
+
           {/* 信息值代码 */}
           <div className="space-y-2">
-            <Label htmlFor="valueCode">信息值代码 (JavaScript)</Label>
+            <Label htmlFor="valueCode">动态信息值代码 (JavaScript，可选)</Label>
             <Textarea
               id="valueCode"
               value={formData.valueCode}

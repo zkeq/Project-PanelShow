@@ -2,11 +2,15 @@
 极简JSON数据库工具
 """
 import json
+import math
 import os
+import sqlite3
 import uuid
 import shutil
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, List
+from tempfile import NamedTemporaryFile
+from typing import Any, Iterator, List
 
 DATA_DIR = Path(__file__).parent / "data"
 
@@ -41,8 +45,48 @@ def write_json(username: str, filename: str, data: Any):
     ensure_user_dir(username)
     file_path = get_user_dir(username) / filename
 
-    with open(file_path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    temporary_path = None
+    try:
+        with NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=file_path.parent, delete=False
+        ) as handle:
+            temporary_path = Path(handle.name)
+            json.dump(data, handle, ensure_ascii=False, indent=2)
+        os.replace(temporary_path, file_path)
+    finally:
+        if temporary_path:
+            temporary_path.unlink(missing_ok=True)
+
+
+@contextmanager
+def project_write() -> Iterator[sqlite3.Connection]:
+    """Serialize project updates and Agent authorization across API workers."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(DATA_DIR / "agent.sqlite3")
+    connection.row_factory = sqlite3.Row
+    try:
+        with connection:
+            connection.execute("BEGIN IMMEDIATE")
+            yield connection
+    finally:
+        connection.close()
+
+
+def parse_order_value(value: Any, fallback: int) -> int:
+    if isinstance(value, (int, float)):
+        return int(value) if math.isfinite(value) else fallback
+
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return fallback
+        try:
+            numeric = float(stripped)
+        except ValueError:
+            return fallback
+        return int(numeric) if math.isfinite(numeric) else fallback
+
+    return fallback
 
 
 def generate_id() -> str:

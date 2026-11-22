@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -567,6 +568,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
                 icon: typeof info.icon === 'string' ? info.icon : 'lucide:code',
                 label: typeof info.label === 'string' ? info.label : '',
                 valueCode: typeof info.valueCode === 'string' ? info.valueCode : '',
+                value: typeof info.value === 'string' ? info.value : undefined,
                 showInHomepage: Boolean(info.showInHomepage),
                 showInSidebar: Boolean(info.showInSidebar),
                 showInHero: Boolean(info.showInHero),
@@ -1012,6 +1014,11 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold text-foreground">{pageTitle}</h1>
         <p className="text-sm text-muted-foreground">{pageSubtitle}</p>
+        {isEditMode && projectId && !projectError && (
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/admin/agent?project=${encodeURIComponent(projectId)}`}>用 Agent 更新此作品</Link>
+          </Button>
+        )}
       </div>
 
       {settingsLoading && (

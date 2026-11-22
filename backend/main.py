@@ -4,7 +4,6 @@
 import asyncio
 import base64
 import hmac
-import math
 import copy
 import re
 import uuid
@@ -33,8 +32,11 @@ import json
 import auth
 import db
 import notifications
+from agent_publish import router as agent_publish_router
+from db import parse_order_value
 
 app = FastAPI(title="极简JSON后端", version="2.0.0")
+app.include_router(agent_publish_router)
 
 # CORS配置
 app.add_middleware(
@@ -67,23 +69,6 @@ ALLOWED_IMAGE_TYPES = {
     "image/gif": ".gif",
     "image/webp": ".webp"
 }
-
-
-def parse_order_value(value: Any, fallback: int) -> int:
-    if isinstance(value, (int, float)):
-        return int(value) if math.isfinite(value) else fallback
-
-    if isinstance(value, str):
-        stripped = value.strip()
-        if not stripped:
-            return fallback
-        try:
-            numeric = float(stripped)
-        except ValueError:
-            return fallback
-        return int(numeric) if math.isfinite(numeric) else fallback
-
-    return fallback
 
 
 def parse_datetime(value: Union[str, None]) -> Union[datetime, None]:
@@ -433,29 +418,30 @@ async def create_project(
     # 检查绑定的用户名
     check_bound_username(current_user, username)
 
-    projects = db.read_json(username, "projects.json")
+    with db.project_write():
+        projects = db.read_json(username, "projects.json")
 
-    # ID 处理：优先使用用户提供的 ID，否则生成新 ID
-    user_provided_id = data.get("id")
-    if isinstance(user_provided_id, str) and user_provided_id.strip():
-        # 用户提供了 ID，使用用户提供的
-        data["id"] = user_provided_id.strip()
-    else:
-        # 用户没有提供 ID，自动生成
-        data["id"] = db.generate_id()
+        # ID 处理：优先使用用户提供的 ID，否则生成新 ID
+        user_provided_id = data.get("id")
+        if isinstance(user_provided_id, str) and user_provided_id.strip():
+            # 用户提供了 ID，使用用户提供的
+            data["id"] = user_provided_id.strip()
+        else:
+            # 用户没有提供 ID，自动生成
+            data["id"] = db.generate_id()
 
-    # 处理 order
-    existing_orders = [
-        parse_order_value(project.get("order"), index)
-        for index, project in enumerate(projects)
-        if isinstance(project, dict)
-    ]
-    next_order = max(existing_orders, default=-1) + 1
-    data["order"] = parse_order_value(data.get("order"), next_order)
+        # 处理 order
+        existing_orders = [
+            parse_order_value(project.get("order"), index)
+            for index, project in enumerate(projects)
+            if isinstance(project, dict)
+        ]
+        next_order = max(existing_orders, default=-1) + 1
+        data["order"] = parse_order_value(data.get("order"), next_order)
 
-    projects.append(data)
+        projects.append(data)
 
-    db.write_json(username, "projects.json", projects)
+        db.write_json(username, "projects.json", projects)
     asyncio.create_task(notifications.notify_project_created(username, data))
 
     return {"message": "项目创建成功", "data": data}
@@ -538,21 +524,22 @@ async def update_tech_stack_configuration(
 
     check_bound_username(current_user, username)
 
-    projects = get_user_projects_and_ids(username)
-    valid_project_ids = extract_valid_project_ids(projects)
+    with db.project_write():
+        projects = get_user_projects_and_ids(username)
+        valid_project_ids = extract_valid_project_ids(projects)
 
-    normalized = normalize_tech_stack_config(payload, valid_project_ids)
-    normalized_assignments = normalized.get("projectAssignments", {})
+        normalized = normalize_tech_stack_config(payload, valid_project_ids)
+        normalized_assignments = normalized.get("projectAssignments", {})
 
-    normalized["updatedAt"] = datetime.now(timezone.utc).isoformat()
+        normalized["updatedAt"] = datetime.now(timezone.utc).isoformat()
 
-    data_to_save = {
-        "categories": normalized.get("categories", []),
-        "updatedAt": normalized.get("updatedAt"),
-    }
-    db.write_json(username, "settings_techStacks.json", data_to_save)
+        data_to_save = {
+            "categories": normalized.get("categories", []),
+            "updatedAt": normalized.get("updatedAt"),
+        }
+        db.write_json(username, "settings_techStacks.json", data_to_save)
 
-    update_project_tech_stacks(username, projects, normalized_assignments)
+        update_project_tech_stacks(username, projects, normalized_assignments)
 
     return {
         "success": True,
@@ -619,33 +606,34 @@ async def update_project(
     # 检查绑定的用户名
     check_bound_username(current_user, username)
 
-    projects = db.read_json(username, "projects.json")
-    project_index = next((i for i, p in enumerate(projects) if p.get("id") == project_id), None)
+    with db.project_write():
+        projects = db.read_json(username, "projects.json")
+        project_index = next((i for i, p in enumerate(projects) if p.get("id") == project_id), None)
 
-    if project_index is None:
-        raise HTTPException(status_code=404, detail="项目不存在")
+        if project_index is None:
+            raise HTTPException(status_code=404, detail="项目不存在")
 
-    # ID 处理：优先使用用户提供的 ID（如果有的话），否则保持原 ID
-    user_provided_id = data.get("id")
-    if isinstance(user_provided_id, str) and user_provided_id.strip():
-        # 用户提供了新的 ID
-        final_id = user_provided_id.strip()
-    else:
-        # 用户没有提供 ID，使用 URL 中的 project_id
-        final_id = project_id
+        # ID 处理：优先使用用户提供的 ID（如果有的话），否则保持原 ID
+        user_provided_id = data.get("id")
+        if isinstance(user_provided_id, str) and user_provided_id.strip():
+            # 用户提供了新的 ID
+            final_id = user_provided_id.strip()
+        else:
+            # 用户没有提供 ID，使用 URL 中的 project_id
+            final_id = project_id
 
-    # 处理 order
-    existing_project = projects[project_index] if isinstance(projects[project_index], dict) else {}
-    existing_order = parse_order_value(existing_project.get("order"), project_index)
-    if "order" in data:
-        data["order"] = parse_order_value(data.get("order"), existing_order)
-    else:
-        data["order"] = existing_order
+        # 处理 order
+        existing_project = projects[project_index] if isinstance(projects[project_index], dict) else {}
+        existing_order = parse_order_value(existing_project.get("order"), project_index)
+        if "order" in data:
+            data["order"] = parse_order_value(data.get("order"), existing_order)
+        else:
+            data["order"] = existing_order
 
-    data["id"] = final_id
-    projects[project_index] = data
+        data["id"] = final_id
+        projects[project_index] = data
 
-    db.write_json(username, "projects.json", projects)
+        db.write_json(username, "projects.json", projects)
     asyncio.create_task(notifications.notify_project_updated(username, data))
     return {"message": "项目更新成功", "data": data}
 
@@ -660,14 +648,15 @@ async def delete_project(
     # 检查绑定的用户名
     check_bound_username(current_user, username)
 
-    projects = db.read_json(username, "projects.json")
-    projects = [p for p in projects if p.get("id") != project_id]
+    with db.project_write():
+        projects = db.read_json(username, "projects.json")
+        projects = [p for p in projects if p.get("id") != project_id]
 
-    for index, project in enumerate(projects):
-        if isinstance(project, dict):
-            project["order"] = index
+        for index, project in enumerate(projects):
+            if isinstance(project, dict):
+                project["order"] = index
 
-    db.write_json(username, "projects.json", projects)
+        db.write_json(username, "projects.json", projects)
     return {"message": "项目删除成功"}
 
 
@@ -712,42 +701,43 @@ async def reorder_projects(
     if not sanitized:
         raise HTTPException(status_code=400, detail="未提供有效的项目ID")
 
-    projects = db.read_json(username, "projects.json")
-    project_map: Dict[str, Dict[str, Any]] = {
-        project.get("id"): project
-        for project in projects
-        if isinstance(project, dict) and isinstance(project.get("id"), str)
-    }
+    with db.project_write():
+        projects = db.read_json(username, "projects.json")
+        project_map: Dict[str, Dict[str, Any]] = {
+            project.get("id"): project
+            for project in projects
+            if isinstance(project, dict) and isinstance(project.get("id"), str)
+        }
 
-    missing = [project_id for project_id, _ in sanitized if project_id not in project_map]
-    if missing:
-        raise HTTPException(status_code=404, detail=f"项目不存在: {', '.join(missing)}")
+        missing = [project_id for project_id, _ in sanitized if project_id not in project_map]
+        if missing:
+            raise HTTPException(status_code=404, detail=f"项目不存在: {', '.join(missing)}")
 
-    sorted_entries = sorted(sanitized, key=lambda item: item[1])
-    specified_ids = {project_id for project_id, _ in sanitized}
-    ordered_projects: List[Dict[str, Any]] = []
+        sorted_entries = sorted(sanitized, key=lambda item: item[1])
+        specified_ids = {project_id for project_id, _ in sanitized}
+        ordered_projects: List[Dict[str, Any]] = []
 
-    for position, (project_id, _) in enumerate(sorted_entries):
-        project = project_map[project_id]
-        project["order"] = position
-        ordered_projects.append(project)
+        for position, (project_id, _) in enumerate(sorted_entries):
+            project = project_map[project_id]
+            project["order"] = position
+            ordered_projects.append(project)
 
-    remaining_projects = [
-        project for project in projects
-        if isinstance(project, dict) and project.get("id") not in specified_ids
-    ]
+        remaining_projects = [
+            project for project in projects
+            if isinstance(project, dict) and project.get("id") not in specified_ids
+        ]
 
-    remaining_with_index = [
-        (parse_order_value(project.get("order"), len(ordered_projects) + idx), idx, project)
-        for idx, project in enumerate(remaining_projects)
-    ]
-    remaining_with_index.sort(key=lambda item: (item[0], item[1]))
+        remaining_with_index = [
+            (parse_order_value(project.get("order"), len(ordered_projects) + idx), idx, project)
+            for idx, project in enumerate(remaining_projects)
+        ]
+        remaining_with_index.sort(key=lambda item: (item[0], item[1]))
 
-    for offset, (_, _, project) in enumerate(remaining_with_index, start=len(ordered_projects)):
-        project["order"] = offset
-        ordered_projects.append(project)
+        for offset, (_, _, project) in enumerate(remaining_with_index, start=len(ordered_projects)):
+            project["order"] = offset
+            ordered_projects.append(project)
 
-    db.write_json(username, "projects.json", ordered_projects)
+        db.write_json(username, "projects.json", ordered_projects)
     return {"success": True, "data": ordered_projects}
 
 
