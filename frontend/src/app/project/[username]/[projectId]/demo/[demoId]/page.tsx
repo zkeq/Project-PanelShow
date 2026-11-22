@@ -11,9 +11,11 @@ import DemoControls from '@/components/demo/DemoControls'
 import DemoFrame from '@/components/demo/DemoFrame'
 import ProjectInfo from '@/components/demo/ProjectInfo'
 import DemoInfo from '@/components/demo/DemoInfo'
+import FeatureGallery from '@/components/project/FeatureGallery'
 import { fetchProjectDetail } from '@/lib/api'
 import type {
   DemoContent,
+  DemoScreenshot,
   FeatureHighlight,
   ProjectOverview,
   ProjectDetailApiData,
@@ -45,6 +47,20 @@ const toOptionalUrl = (value: unknown) =>
 
 const toOptionalText = (value: unknown) =>
   typeof value === "string" ? value : undefined
+
+function normalizeScreenshots(raw: unknown): DemoScreenshot[] {
+  if (!Array.isArray(raw)) return []
+
+  return raw.flatMap((item, index) => {
+    if (!item || typeof item !== "object") return []
+    const record = item as Record<string, unknown>
+    const src = toOptionalUrl(record.url) ?? toOptionalUrl(record.src)
+    if (!src) return []
+    const description = toOptionalText(record.description)
+    const label = toStringOrFallback(record.name, `截图 ${index + 1}`)
+    return [{ src, label, description, alt: description || label }]
+  })
+}
 
 const normalizeFeatureHighlights = (raw: unknown): FeatureHighlight[] => {
   if (!Array.isArray(raw)) return []
@@ -80,6 +96,7 @@ const normalizeFeatureHighlights = (raw: unknown): FeatureHighlight[] => {
       mobilePreviewUrl: toOptionalUrl(record.mobilePreviewUrl),
       leftMarkdown: toOptionalText(record.leftMarkdown),
       rightMarkdown: toOptionalText(record.rightMarkdown),
+      screenshots: normalizeScreenshots(record.screenshots),
     })
   })
 
@@ -169,6 +186,7 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
 
         const demo: DemoContent = {
           title: toStringOrFallback(highlight.title, name),
+          description: highlight.description,
           previewUrl: highlight.previewUrl ?? toOptionalUrl(data.previewUrl),
           mobilePreviewUrl:
             highlight.mobilePreviewUrl ?? toOptionalUrl(data.mobilePreviewUrl),
@@ -176,6 +194,7 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
           leftMarkdown: highlight.leftMarkdown ?? toOptionalText(data.leftSidebarMarkdown),
           rightMarkdown:
             highlight.rightMarkdown ?? toOptionalText(data.rightSidebarMarkdown),
+          screenshots: highlight.screenshots,
         }
 
         setProjectInfo(overview)
@@ -391,6 +410,16 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
             onLoad={handleIframeLoad}
             onError={handleIframeError}
           />
+
+          {!!demoContent.screenshots?.length && (
+            <section aria-labelledby="feature-screenshots" className="w-full max-w-5xl space-y-3 py-6">
+              <h2 id="feature-screenshots" className="text-lg font-semibold">功能截图</h2>
+              {demoContent.description && (
+                <p className="text-sm leading-relaxed text-muted-foreground">{demoContent.description}</p>
+              )}
+              <FeatureGallery images={demoContent.screenshots} />
+            </section>
+          )}
 
           <DemoInfo content={demoContent} />
         </div>

@@ -292,7 +292,7 @@ export default function ProjectContent({ project, username, mobileNavigation, ti
               </CardHeader>
               <CardContent className="py-4 lg:py-6">
                 {statsAttributes.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 lg:gap-4 w-full">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:gap-4 w-full">
                     {statsAttributes.map((attribute, index) => (
                       <ProjectStatItem
                         key={attribute.id}

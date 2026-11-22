@@ -6,11 +6,20 @@ export interface ProjectOverview {
 
 export interface DemoContent {
   title: string
+  description?: string
   previewUrl?: string
   mobilePreviewUrl?: string
   sourceUrl?: string
   leftMarkdown?: string
   rightMarkdown?: string
+  screenshots?: DemoScreenshot[]
+}
+
+export interface DemoScreenshot {
+  src: string
+  alt: string
+  label: string
+  description?: string
 }
 
 export interface FeatureHighlight {
@@ -21,6 +30,7 @@ export interface FeatureHighlight {
   mobilePreviewUrl?: string
   leftMarkdown?: string
   rightMarkdown?: string
+  screenshots?: DemoScreenshot[]
 }
 
 export interface ProjectDetailApiData {

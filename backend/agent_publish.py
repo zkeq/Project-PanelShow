@@ -24,7 +24,10 @@ import notifications
 router = APIRouter(prefix="/api/agent", tags=["Agent 发布"])
 KEY_TTL = 60 * 60
 MAX_ASSET_BYTES = 8 * 1024 * 1024
-MAX_ASSETS = 24
+MAX_ASSETS = 48
+OVERVIEW_SIZE = 24
+HOMEPAGE_OVERVIEW_SIZE = 4
+SIDEBAR_OVERVIEW_SIZE = 8
 SITE_NAME = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}")
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 Summary = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=400)]
@@ -69,7 +72,16 @@ class Submission(Input):
     is_open_source: bool | None = None
     screenshots: list[Screenshot] | None = Field(default=None, max_length=12)
     highlights: list[Highlight] | None = Field(default=None, max_length=8)
-    overview: list[ProjectInfo] | None = Field(default=None, max_length=8)
+    overview: list[ProjectInfo] | None = Field(
+        default=None, min_length=OVERVIEW_SIZE, max_length=OVERVIEW_SIZE
+    )
+
+    @field_validator("overview")
+    @classmethod
+    def unique_overview_labels(cls, value: list[ProjectInfo] | None) -> list[ProjectInfo] | None:
+        if value is not None and len({item.label.casefold() for item in value}) != len(value):
+            raise ValueError("Overview labels must be unique")
+        return value
 
     @field_validator("introduction")
     @classmethod
@@ -253,12 +265,21 @@ def authorized_key(connection: sqlite3.Connection, token: str) -> sqlite3.Row:
 async def publication_schema() -> dict:
     return {
         "schema": Submission.model_json_schema(),
-        "asset_upload": {"method": "POST", "path": "/api/agent/v1/assets", "multipart_field": "file"},
+        "asset_upload": {
+            "method": "POST", "path": "/api/agent/v1/assets", "multipart_field": "file",
+            "max_assets_per_key": MAX_ASSETS,
+        },
         "publish": {
             "method": "POST",
             "path": "/api/agent/v1/publish",
             "idempotency_header": "Idempotency-Key",
-            "create_required": ["name", "description", "introduction", "highlights"],
+            "create_required": ["name", "description", "introduction", "highlights", "overview"],
+        },
+        "overview_display": {
+            "total": OVERVIEW_SIZE,
+            "homepage": HOMEPAGE_OVERVIEW_SIZE,
+            "sidebar": SIDEBAR_OVERVIEW_SIZE,
+            "ordering": "First 4 on the homepage, first 8 in the sidebar, all 24 in the detail grid.",
         },
         "authorization": "Bearer <Agent SK>",
         "result_fields": ["project_id", "url", "operation"],
@@ -365,7 +386,9 @@ def project_fields(payload: Submission, assets: dict[str, str], api_origin: str)
             {
                 "id": f"info-{index}", "label": item.label, "value": item.value,
                 "valueCode": "", "icon": "lucide:info", "order": index,
-                "showInHomepage": index < 4, "showInHero": index < 3, "showInSidebar": True,
+                "showInHomepage": index < HOMEPAGE_OVERVIEW_SIZE,
+                "showInSidebar": index < SIDEBAR_OVERVIEW_SIZE,
+                "showInHero": index < 3,
             }
             for index, item in enumerate(payload.overview)
         ]
@@ -396,8 +419,10 @@ async def publish(
         site, target = key["site"], key["target"]
         if target and payload.slug:
             raise HTTPException(422, "编辑作品时不能修改地址")
-        if not target and not all((payload.name, payload.description, payload.introduction, payload.highlights)):
-            raise HTTPException(422, "创建作品需要名称、简介、正文和至少一个亮点")
+        if not target and not all(
+            (payload.name, payload.description, payload.introduction, payload.highlights, payload.overview)
+        ):
+            raise HTTPException(422, "创建作品需要名称、简介、正文、至少一个亮点和 24 项概览")
         asset_paths = dict(connection.execute(
             "SELECT id, path FROM agent_assets WHERE key_id = ?", (key["id"],)
         ).fetchall())

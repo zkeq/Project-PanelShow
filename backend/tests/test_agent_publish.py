@@ -59,7 +59,9 @@ def sample():
         "description": "A reproducible example.",
         "introduction": "## Overview\n\nThe project has a verified workflow.",
         "highlights": [{"title": "Workflow", "description": "Run and inspect the result."}],
-        "overview": [{"label": "Runtime", "value": "FastAPI"}],
+        "overview": [{"label": "Runtime", "value": "FastAPI"}] + [
+            {"label": f"Aspect {number}", "value": f"Verified {number}"} for number in range(2, 25)
+        ],
     }
 
 
@@ -87,6 +89,10 @@ def test_create_from_agent_and_retry(panelshow):
     project = client.get(f"/api/projects/first-site/{result['project_id']}").json()["data"]
     assert project["screenshots"][0]["description"] == "The main screen"
     assert project["heroAttributes"][0]["value"] == "FastAPI"
+    assert len(project["projectInfos"]) == 24
+    assert len(project["homeAttributes"]) == 4
+    assert len(project["sidebarAttributes"]) == 8
+    assert project["projectInfos"][8]["showInSidebar"] is False
     assert len(db.read_json("first-site", "projects.json")) == 1
     status = client.get("/api/agent/keys", headers=owner).json()["keys"][0]
     assert "token" not in status
@@ -153,3 +159,17 @@ def test_expired_key_and_invalid_content(panelshow):
     with db.project_write() as connection:
         connection.execute("UPDATE agent_keys SET expires_at = 0 WHERE id = ?", (key["id"],))
     assert client.post("/api/agent/v1/publish", headers=agent, json=sample()).status_code == 401
+
+
+def test_overview_requires_24_distinct_items(panelshow):
+    client, bind, _ = panelshow
+    owner = bind("1", "first-site")
+    _, agent = issue(client, owner)
+    body = sample()
+    assert client.post("/api/agent/v1/publish", headers=agent, json={
+        **body, "overview": body["overview"][:-1]
+    }).status_code == 422
+    repeated = [body["overview"][0]] * 24
+    assert client.post("/api/agent/v1/publish", headers=agent, json={
+        **body, "overview": repeated
+    }).status_code == 422
