@@ -78,7 +78,9 @@ def test_create_from_agent_and_retry(panelshow):
     )
     assert uploaded.status_code == 201
     body = sample()
-    body["screenshots"] = [{"asset_id": uploaded.json()["asset_id"], "caption": "The main screen"}]
+    body["screenshots"] = [{
+        "asset_id": uploaded.json()["asset_id"], "title": "Main screen", "caption": "The main screen"
+    }]
     submitted = client.post("/api/agent/v1/publish", headers=agent, json=body)
     assert submitted.status_code == 200, submitted.text
     result = submitted.json()
@@ -88,6 +90,7 @@ def test_create_from_agent_and_retry(panelshow):
     assert client.post("/api/agent/v1/publish", headers=agent, json={**body, "name": "Different"}).status_code == 409
     project = client.get(f"/api/projects/first-site/{result['project_id']}").json()["data"]
     assert project["screenshots"][0]["description"] == "The main screen"
+    assert project["screenshots"][0]["name"] == "Main screen"
     assert project["heroAttributes"][0]["value"] == "FastAPI"
     assert len(project["projectInfos"]) == 24
     assert len(project["homeAttributes"]) == 4

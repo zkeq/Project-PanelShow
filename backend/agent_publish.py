@@ -44,6 +44,7 @@ class IssueKey(Input):
 
 class Screenshot(Input):
     asset_id: AssetId
+    title: ShortText | None = None
     caption: Summary
 
 
@@ -338,13 +339,13 @@ STATUS_LABELS = {
 def project_fields(payload: Submission, assets: dict[str, str], api_origin: str) -> dict:
     def screenshots(items: list[Screenshot]) -> list[dict]:
         result = []
-        for item in items:
+        for index, item in enumerate(items, 1):
             path = assets.get(item.asset_id)
             if path is None:
                 raise HTTPException(422, "截图必须由本次发布密钥上传")
             result.append({
                 "id": item.asset_id,
-                "name": Path(path).name,
+                "name": item.title or f"截图 {index}",
                 "description": item.caption,
                 "url": f"{api_origin}{path}",
             })
