@@ -1,3 +1,5 @@
+import { CANONICAL_API_ORIGIN } from '@/lib/site-domain';
+
 export const PROJECT_JSON_PROMPT_GUIDE = `整理分析一下我这个项目 然后生成这个项目的JSON介绍文件 我要放到我的作品集里面
 
 {
@@ -499,7 +501,7 @@ return days + " 天"
 
 // API 状态检测
 try {
-  const res = await fetch("https://pps-backend.onmicrosoft.cn/health")
+  const res = await fetch("${CANONICAL_API_ORIGIN}/health")
   return res.ok ? "✅ 运行中" : "⚠️ 异常"
 } catch {
   return "❌ 离线"

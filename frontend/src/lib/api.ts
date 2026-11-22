@@ -1,6 +1,7 @@
 import type { TechStackConfig, TechStackResponseData } from '@/types/tech-stack'
+import { resolveApiOrigin } from '@/lib/site-domain'
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8007';
+export const API_BASE_URL = resolveApiOrigin(process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:8007');
 
 interface RequestOptions extends RequestInit {
   token?: string | null;
@@ -47,7 +48,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     try {
       data = JSON.parse(text);
     } catch {
-      throw new Error('服务返回了无法解析的响应');
+      if (response.ok) throw new Error('服务返回了无法解析的响应');
     }
   }
 

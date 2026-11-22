@@ -135,6 +135,8 @@ npm run dev
 
 官方前端将 `projects.onmicrosoft.cn` 的请求永久重定向到 `projects.dev-tool.cool`，保留路径和查询参数。新域名的管理后台顶部显示迁移通知。本地预览也可设置 `NEXT_PUBLIC_DOMAIN_MIGRATION_ORIGIN` 来显示通知。
 
+官方后端 API 地址为 `https://pps-backend.dev-tool.cool`。生产构建兼容已有的 `NEXT_PUBLIC_API_BASE_URL=https://pps-backend.onmicrosoft.cn`，并会使用新地址。本地和自托管继续使用各自配置的 API 地址。
+
 ### 配置模板
 
 ```bash

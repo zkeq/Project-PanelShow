@@ -1,4 +1,5 @@
 import type { NextConfig } from "next"
+import { resolveApiOrigin } from "./src/lib/site-domain"
 
 type RemotePattern = {
   protocol: "http" | "https"
@@ -16,20 +17,23 @@ const remotePatterns: RemotePattern[] = [
   }
 ]
 
-if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-  try {
-    const apiUrl = new URL(process.env.NEXT_PUBLIC_API_BASE_URL)
-    const protocol = apiUrl.protocol.replace(":", "")
-    if (protocol === "https" || protocol === "http") {
-      remotePatterns.push({
-        protocol: protocol as RemotePattern["protocol"],
-        hostname: apiUrl.hostname,
-        port: apiUrl.port,
-        pathname: "/uploads/**"
-      })
+const configuredApiOrigin = process.env.NEXT_PUBLIC_API_BASE_URL
+if (configuredApiOrigin) {
+  for (const origin of new Set([configuredApiOrigin, resolveApiOrigin(configuredApiOrigin)])) {
+    try {
+      const apiUrl = new URL(origin)
+      const protocol = apiUrl.protocol.replace(":", "")
+      if (protocol === "https" || protocol === "http") {
+        remotePatterns.push({
+          protocol,
+          hostname: apiUrl.hostname,
+          port: apiUrl.port,
+          pathname: "/uploads/**"
+        })
+      }
+    } catch (error) {
+      console.warn("Invalid NEXT_PUBLIC_API_BASE_URL for image remote patterns", error)
     }
-  } catch (error) {
-    console.warn("Invalid NEXT_PUBLIC_API_BASE_URL for image remote patterns", error)
   }
 } else {
   remotePatterns.push({

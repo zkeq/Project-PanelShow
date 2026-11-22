@@ -75,10 +75,12 @@ export function useExecuteCode(code: string | undefined, fallback: string = ''):
           if (cancelled) return;
 
           const errorMessage = err instanceof Error ? err.message : '执行出错';
+          const status = err instanceof Error && 'status' in err ? err.status : undefined;
           const isNetworkError = errorMessage.includes('Failed to fetch')
             || errorMessage.includes('NetworkError')
             || errorMessage.includes('CORS')
-            || errorMessage.includes('ERR_FAILED');
+            || errorMessage.includes('ERR_FAILED')
+            || status === 502 || status === 503 || status === 504;
 
           const isLastAttempt = attempt === maxRetries;
 

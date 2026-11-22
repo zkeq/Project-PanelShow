@@ -983,7 +983,11 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
         router.push('/admin');
       }, 1200);
     } catch (error) {
-      const message = error instanceof Error ? error.message : '提交失败，请稍后重试';
+      const status = error instanceof Error && 'status' in error ? error.status : undefined;
+      const connectionFailed = error instanceof TypeError || status === 502 || status === 503 || status === 504;
+      const message = connectionFailed
+        ? '未收到服务器确认，当前编辑已保留。请检查网络并确认作品状态后重试。'
+        : error instanceof Error ? error.message : '提交失败，请稍后重试';
       setStatusToast({ type: 'error', message });
     } finally {
       setIsSubmitting(false);
