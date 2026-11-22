@@ -14,6 +14,7 @@ import {
   API_BASE_URL,
   type AgentKey,
   dismissAgentOnboarding,
+  fetchAgentKeySecret,
   fetchAgentKeys,
   fetchAgentOnboarding,
   issueAgentKey,
@@ -24,7 +25,7 @@ import styles from "./AgentPublishing.module.css";
 
 const keyStatusLabels = {
   ready: "可用",
-  published: "已使用",
+  published: "有发布记录",
   expired: "已过期",
   revoked: "已撤销",
 };
@@ -84,6 +85,7 @@ export function AgentPublishing({
   const [copied, setCopied] = useState<{ target: CopyTarget; attempt: number }>();
   const activeKeyId = activeKey?.id;
   const keyStatus = activeKey?.status;
+  const keyRecoverable = activeKey?.recoverable;
   const keyValue = secret?.id === activeKeyId && keyStatus === "ready" ? secret?.value ?? "" : "";
 
   function formatPrompt(targetSite: string, key: string) {
@@ -123,6 +125,19 @@ export function AgentPublishing({
       clearTimeout(timer);
     };
   }, [token, projectId, activeKeyId, keyStatus]);
+
+  useEffect(() => {
+    if (!activeKeyId || keyStatus !== "ready" || !keyRecoverable || keyValue) return;
+    const controller = new AbortController();
+    void fetchAgentKeySecret(token, activeKeyId, controller.signal)
+      .then((key) => {
+        if (!controller.signal.aborted) setSecret({ id: key.id, value: key.token });
+      })
+      .catch((failure) => {
+        if (!controller.signal.aborted) setError(errorMessage(failure));
+      });
+    return () => controller.abort();
+  }, [activeKeyId, keyRecoverable, keyStatus, keyValue, token]);
 
   useEffect(() => {
     if (!copied) return;
@@ -167,6 +182,7 @@ export function AgentPublishing({
         project_id: projectId,
         expires_at: key.expires_at,
         status: "ready",
+        recoverable: true,
         result: null,
       });
       setSecret({ id: key.id, value: key.token });
@@ -253,7 +269,9 @@ export function AgentPublishing({
               id={keyFieldId}
               className="min-w-0 bg-background font-mono text-xs"
               value={keyValue}
-              placeholder={keyReady ? "密钥明文仅在生成时显示" : "生成后在此显示密钥"}
+              placeholder={keyReady
+                ? keyRecoverable ? "正在读取密钥…" : "旧版密钥，请重新生成一次"
+                : "生成后在此显示密钥"}
               autoComplete="off"
               spellCheck={false}
               readOnly
@@ -271,11 +289,11 @@ export function AgentPublishing({
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            这把密钥可上传图片，并{projectId ? "更新这个作品" : "发布一个作品"}。
+            同一把密钥可上传图片，并在 7 天内{projectId ? "多次更新这个作品" : "多次发布作品"}。
             {keyReady && activeKey
-              ? `本次有效至 ${new Date(activeKey.expires_at * 1000).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}。`
-              : "生成后有效期为 1 小时。"}
-            {keyReady && !keyValue && "如需查看或复制明文，请重新生成。"}
+              ? `有效至 ${new Date(activeKey.expires_at * 1000).toLocaleString("zh-CN", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}。`
+              : ""}
+            {keyReady && !keyRecoverable && "这是旧版密钥，重新生成一次即可在有效期内随时查看。"}
           </p>
         </section>
         {(!onboarding || keyValue) && <section className="space-y-3" aria-labelledby={promptFieldId + "-label"}>
@@ -314,7 +332,7 @@ export function AgentPublishing({
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         {publication && (
           <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
-            <p role="status" className="text-sm font-medium">作品已{publication.operation === "create" ? "发布" : "更新"}</p>
+            <p role="status" className="text-sm font-medium">最近一次作品已{publication.operation === "create" ? "发布" : "更新"}</p>
             <div className="flex flex-wrap gap-2">
               <Button asChild size="sm" variant="outline">
                 <a href={publication.url} target="_blank" rel="noreferrer">查看公开作品 <ArrowUpRight aria-hidden="true" /></a>

@@ -19,7 +19,7 @@ NOTIFICATION_ENDPOINT = os.getenv(
     "WECHAT_NOTIFY_ENDPOINT", "http://127.0.0.1:6789/send_message/"
 )
 DEFAULT_TOUID = os.getenv("WECHAT_NOTIFY_TOUID", "@all")
-FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "https://projects.onmicrosoft.cn")
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "https://projects.dev-tool.cool")
 
 LOCAL_TIMEZONE = timezone(timedelta(hours=8))
 UPLOAD_LOG_PATH = Path(__file__).parent / "data" / "uploads_log.json"

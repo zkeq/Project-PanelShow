@@ -99,9 +99,39 @@ def upload_file_to_cos(*, local_path: str, key: str, content_type: Optional[str]
     except (CosServiceError, CosClientError) as exc:
         raise CosUploadError(f"上传到 COS 失败: {exc}") from exc
 
+    return public_cos_url(key)
+
+
+def public_cos_url(key: str) -> str:
+    settings = _load_settings()
     base_url = settings.get("public_base_url") or settings.get("bucket_base_url")
     if not base_url:
         raise CosConfigError("COS 配置缺少可用的访问域名")
 
     return f"{base_url.rstrip('/')}/{key}"
+
+
+def sign_cos_upload(key: str, content_type: str, size: int, expires_in: int) -> dict:
+    headers = {
+        "Content-Type": content_type,
+        "Content-Length": str(size),
+        "x-cos-forbid-overwrite": "true",
+    }
+    url = _get_client().get_presigned_url(
+        Bucket=_load_settings()["bucket"], Key=key, Method="PUT", Expired=expires_in, Headers=headers,
+    )
+    return {"method": "PUT", "url": url, "headers": headers, "expires_in": expires_in}
+
+
+def cos_upload_matches(key: str, content_type: str, size: int) -> bool:
+    try:
+        metadata = _get_client().head_object(Bucket=_load_settings()["bucket"], Key=key)
+    except CosServiceError as exc:
+        if str(exc.get_status_code()) == "404":
+            return False
+        raise CosUploadError("无法核验 COS 对象") from exc
+    except CosClientError as exc:
+        raise CosUploadError("无法核验 COS 对象") from exc
+    headers = {name.lower(): value for name, value in metadata.items()}
+    return headers.get("content-type") == content_type and headers.get("content-length") == str(size)
 

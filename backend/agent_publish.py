@@ -1,28 +1,32 @@
 """Scoped Agent credentials and public portfolio submissions."""
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import hmac
 import json
-import os
 import re
 import secrets
 import sqlite3
 import time
+from base64 import urlsafe_b64encode
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Annotated, Literal
 from urllib.parse import quote
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Header, HTTPException, Request, Response, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request, Response
+from fastapi.routing import APIRoute
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 import auth
 import db
 import notifications
+from cos_client import CosConfigError, CosUploadError, build_cos_key, cos_upload_matches, public_cos_url, sign_cos_upload
 
-router = APIRouter(prefix="/api/agent", tags=["Agent 发布"])
-KEY_TTL = 60 * 60
+KEY_TTL = 7 * 24 * 60 * 60
+KEY_ISSUE_WINDOW = 60 * 60
+UPLOAD_TTL = 15 * 60
 MAX_ASSET_BYTES = 8 * 1024 * 1024
 MAX_ASSETS = 48
 OVERVIEW_SIZE = 24
@@ -36,6 +40,25 @@ AssetId = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{32}$")]
 IconifyId = Annotated[str, StringConstraints(
     strip_whitespace=True, max_length=128, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*:[a-z0-9]+(?:-[a-z0-9]+)*$"
 )]
+IMAGE_EXTENSIONS = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}
+
+
+class AgentRoute(APIRoute):
+    def get_route_handler(self):
+        handler = super().get_route_handler()
+        if self.path != "/api/agent/v1/assets" or "POST" not in self.methods:
+            return handler
+
+        async def metadata_only(request: Request) -> Response:
+            media_type = request.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+            if media_type != "application/json":
+                raise HTTPException(415, "此接口仅接收 JSON 上传信息，请按发布 schema 直传 COS")
+            return await handler(request)
+
+        return metadata_only
+
+
+router = APIRouter(prefix="/api/agent", tags=["Agent 发布"], route_class=AgentRoute)
 
 
 class Input(BaseModel):
@@ -46,8 +69,13 @@ class IssueKey(Input):
     project_id: str | None = Field(default=None, min_length=1, max_length=160)
 
 
+class AssetUpload(Input):
+    content_type: Literal["image/png", "image/jpeg", "image/webp"]
+    size: int = Field(strict=True, ge=1, le=MAX_ASSET_BYTES, description="文件实际字节数。")
+
+
 class Screenshot(Input):
-    asset_id: AssetId = Field(description="从本次 SK 的图片上传响应取得的 asset_id。")
+    asset_id: AssetId = Field(description="由当前 SK 申请、直传 COS 并确认完成的 asset_id。")
     title: ShortText | None = Field(default=None, description="在图集中展示的简短图片标题。")
     caption: Summary = Field(description="说明画面中的具体功能、操作或状态。")
 
@@ -135,11 +163,41 @@ def initialize(connection: sqlite3.Connection) -> None:
     """)
     connection.execute("""
         CREATE TABLE IF NOT EXISTS agent_assets (
-            id TEXT PRIMARY KEY, key_id TEXT NOT NULL, path TEXT NOT NULL
+            id TEXT PRIMARY KEY, key_id TEXT NOT NULL, path TEXT NOT NULL,
+            committed INTEGER NOT NULL DEFAULT 0
+        )
+    """)
+    connection.execute("""
+        CREATE TABLE IF NOT EXISTS agent_submissions (
+            key_id TEXT NOT NULL, request_key TEXT NOT NULL, request_digest TEXT NOT NULL,
+            result TEXT NOT NULL, PRIMARY KEY (key_id, request_key)
         )
     """)
     connection.execute("CREATE INDEX IF NOT EXISTS agent_assets_key ON agent_assets (key_id)")
     connection.execute("CREATE INDEX IF NOT EXISTS agent_keys_owner ON agent_keys (owner, site)")
+
+    version = connection.execute("PRAGMA user_version").fetchone()[0]
+    if version < 1:
+        asset_fields = {row["name"] for row in connection.execute("PRAGMA table_info(agent_assets)")}
+        if "committed" not in asset_fields:
+            connection.execute("ALTER TABLE agent_assets ADD COLUMN committed INTEGER NOT NULL DEFAULT 0")
+            connection.execute("UPDATE agent_assets SET committed = 1 WHERE key_id IN (SELECT id FROM agent_keys WHERE result IS NOT NULL)")
+        connection.execute("""
+            INSERT OR IGNORE INTO agent_submissions
+            SELECT id, request_key, request_digest, result FROM agent_keys
+            WHERE result IS NOT NULL AND request_key IS NOT NULL AND request_digest IS NOT NULL
+        """)
+        connection.execute(
+            "UPDATE agent_keys SET expires_at = expires_at + ? WHERE revoked = 0 AND expires_at > ?",
+            (KEY_TTL - KEY_ISSUE_WINDOW, int(time.time())),
+        )
+    if version < 2:
+        connection.execute("ALTER TABLE agent_assets ADD COLUMN cos_key TEXT")
+        connection.execute("ALTER TABLE agent_assets ADD COLUMN content_type TEXT")
+        connection.execute("ALTER TABLE agent_assets ADD COLUMN byte_count INTEGER")
+        connection.execute("ALTER TABLE agent_assets ADD COLUMN verified INTEGER NOT NULL DEFAULT 0")
+        connection.execute("UPDATE agent_assets SET verified = 1 WHERE cos_key IS NULL")
+        connection.execute("PRAGMA user_version = 2")
 
 
 def owner_from_session(user: dict) -> tuple[str, str]:
@@ -160,6 +218,17 @@ def digest(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()
 
 
+def agent_secret(key_id: str) -> str:
+    context = f"panelshow:agent-key:v1:{key_id}".encode()
+    secret = hmac.digest(auth.SECRET_KEY.encode(), context, "sha256")
+    return f"pps_sk_{urlsafe_b64encode(secret).decode().rstrip('=')}"
+
+
+def recover_agent_secret(row: sqlite3.Row) -> str | None:
+    secret = agent_secret(row["id"])
+    return secret if hmac.compare_digest(digest(secret), row["digest"]) else None
+
+
 def revision(project: dict) -> str:
     return digest(json.dumps(project, sort_keys=True, ensure_ascii=False))
 
@@ -174,8 +243,6 @@ def find_project(projects: list, project_id: str) -> dict | None:
 def key_info(row: sqlite3.Row) -> dict:
     if row["revoked"]:
         status = "revoked"
-    elif row["result"]:
-        status = "published"
     elif row["expires_at"] <= time.time():
         status = "expired"
     else:
@@ -185,6 +252,7 @@ def key_info(row: sqlite3.Row) -> dict:
         "project_id": row["target"],
         "expires_at": row["expires_at"],
         "status": status,
+        "recoverable": status == "ready" and recover_agent_secret(row) is not None,
         "result": json.loads(row["result"]) if row["result"] else None,
     }
 
@@ -227,14 +295,14 @@ async def list_keys(user: dict = Depends(auth.require_auth)) -> dict:
 async def issue_key(payload: IssueKey, response: Response, user: dict = Depends(auth.require_auth)) -> dict:
     owner, site = owner_from_session(user)
     key_id = secrets.token_hex(16)
-    token = f"pps_sk_{secrets.token_urlsafe(32)}"
+    token = agent_secret(key_id)
     expires_at = int(time.time()) + KEY_TTL
     target = payload.project_id
     with db.project_write() as connection:
         initialize(connection)
         recent = connection.execute(
             "SELECT COUNT(*) FROM agent_keys WHERE owner = ? AND expires_at > ?",
-            (owner, expires_at - 3600),
+            (owner, expires_at - KEY_ISSUE_WINDOW),
         ).fetchone()[0]
         if recent >= 8:
             raise HTTPException(429, "一小时内最多生成 8 把发布密钥，请稍后重试")
@@ -243,8 +311,8 @@ async def issue_key(payload: IssueKey, response: Response, user: dict = Depends(
             raise HTTPException(404, "项目不存在")
         connection.execute(
             """UPDATE agent_keys SET revoked = 1
-               WHERE owner = ? AND site = ? AND target IS ? AND result IS NULL""",
-            (owner, site, target),
+               WHERE owner = ? AND site = ? AND target IS ? AND expires_at > ? AND revoked = 0""",
+            (owner, site, target, int(time.time())),
         )
         connection.execute(
             """INSERT INTO agent_keys (id, digest, owner, site, target, revision, expires_at)
@@ -254,6 +322,24 @@ async def issue_key(payload: IssueKey, response: Response, user: dict = Depends(
         connection.execute("INSERT OR IGNORE INTO agent_onboarding VALUES (?)", (owner,))
     response.headers["Cache-Control"] = "no-store"
     return {"id": key_id, "token": token, "expires_at": expires_at, "site": site}
+
+
+@router.get("/keys/{key_id}/secret")
+async def read_key_secret(key_id: str, response: Response, user: dict = Depends(auth.require_auth)) -> dict:
+    owner, site = owner_from_session(user)
+    with db.project_write() as connection:
+        initialize(connection)
+        row = connection.execute(
+            "SELECT * FROM agent_keys WHERE id = ? AND owner = ? AND site = ?",
+            (key_id, owner, site),
+        ).fetchone()
+        if not row or row["revoked"] or row["expires_at"] <= time.time():
+            raise HTTPException(404, "密钥不存在、已过期或已撤销")
+        secret = recover_agent_secret(row)
+        if not secret:
+            raise HTTPException(409, "旧版密钥请重新生成一次")
+    response.headers["Cache-Control"] = "no-store"
+    return {"id": key_id, "token": secret}
 
 
 @router.delete("/keys/{key_id}", status_code=204, response_class=Response)
@@ -288,8 +374,17 @@ async def publication_schema() -> dict:
     return {
         "schema": Submission.model_json_schema(),
         "asset_upload": {
-            "method": "POST", "path": "/api/agent/v1/assets", "multipart_field": "file",
-            "max_assets_per_key": MAX_ASSETS,
+            "reserve": {
+                "method": "POST", "path": "/api/agent/v1/assets", "json_schema": AssetUpload.model_json_schema(),
+                "response_fields": ["asset_id", "upload"],
+            },
+            "transfer": {
+                "method": "PUT", "url_field": "upload.url", "headers_field": "upload.headers",
+                "body": "图片原始字节，直接发送到 COS。使用签名返回的请求头，不发送 Agent SK。",
+                "expires_in": UPLOAD_TTL,
+            },
+            "complete": {"method": "POST", "path": "/api/agent/v1/assets/{asset_id}/complete"},
+            "max_pending_assets_per_key": MAX_ASSETS,
             "max_bytes": MAX_ASSET_BYTES,
             "formats": ["PNG", "JPEG", "WebP"],
             "desktop_capture": {"width": 2560, "height": 1440},
@@ -317,48 +412,65 @@ async def publication_schema() -> dict:
             "search_url_template": "https://api.iconify.design/search?query={keyword}",
         },
         "authorization": "Bearer <Agent SK>",
+        "key": {"valid_days": KEY_TTL // 86400, "reusable": True},
         "result_fields": ["project_id", "url", "operation"],
     }
 
 
-def image_extension(content: bytes) -> str:
-    if content.startswith(b"\x89PNG\r\n\x1a\n") and len(content) >= 33:
-        return ".png"
-    if content.startswith(b"\xff\xd8\xff") and content.endswith(b"\xff\xd9"):
-        return ".jpg"
-    if content.startswith(b"RIFF") and content[8:12] == b"WEBP":
-        return ".webp"
-    raise HTTPException(415, "请上传 PNG、JPEG 或 WebP 图片")
-
-
 @router.post("/v1/assets", status_code=201)
-async def upload_asset(
-    file: UploadFile = File(...),
+async def reserve_asset(
+    payload: AssetUpload,
+    response: Response,
     credentials: HTTPAuthorizationCredentials = Depends(auth.security),
 ) -> dict:
-    contents = await file.read(MAX_ASSET_BYTES + 1)
-    if len(contents) > MAX_ASSET_BYTES:
-        raise HTTPException(413, "图片大小不能超过 8 MB")
-    extension = image_extension(contents)
     asset_id = secrets.token_hex(16)
     with db.project_write() as connection:
         initialize(connection)
         key = authorized_key(connection, credentials.credentials)
-        if key["result"]:
-            raise HTTPException(409, "本次密钥已完成发布")
         count = connection.execute(
-            "SELECT COUNT(*) FROM agent_assets WHERE key_id = ?", (key["id"],)
+            "SELECT COUNT(*) FROM agent_assets WHERE key_id = ? AND committed = 0", (key["id"],)
         ).fetchone()[0]
         if count >= MAX_ASSETS:
-            raise HTTPException(409, "此密钥的图片上传额度已用完")
-        relative_path = Path(key["site"]) / "agent-projects" / f"{asset_id}{extension}"
-        destination = db.DATA_DIR / "uploads" / relative_path
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_bytes(contents)
+            raise HTTPException(409, "此密钥待提交的图片已达到上限")
+        try:
+            cos_key = build_cos_key(key["site"], "agent-projects", f"{asset_id}{IMAGE_EXTENSIONS[payload.content_type]}")
+            url = public_cos_url(cos_key)
+            upload = sign_cos_upload(cos_key, payload.content_type, payload.size, UPLOAD_TTL)
+        except CosConfigError as exc:
+            raise HTTPException(503, "作品集 COS 上传暂不可用") from exc
         connection.execute(
-            "INSERT INTO agent_assets VALUES (?, ?, ?)",
-            (asset_id, key["id"], f"/uploads/{relative_path.as_posix()}"),
+            """INSERT INTO agent_assets (id, key_id, path, cos_key, content_type, byte_count)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (asset_id, key["id"], url, cos_key, payload.content_type, payload.size),
         )
+    response.headers["Cache-Control"] = "no-store"
+    return {"asset_id": asset_id, "upload": upload}
+
+
+@router.post("/v1/assets/{asset_id}/complete")
+async def complete_asset(
+    asset_id: AssetId,
+    credentials: HTTPAuthorizationCredentials = Depends(auth.security),
+) -> dict:
+    with db.project_write() as connection:
+        initialize(connection)
+        key = authorized_key(connection, credentials.credentials)
+        asset = connection.execute(
+            "SELECT * FROM agent_assets WHERE id = ? AND key_id = ? AND cos_key IS NOT NULL",
+            (asset_id, key["id"]),
+        ).fetchone()
+    if asset is None:
+        raise HTTPException(404, "图片上传记录不存在")
+    if not asset["verified"]:
+        try:
+            matches = await asyncio.to_thread(cos_upload_matches, asset["cos_key"], asset["content_type"], asset["byte_count"])
+        except (CosConfigError, CosUploadError) as exc:
+            raise HTTPException(503, "暂时无法核验 COS 图片，请重试确认") from exc
+        if not matches:
+            raise HTTPException(409, "COS 图片尚未上传或大小与类型不符")
+        with db.project_write() as connection:
+            authorized_key(connection, credentials.credentials)
+            connection.execute("UPDATE agent_assets SET verified = 1 WHERE id = ?", (asset_id,))
     return {"asset_id": asset_id}
 
 
@@ -370,18 +482,21 @@ STATUS_LABELS = {
 }
 
 
-def project_fields(payload: Submission, assets: dict[str, str], api_origin: str) -> dict:
+def project_fields(payload: Submission, assets: dict[str, str]) -> tuple[dict, set[str]]:
+    used_assets: set[str] = set()
+
     def screenshots(items: list[Screenshot]) -> list[dict]:
         result = []
         for index, item in enumerate(items, 1):
             path = assets.get(item.asset_id)
             if path is None:
-                raise HTTPException(422, "截图必须由本次发布密钥上传")
+                raise HTTPException(422, "截图必须由当前密钥上传到 COS 并确认完成")
+            used_assets.add(item.asset_id)
             result.append({
                 "id": item.asset_id,
                 "name": item.title or f"截图 {index}",
                 "description": item.caption,
-                "url": f"{api_origin}{path}",
+                "url": path,
             })
         return result
 
@@ -428,7 +543,7 @@ def project_fields(payload: Submission, assets: dict[str, str], api_origin: str)
             }
             for index, item in enumerate(payload.overview)
         ]
-    return fields
+    return fields, used_assets
 
 
 def public_url(site: str, project_id: str) -> str:
@@ -438,7 +553,6 @@ def public_url(site: str, project_id: str) -> str:
 @router.post("/v1/publish")
 async def publish(
     payload: Submission,
-    request: Request,
     background: BackgroundTasks,
     request_key: Annotated[str, Header(alias="Idempotency-Key", min_length=8, max_length=128)],
     credentials: HTTPAuthorizationCredentials = Depends(auth.security),
@@ -447,10 +561,14 @@ async def publish(
     with db.project_write() as connection:
         initialize(connection)
         key = authorized_key(connection, credentials.credentials)
-        if key["result"]:
-            if (key["request_key"], key["request_digest"]) != (request_key, request_digest):
-                raise HTTPException(409, "此密钥已发布，重试需要原来的请求内容和幂等键")
-            return json.loads(key["result"])
+        receipt = connection.execute(
+            "SELECT request_digest, result FROM agent_submissions WHERE key_id = ? AND request_key = ?",
+            (key["id"], request_key),
+        ).fetchone()
+        if receipt:
+            if receipt["request_digest"] != request_digest:
+                raise HTTPException(409, "此幂等键已用于另一份提交内容")
+            return json.loads(receipt["result"])
 
         site, target = key["site"], key["target"]
         if target and payload.slug:
@@ -459,16 +577,21 @@ async def publish(
             (payload.name, payload.description, payload.introduction, payload.highlights, payload.overview)
         ):
             raise HTTPException(422, "创建作品需要名称、简介、正文、至少一个亮点和 24 项概览")
-        asset_paths = dict(connection.execute(
-            "SELECT id, path FROM agent_assets WHERE key_id = ?", (key["id"],)
-        ).fetchall())
-        api_origin = os.getenv("AGENT_API_ORIGIN") or str(request.base_url)
-        fields = project_fields(payload, asset_paths, api_origin.rstrip("/"))
+        asset_paths = {}
+        redirects = db.read_json("_system", "agent_cos_redirects.json")
+        for asset in connection.execute(
+            "SELECT id, path, cos_key FROM agent_assets WHERE key_id = ? AND verified = 1", (key["id"],)
+        ):
+            url = asset["path"] if asset["cos_key"] else redirects.get(asset["path"])
+            if url:
+                asset_paths[asset["id"]] = url
+        fields, used_assets = project_fields(payload, asset_paths)
         if not fields:
             raise HTTPException(422, "请提供需要更新的字段")
         projects = db.read_json(site, "projects.json")
         # A stable ID makes a retry safe if the process stops between the JSON write and the receipt commit.
-        project_id = target or f"{payload.slug or 'project'}-{key['id'][:12]}"
+        submission_id = digest(f"{key['id']}:{request_key}")[:12]
+        project_id = target or f"{payload.slug or 'project'}-{submission_id}"
         existing = find_project(projects, project_id)
         already_written = existing is not None and all(existing.get(name) == value for name, value in fields.items())
         if target and existing is None:
@@ -496,9 +619,18 @@ async def publish(
             db.write_json(site, "projects.json", projects)
 
         result = {"project_id": project_id, "url": public_url(site, project_id), "operation": "update" if target else "create"}
+        serialized_result = json.dumps(result)
         connection.execute(
-            "UPDATE agent_keys SET request_key = ?, request_digest = ?, result = ? WHERE id = ?",
-            (request_key, request_digest, json.dumps(result), key["id"]),
+            "INSERT INTO agent_submissions VALUES (?, ?, ?, ?)",
+            (key["id"], request_key, request_digest, serialized_result),
+        )
+        connection.execute(
+            "UPDATE agent_keys SET request_key = ?, request_digest = ?, result = ?, revision = ? WHERE id = ?",
+            (request_key, request_digest, serialized_result, revision(project) if target else None, key["id"]),
+        )
+        connection.executemany(
+            "UPDATE agent_assets SET committed = 1 WHERE key_id = ? AND id = ?",
+            ((key["id"], asset_id) for asset_id in used_assets),
         )
 
     if not already_written:

@@ -42,6 +42,8 @@ if (process.env.NEXT_PUBLIC_API_BASE_URL) {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  skipTrailingSlashRedirect: true,
+  skipMiddlewareUrlNormalize: true,
   images: {
     remotePatterns
   },

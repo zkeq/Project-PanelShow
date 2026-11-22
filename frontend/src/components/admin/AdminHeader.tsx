@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Settings,
@@ -14,8 +14,9 @@ import { useTheme } from 'next-themes';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTourStore } from '@/components/admin/tour/useTourStore';
+import { CANONICAL_SITE_ORIGIN } from '@/lib/site-domain';
 
-const migrationOrigin = process.env.NEXT_PUBLIC_DOMAIN_MIGRATION_ORIGIN?.trim();
+const configuredMigrationOrigin = process.env.NEXT_PUBLIC_DOMAIN_MIGRATION_ORIGIN?.trim();
 
 const getPageTitle = (pathname: string): string => {
   if (pathname === '/admin') return '管理控制台';
@@ -42,6 +43,13 @@ export function AdminHeader({
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const startTour = useTourStore((state) => state.start);
+  const [migrationOrigin, setMigrationOrigin] = useState(configuredMigrationOrigin);
+
+  useEffect(() => {
+    if (!configuredMigrationOrigin && window.location.origin === CANONICAL_SITE_ORIGIN) {
+      setMigrationOrigin(CANONICAL_SITE_ORIGIN);
+    }
+  }, []);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');

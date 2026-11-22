@@ -29,14 +29,15 @@ type ApiError = Error & { status: number; payload?: unknown };
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { token, headers, ...rest } = options;
+  const requestHeaders = new Headers(headers);
+  if (typeof rest.body === 'string' && !requestHeaders.has('Content-Type')) {
+    requestHeaders.set('Content-Type', 'application/json');
+  }
+  if (token) requestHeaders.set('Authorization', `Bearer ${token}`);
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...rest,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(headers ?? {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    headers: requestHeaders,
   });
 
   const text = await response.text();
@@ -72,6 +73,7 @@ export interface AgentKey {
   project_id: string | null;
   expires_at: number;
   status: 'ready' | 'published' | 'expired' | 'revoked';
+  recoverable?: boolean;
   result: AgentPublication | null;
 }
 
@@ -97,6 +99,12 @@ export function issueAgentKey(token: string, projectId: string | null) {
 
 export function revokeAgentKey(token: string, keyId: string) {
   return request<void>(`/api/agent/keys/${encodeURIComponent(keyId)}`, { method: 'DELETE', token });
+}
+
+export function fetchAgentKeySecret(token: string, keyId: string, signal?: AbortSignal) {
+  return request<{ id: string; token: string }>(`/api/agent/keys/${encodeURIComponent(keyId)}/secret`, {
+    token, signal, cache: 'no-store',
+  });
 }
 
 export interface AuthResponse {

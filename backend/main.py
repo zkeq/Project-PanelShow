@@ -18,7 +18,10 @@ from urllib.parse import quote
 
 from fastapi import FastAPI, HTTPException, Depends, Body, Path, UploadFile, File, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from cos_client import (
     CosConfigError,
@@ -37,6 +40,21 @@ from db import parse_order_value
 
 app = FastAPI(title="极简JSON后端", version="2.0.0")
 app.include_router(agent_publish_router)
+
+
+class ProjectResponseCompression:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+        self.compressed = GZipMiddleware(app, minimum_size=1024, compresslevel=4)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http" and scope["method"] == "GET" and scope["path"].startswith("/api/projects/"):
+            await self.compressed(scope, receive, send)
+        else:
+            await self.app(scope, receive, send)
+
+
+app.add_middleware(ProjectResponseCompression)
 
 # CORS配置
 app.add_middleware(
@@ -59,6 +77,15 @@ LOCAL_BLOCKED_KEYWORDS = {"诈骗", "赌博", "毒品", "恐怖袭击"}
 
 FILE_UPLOAD_ROOT = (FilePath(__file__).parent / "data" / "uploads")
 FILE_UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+
+
+@app.api_route("/uploads/{username}/agent-projects/{filename}", methods=["GET", "HEAD"], include_in_schema=False)
+async def redirect_legacy_agent_image(username: str, filename: str) -> RedirectResponse:
+    url = db.read_json("_system", "agent_cos_redirects.json").get(f"/uploads/{username}/agent-projects/{filename}")
+    if not url:
+        raise HTTPException(404, "图片不存在")
+    return RedirectResponse(url, status_code=308)
+
 
 app.mount("/uploads", StaticFiles(directory=str(FILE_UPLOAD_ROOT)), name="uploads")
 

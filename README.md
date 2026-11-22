@@ -133,7 +133,7 @@ npm run dev
 
 > ⚠️ **安全提示**：这两个文件已加入 `.gitignore`，绝不要将含真实密钥的版本提交到仓库。部署时通过环境变量或挂载卷注入。
 
-新域名可用后，在前端构建环境设置 `NEXT_PUBLIC_DOMAIN_MIGRATION_ORIGIN`（完整的 HTTPS 站点地址）即可在管理后台顶部显示域名迁移通知。
+官方前端将 `projects.onmicrosoft.cn` 的请求永久重定向到 `projects.dev-tool.cool`，保留路径和查询参数。新域名的管理后台顶部显示迁移通知。本地预览也可设置 `NEXT_PUBLIC_DOMAIN_MIGRATION_ORIGIN` 来显示通知。
 
 ### 配置模板
 
@@ -158,9 +158,9 @@ vim backend/config.yaml   # 按注释填写各字段
 
 ### 用 Agent 发布作品
 
-登录并绑定作品集后，在后台打开「Agent 发布」并复制提示词。编辑已发布的作品时，可以从该作品的编辑页生成专用密钥。发布密钥有效期一小时，支持撤销及使用同一幂等键重试。项目归属由密钥确定。
+登录并绑定作品集后，在后台打开「Agent 发布」并复制提示词。编辑已发布的作品时，可以从该作品的编辑页生成专用密钥。密钥七天内可重复上传素材和提交作品，也可随时撤销。每次新提交使用新的幂等键，同一笔重试沿用原键。项目归属由密钥确定。
 
-Agent 先读取 `GET /api/agent/v1/schema`，用 `POST /api/agent/v1/assets` 上传截图，再用 `POST /api/agent/v1/publish` 创建或更新作品。服务使用 `FRONTEND_BASE_URL` 生成公开作品链接。反向代理部署可设置 `AGENT_API_ORIGIN` 为公开 API 的 HTTPS Origin，以生成截图地址。自托管时，后端持久化 `backend/data/` 并对外提供 `/uploads/`，用于保存发布密钥记录和截图。
+Agent 先读取 `GET /api/agent/v1/schema`。有截图时，向 `POST /api/agent/v1/assets` 发送图片类型和字节数，按返回的签名将图片直接 PUT 到腾讯云 COS，再调用 `POST /api/agent/v1/assets/{asset_id}/complete` 确认上传。使用 `POST /api/agent/v1/publish` 创建或更新作品。自托管时，后端使用 `config.yaml` 中的 COS 配置和公开访问域名，持久化 `backend/data/` 中的密钥和发布记录，并使用 `FRONTEND_BASE_URL` 生成公开作品链接。
 
 ## 🤝 参与贡献
 

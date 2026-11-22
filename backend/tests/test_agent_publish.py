@@ -1,5 +1,6 @@
 from io import StringIO
 from pathlib import Path
+from time import time
 from unittest.mock import patch
 
 import pytest
@@ -18,6 +19,7 @@ def panelshow(monkeypatch, tmp_path):
         return original_open(path, *args, **kwargs)
 
     with patch("builtins.open", open_with_test_config):
+        import agent_publish
         import auth
         import db
         import main
@@ -31,6 +33,12 @@ def panelshow(monkeypatch, tmp_path):
     monkeypatch.setattr(notifications, "notify_project_created", ignore_notification)
     monkeypatch.setattr(notifications, "notify_project_updated", ignore_notification)
     monkeypatch.setattr(notifications, "FRONTEND_BASE_URL", "https://projects.example.test")
+    monkeypatch.setattr(agent_publish, "build_cos_key", lambda *parts: "/".join(parts))
+    monkeypatch.setattr(agent_publish, "public_cos_url", lambda key: f"https://images.example.test/{key}")
+    monkeypatch.setattr(agent_publish, "sign_cos_upload", lambda key, content_type, size, expires_in: {
+        "method": "PUT", "url": f"https://bucket.example.test/{key}", "headers": {"Content-Type": content_type},
+    })
+    monkeypatch.setattr(agent_publish, "cos_upload_matches", lambda key, content_type, size: True)
     with TestClient(main.app, base_url="https://api.example.test") as client:
         def bind(identity, username):
             token = auth.create_access_token(
@@ -66,6 +74,14 @@ def sample():
     }
 
 
+def reserve_image(client, agent):
+    return client.post("/api/agent/v1/assets", headers=agent, json={"content_type": "image/png", "size": 33})
+
+
+def complete_image(client, agent, asset_id):
+    return client.post(f"/api/agent/v1/assets/{asset_id}/complete", headers=agent)
+
+
 def test_create_from_agent_and_retry(panelshow):
     client, bind, db = panelshow
     owner = bind("1", "first-site")
@@ -73,15 +89,19 @@ def test_create_from_agent_and_retry(panelshow):
     assert client.get("/api/agent/v1/schema").json()["schema"]["title"] == "Submission"
     key, agent = issue(client, owner)
     assert client.get("/api/agent/onboarding", headers=owner).json() == {"show": False}
-    image = b"\x89PNG\r\n\x1a\n" + bytes(25)
-    uploaded = client.post(
-        "/api/agent/v1/assets", headers=agent, files={"file": ("screen.png", image, "image/png")}
-    )
-    assert uploaded.status_code == 201
+    reserved = reserve_image(client, agent)
+    assert reserved.status_code == 201, reserved.text
+    assert reserved.headers["Cache-Control"] == "no-store"
+    asset_id = reserved.json()["asset_id"]
+    object_path = f"first-site/agent-projects/{asset_id}.png"
+    assert reserved.json()["upload"]["url"] == f"https://bucket.example.test/{object_path}"
     body = sample()
     body["screenshots"] = [{
-        "asset_id": uploaded.json()["asset_id"], "title": "Main screen", "caption": "The main screen"
+        "asset_id": asset_id, "title": "Main screen", "caption": "The main screen"
     }]
+    assert client.post("/api/agent/v1/publish", headers=agent, json=body).status_code == 422
+    assert complete_image(client, agent, asset_id).status_code == 200
+    assert complete_image(client, agent, asset_id).status_code == 200
     submitted = client.post("/api/agent/v1/publish", headers=agent, json=body)
     assert submitted.status_code == 200, submitted.text
     result = submitted.json()
@@ -92,6 +112,8 @@ def test_create_from_agent_and_retry(panelshow):
     project = client.get(f"/api/projects/first-site/{result['project_id']}").json()["data"]
     assert project["screenshots"][0]["description"] == "The main screen"
     assert project["screenshots"][0]["name"] == "Main screen"
+    assert project["screenshots"][0]["url"] == f"https://images.example.test/{object_path}"
+    assert not (db.DATA_DIR / "uploads").exists()
     assert project["heroAttributes"][0]["value"] == "FastAPI"
     assert project["heroAttributes"][0]["icon"] == "lucide:server"
     assert project["sidebarAttributes"][1]["icon"] == "logos:vue"
@@ -103,7 +125,9 @@ def test_create_from_agent_and_retry(panelshow):
     status = client.get("/api/agent/keys", headers=owner).json()["keys"][0]
     assert "token" not in status
     assert status["id"] == key["id"]
+    assert status["status"] == "ready"
     assert status["result"] == result
+    assert int(time()) + 7 * 86400 - 10 <= key["expires_at"] <= int(time()) + 7 * 86400
     assert key["token"].encode() not in (db.DATA_DIR / "agent.sqlite3").read_bytes()
 
 
@@ -116,12 +140,10 @@ def test_agent_credentials_and_assets_are_scoped(panelshow):
     assert client.post("/api/projects/second-site", headers=alice_agent, json=sample()).status_code == 401
     assert client.post("/api/agent/v1/publish", headers=alice, json=sample()).status_code != 200
     assert client.delete(f"/api/agent/keys/{key['id']}", headers=bob).status_code == 404
-    uploaded = client.post(
-        "/api/agent/v1/assets",
-        headers=alice_agent,
-        files={"file": ("screen.png", b"\x89PNG\r\n\x1a\n" + bytes(25), "image/png")},
-    ).json()
-    body = {**sample(), "screenshots": [{"asset_id": uploaded["asset_id"], "caption": "Wrong owner"}]}
+    asset_id = reserve_image(client, alice_agent).json()["asset_id"]
+    assert complete_image(client, bob_agent, asset_id).status_code == 404
+    assert complete_image(client, alice_agent, asset_id).status_code == 200
+    body = {**sample(), "screenshots": [{"asset_id": asset_id, "caption": "Wrong owner"}]}
     assert client.post("/api/agent/v1/publish", headers=bob_agent, json=body).status_code == 422
     assert client.delete(f"/api/agent/keys/{key['id']}", headers=alice).status_code == 204
     assert client.post("/api/agent/v1/publish", headers=alice_agent, json=sample()).status_code == 401
@@ -150,6 +172,11 @@ def test_edit_preserves_existing_fields_and_detects_stale_keys(panelshow):
     assert project["description"] == "Preserve me"
     assert project["custom"] == ["legacy"]
     assert project["order"] == 4
+    second_headers = {**agent, "Idempotency-Key": "another-edit"}
+    second = client.post("/api/agent/v1/publish", headers=second_headers, json={"name": "Later agent edit"})
+    assert second.status_code == 200, second.text
+    assert second.json()["project_id"] == "existing"
+    assert db.read_json("first-site", "projects.json")[0]["name"] == "Later agent edit"
 
 
 def test_expired_key_and_invalid_content(panelshow):
@@ -162,6 +189,12 @@ def test_expired_key_and_invalid_content(panelshow):
     assert client.post(
         "/api/agent/v1/assets", headers=agent, files={"file": ("fake.png", b"not a PNG", "image/png")}
     ).status_code == 415
+    assert client.post(
+        "/api/agent/v1/assets", headers=agent, json={"content_type": "text/html", "size": 33}
+    ).status_code == 422
+    assert client.post(
+        "/api/agent/v1/assets", headers=agent, json={"content_type": "image/png", "size": 9 * 1024 * 1024}
+    ).status_code == 422
     with db.project_write() as connection:
         connection.execute("UPDATE agent_keys SET expires_at = 0 WHERE id = ?", (key["id"],))
     assert client.post("/api/agent/v1/publish", headers=agent, json=sample()).status_code == 401
@@ -198,3 +231,68 @@ def test_create_without_screenshots_goes_first(panelshow):
     project_id = response.json()["project_id"]
     records = client.get("/api/projects/first-site").json()["data"]
     assert [record["id"] for record in records] == [project_id, "formerly-first", "legacy", "last"]
+
+
+def test_key_can_reuse_upload_and_publish_without_losing_previous_receipts(panelshow, monkeypatch):
+    import agent_publish
+
+    client, bind, _ = panelshow
+    monkeypatch.setattr(agent_publish, "MAX_ASSETS", 1)
+    owner = bind("1", "first-site")
+    _, agent = issue(client, owner)
+    reserved = reserve_image(client, agent)
+    assert reserved.status_code == 201
+    assert reserve_image(client, agent).status_code == 409
+    asset_id = reserved.json()["asset_id"]
+    monkeypatch.setattr(agent_publish, "cos_upload_matches", lambda key, content_type, size: False)
+    assert complete_image(client, agent, asset_id).status_code == 409
+    monkeypatch.setattr(agent_publish, "cos_upload_matches", lambda key, content_type, size: True)
+    assert complete_image(client, agent, asset_id).status_code == 200
+    body = {**sample(), "screenshots": [{"asset_id": asset_id, "caption": "First screenshot"}]}
+    first = client.post("/api/agent/v1/publish", headers=agent, json=body)
+    assert first.status_code == 200
+    assert reserve_image(client, agent).status_code == 201
+    another = client.post(
+        "/api/agent/v1/publish", headers={**agent, "Idempotency-Key": "another-publication"}, json=sample()
+    )
+    assert another.status_code == 200
+    assert another.json()["project_id"] != first.json()["project_id"]
+    assert client.post("/api/agent/v1/publish", headers=agent, json=body).json() == first.json()
+    latest = client.get("/api/agent/keys", headers=owner).json()["keys"][0]
+    assert latest["status"] == "ready"
+    assert latest["result"] == another.json()
+
+
+def test_only_owner_can_recover_current_key(panelshow):
+    client, bind, _ = panelshow
+    owner = bind("1", "first-site")
+    other = bind("2", "second-site")
+    key, _ = issue(client, owner)
+    path = f"/api/agent/keys/{key['id']}/secret"
+    status = client.get("/api/agent/keys", headers=owner).json()["keys"][0]
+    assert status["recoverable"] is True and "token" not in status
+    result = client.get(path, headers=owner)
+    assert result.json()["token"] == key["token"]
+    assert result.headers["Cache-Control"] == "no-store"
+    assert client.get(path, headers=other).status_code == 404
+    assert client.delete(f"/api/agent/keys/{key['id']}", headers=owner).status_code == 204
+    assert client.get(path, headers=owner).status_code == 404
+
+
+def test_legacy_agent_image_redirects_and_project_json_compresses(panelshow):
+    client, bind, db = panelshow
+    bind("1", "first-site")
+    path = "/uploads/first-site/agent-projects/old.png"
+    cos_url = "https://images.example.test/first-site/agent-projects/old.png"
+    db.write_json("_system", "agent_cos_redirects.json", {path: cos_url})
+    for method in ("GET", "HEAD"):
+        response = client.request(method, path, follow_redirects=False)
+        assert response.status_code == 308
+        assert response.headers["location"] == cos_url
+    assert client.get(path.replace("old.png", "unknown.png")).status_code == 404
+    db.write_json("first-site", "projects.json", [{"id": "existing", "projectIntroduction": "正文" * 1000}])
+    endpoint = "/api/projects/first-site"
+    packed = client.get(endpoint, headers={"Accept-Encoding": "gzip"})
+    plain = client.get(endpoint, headers={"Accept-Encoding": "identity"})
+    assert packed.headers["content-encoding"] == "gzip"
+    assert packed.json() == plain.json()
