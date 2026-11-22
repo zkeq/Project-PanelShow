@@ -193,8 +193,11 @@ def test_expired_key_and_invalid_content(panelshow):
         "/api/agent/v1/assets", headers=agent, json={"content_type": "text/html", "size": 33}
     ).status_code == 422
     assert client.post(
-        "/api/agent/v1/assets", headers=agent, json={"content_type": "image/png", "size": 9 * 1024 * 1024}
+        "/api/agent/v1/assets", headers=agent, json={"content_type": "image/png", "size": 64 * 1024 * 1024 + 1}
     ).status_code == 422
+    assert client.post(
+        "/api/agent/v1/assets", headers=agent, json={"content_type": "image/png", "size": 64 * 1024 * 1024}
+    ).status_code == 201
     with db.project_write() as connection:
         connection.execute("UPDATE agent_keys SET expires_at = 0 WHERE id = ?", (key["id"],))
     assert client.post("/api/agent/v1/publish", headers=agent, json=sample()).status_code == 401

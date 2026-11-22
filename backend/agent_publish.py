@@ -27,7 +27,7 @@ from cos_client import CosConfigError, CosUploadError, build_cos_key, cos_upload
 KEY_TTL = 7 * 24 * 60 * 60
 KEY_ISSUE_WINDOW = 60 * 60
 UPLOAD_TTL = 15 * 60
-MAX_ASSET_BYTES = 8 * 1024 * 1024
+MAX_ASSET_BYTES = 64 * 1024 * 1024
 MAX_ASSETS = 48
 OVERVIEW_SIZE = 24
 HOMEPAGE_OVERVIEW_SIZE = 4

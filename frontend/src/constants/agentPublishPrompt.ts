@@ -41,7 +41,7 @@ overview 必须是 24 个不同的项，每项填写 label、简短静态 value 
 
 预审正文深度和可读性、复杂项目的 Mermaid 架构图、24 项概览顺序和图标、演示链接，以及已提供截图的尺寸、加载状态和覆盖范围。
 
-有截图时，向 schema 指定的 reserve 接口发送 JSON，按文件填写 content_type 和实际字节数 size。使用响应中 upload.url 和 upload.headers，将原始文件以 PUT 直传腾讯云 COS；逐项带上签名所需的请求头。COS 请求无需 Agent SK。上传成功后，用同一把 SK 调用 complete 接口，再将已确认的 asset_id 填入对应图集。签名 URL 和 SK 都只用于对应请求，避免把它们写进作品说明或交付内容。
+有截图时，先检查单张文件大小符合 schema 的 asset_upload.max_bytes，再向 reserve 接口发送 JSON，按文件填写 content_type 和实际字节数 size。使用响应中 upload.url 和 upload.headers，将原始文件以 PUT 直传腾讯云 COS；逐项带上签名所需的请求头。COS 请求无需 Agent SK。上传成功后，用同一把 SK 调用 complete 接口，再将已确认的 asset_id 填入对应图集。签名 URL 和 SK 都只用于对应请求，避免把它们写进作品说明或交付内容。
 
 SK 七天内可重复使用，只作为 Authorization 请求头中的 Bearer 凭证发送给指定发布 API。每次新提交使用一个新的 Idempotency-Key，同一笔超时重试沿用原键和原内容。提交后打开公开详情与重点演示，核对介绍、图标、已提供的图集和架构图是否正确渲染。最后交付项目名、公开链接、亮点与各自截图数，以及尚待验证的事项。`;
 }
