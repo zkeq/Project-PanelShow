@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { Icon } from '@iconify/react'
 import { ProjectInfo } from '@/types/store'
-import { useExecuteCode } from '@/hooks/useExecuteCode'
+import { useProjectInfoValue } from '@/hooks/useProjectInfoValue'
 import { cn } from '@/lib/utils'
 import {
   computeFeatureChipVisuals,
@@ -55,8 +55,8 @@ interface FeatureChip {
 }
 
 const HeroStatItem = ({ attribute }: { attribute: ProjectInfo }) => {
-  const { value, loading } = useExecuteCode(attribute.valueCode, attribute.value ?? '')
-  const displayValue = attribute.valueCode ? (loading ? '计算中...' : value) : (attribute.value ?? '')
+  const { value, loading } = useProjectInfoValue(attribute)
+  const displayValue = loading ? '计算中...' : value
 
   return (
     <div>

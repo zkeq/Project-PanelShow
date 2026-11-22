@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { readProjectValueApi } from '@/lib/project-info';
 import { useGlobalStore } from '@/store/useGlobalStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTourStore } from '@/components/admin/tour/useTourStore';
@@ -155,7 +156,9 @@ const mapProjectFromApi = (raw: unknown, fallbackIndex = 0): Project => {
         id: pickString(attr['id'], `${Date.now()}`),
         icon: pickString(attr['icon'], ''),
         label: pickString(attr['label'], ''),
+        value: pickString(attr['value']),
         valueCode: pickString(attr['valueCode'], ''),
+        valueApi: readProjectValueApi(attr['valueApi']),
         showInHomepage: Boolean(attr['showInHomepage']),
         showInSidebar: Boolean(attr['showInSidebar']),
         color: pickString(attr['color'], ''),
@@ -169,7 +172,9 @@ const mapProjectFromApi = (raw: unknown, fallbackIndex = 0): Project => {
         id: pickString(attr['id'], `${Date.now()}`),
         icon: pickString(attr['icon'], ''),
         label: pickString(attr['label'], ''),
+        value: pickString(attr['value']),
         valueCode: pickString(attr['valueCode'], ''),
+        valueApi: readProjectValueApi(attr['valueApi']),
         showInHomepage: Boolean(attr['showInHomepage']),
         showInSidebar: Boolean(attr['showInSidebar']),
         color: pickString(attr['color'], ''),

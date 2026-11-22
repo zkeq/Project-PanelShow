@@ -17,6 +17,7 @@ import { ProjectFeatureSelector, type ProjectFeature } from './ProjectFeatureSel
 import { MarkdownEditor } from './MarkdownEditor';
 import { ScreenshotManager } from './ScreenshotManager';
 import { ProjectInfoManager, type ProjectInfo } from './ProjectInfoManager';
+import { readProjectValueApi } from '@/lib/project-info';
 import { FeatureHighlightManager, type FeatureHighlight } from './FeatureHighlightManager';
 import {
   createProject,
@@ -569,6 +570,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
                 label: typeof info.label === 'string' ? info.label : '',
                 valueCode: typeof info.valueCode === 'string' ? info.valueCode : '',
                 value: typeof info.value === 'string' ? info.value : undefined,
+                valueApi: readProjectValueApi(info.valueApi),
                 showInHomepage: Boolean(info.showInHomepage),
                 showInSidebar: Boolean(info.showInSidebar),
                 showInHero: Boolean(info.showInHero),

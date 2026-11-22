@@ -33,6 +33,13 @@ export interface ProjectAttribute {
 }
 
 // 项目信息项类型
+export interface ProjectValueApi {
+  url: string;
+  json_path: string[];
+  prefix?: string;
+  suffix?: string;
+}
+
 export interface ProjectInfo {
   id: string;
   icon: string;
@@ -44,6 +51,7 @@ export interface ProjectInfo {
   color: string;
   order: number;
   value?: string;
+  valueApi?: ProjectValueApi;
 }
 
 // 项目数据类型

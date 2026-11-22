@@ -29,9 +29,13 @@ export function agentPublishPrompt({
 
 复杂项目应在 introduction 的 Markdown 正文中用标记为 mermaid 的代码围栏画一张架构图，PanelShow 会渲染它。图应按实际实现标出关键模块、前后端或外部接口的边界，并用箭头说明数据流或职责关系。简单项目可按需要省略架构图。
 
-### 3. 填满 24 项概览并规划展示位
+### 3. 准备 20 项概览并规划展示位
 
-overview 必须是 24 个不同的项，每项填写 label、简短静态 value 和语义对应的 icon。用接口规范中的 Iconify 官方集合、图标清单或搜索链接查询，每项从官方结果自己选择并填写完整的「图标集:图标名」。亮点也可按同样方式填写 icon。tags 另作主题分类。把最能概括项目的 4 项放第 1–4 位，帮助理解关键实现的 4 项放第 5–8 位，其余可核实细节放第 9–24 位。首页显示前 4 项，详情侧栏显示前 8 项，详情概览显示全部 24 项。内容不足时继续读代码、测试和配置，确保每项都提供不同事实。
+overview 必须是 20 个不同的项，每项填写 label、简短 value 和语义对应的 icon。用接口规范中的 Iconify 官方集合、图标清单或搜索链接查询，每项从官方结果自己选择并填写完整的「图标集:图标名」。亮点也可按同样方式填写 icon。tags 另作主题分类。把最能概括项目的 4 项放第 1–4 位，帮助理解关键实现的 4 项放第 5–8 位，其余可核实细节放第 9–20 位。首页显示前 4 项，详情侧栏显示前 8 项，详情概览显示全部 20 项。
+
+技术栈和设计方式等固定事实直接填 value。需要动态展示公开指标时，同时填写 value_api 和有意义的静态 value。使用无需凭据、支持浏览器 CORS 的公开 HTTPS JSON GET 接口，先验证实际响应，再用 json_path 指定要读的字段。例如 GitHub Star 数的 value_api 可填 {"url":"https://api.github.com/repos/zkeq/Project-PanelShow","json_path":["stargazers_count"],"suffix":" stars"}。嵌套字段用多个键，例如 ["data","total"]。结果应是简短字符串或数字。请求期间、请求失败或数据缺失时，页面显示 value。示例地址请换成当前作品自己的公开数据源。
+
+需要条件判断或自定义计算时，管理端「动态信息值代码」接受 JavaScript 函数体 valueCode，可以用 await fetch(...)，检查 response.ok，解析 JSON 并 return 字符串或数字。例如 const res = await fetch("https://api.github.com/repos/zkeq/Project-PanelShow"); if (!res.ok) return "暂无数据"; const data = await res.json(); return data.stargazers_count + " stars";。这种脚本可在交付时提供给作者粘贴到管理端，Agent 发布请求里的动态读数使用 value_api。公开作品的值、脚本和数据源不要包含凭据或私密内容。
 
 ### 4. 为亮点准备可验证的截图和演示
 
@@ -39,7 +43,7 @@ overview 必须是 24 个不同的项，每项填写 label、简短静态 value 
 
 ### 5. 校验、发布并回读
 
-预审正文深度和可读性、复杂项目的 Mermaid 架构图、24 项概览顺序和图标、演示链接，以及已提供截图的尺寸、加载状态和覆盖范围。
+预审正文深度和可读性、复杂项目的 Mermaid 架构图、20 项概览顺序和图标、动态值与静态备用值、演示链接，以及已提供截图的尺寸、加载状态和覆盖范围。
 
 有截图时，先检查单张文件大小符合 schema 的 asset_upload.max_bytes，再向 reserve 接口发送 JSON，按文件填写 content_type 和实际字节数 size。使用响应中 upload.url 和 upload.headers，将原始文件以 PUT 直传腾讯云 COS；逐项带上签名所需的请求头。COS 请求无需 Agent SK。上传成功后，用同一把 SK 调用 complete 接口，再将已确认的 asset_id 填入对应图集。签名 URL 和 SK 都只用于对应请求，避免把它们写进作品说明或交付内容。
 

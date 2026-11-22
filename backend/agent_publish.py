@@ -29,7 +29,7 @@ KEY_ISSUE_WINDOW = 60 * 60
 UPLOAD_TTL = 15 * 60
 MAX_ASSET_BYTES = 64 * 1024 * 1024
 MAX_ASSETS = 48
-OVERVIEW_SIZE = 24
+OVERVIEW_SIZE = 20
 HOMEPAGE_OVERVIEW_SIZE = 4
 SIDEBAR_OVERVIEW_SIZE = 8
 HERO_OVERVIEW_SIZE = 3
@@ -89,12 +89,34 @@ class Highlight(Input):
     icon: IconifyId | None = Field(default=None, description="从 Iconify 官方目录选择的亮点图标。")
 
 
+class ProjectValueApi(Input):
+    url: AnyHttpUrl = Field(description="无需凭据且允许跨域读取的公开 HTTPS JSON 地址。")
+    json_path: list[ShortText] = Field(min_length=1, max_length=8, description="按层级读取 JSON 的键。数组下标也写成字符串。")
+    prefix: str = Field(default="", max_length=20, description="动态值的可选前缀。")
+    suffix: str = Field(default="", max_length=20, description="动态值的可选后缀，例如 ' stars'。")
+
+    @field_validator("url")
+    @classmethod
+    def validate_public_url(cls, value: AnyHttpUrl) -> AnyHttpUrl:
+        hostname = (value.host or "").lower().rstrip(".")
+        if (
+            value.scheme != "https" or value.username or value.password or value.port not in (None, 443)
+            or not re.fullmatch(r"(?:[a-z0-9-]+\.)+(?:[a-z]{2,}|xn--[a-z0-9-]+)", hostname)
+            or hostname.endswith((".localhost", ".local", ".internal", ".home.arpa"))
+        ):
+            raise ValueError("Use a public HTTPS hostname without credentials or a custom port")
+        return value
+
+
 class ProjectInfo(Input):
     label: ShortText = Field(description="概览卡片的唯一短标题。", examples=["数据存储"])
-    value: ShortText = Field(description="用于概览、首页及侧栏的简短静态文字。", examples=["MySQL"])
+    value: ShortText = Field(description="简短静态文字。配置 value_api 时，也用于请求期间和读取失败时。", examples=["MySQL"])
     icon: IconifyId = Field(
         description="概览、首页和侧栏共用的 Iconify 图标。先查官方目录，再填图标集:图标名。",
         examples=["lucide:database", "logos:vue"],
+    )
+    value_api: ProjectValueApi | None = Field(
+        default=None, description="可选的动态值。浏览器执行公开 JSON GET 读取，选取一个字符串或数字展示。",
     )
 
 
@@ -123,7 +145,7 @@ class Submission(Input):
     )
     overview: list[ProjectInfo] | None = Field(
         default=None, min_length=OVERVIEW_SIZE, max_length=OVERVIEW_SIZE,
-        description="依展示优先级排列的 24 个概览项，每项包含标题、静态值和图标。",
+        description=f"依展示优先级排列的 {OVERVIEW_SIZE} 个概览项。每项填写标题、静态值和图标，可选公开 API 动态值。",
     )
 
     @field_validator("overview")
@@ -401,7 +423,16 @@ async def publication_schema() -> dict:
             "homepage": HOMEPAGE_OVERVIEW_SIZE,
             "sidebar": SIDEBAR_OVERVIEW_SIZE,
             "hero": HERO_OVERVIEW_SIZE,
-            "ordering": "First 4 on the homepage, first 8 in the sidebar, all 24 in the detail grid.",
+            "ordering": f"First {HOMEPAGE_OVERVIEW_SIZE} on the homepage, first {SIDEBAR_OVERVIEW_SIZE} in the sidebar, all {OVERVIEW_SIZE} in the detail grid.",
+        },
+        "overview_value": {
+            "static": "overview[].value 必填，立即显示，也作为动态值失败时的文本。",
+            "dynamic": "overview[].value_api 可选。使用公开、无需凭据、支持 CORS 的 HTTPS JSON GET 接口，填写 json_path，按需加 prefix 或 suffix。",
+            "example": {
+                "label": "GitHub Stars", "value": "查看仓库", "icon": "lucide:star",
+                "value_api": {"url": "https://api.github.com/repos/zkeq/Project-PanelShow", "json_path": ["stargazers_count"], "suffix": " stars"},
+            },
+            "custom_script": "valueCode 是管理端的可选 JavaScript 函数体。可用 await fetch(...)，检查响应后 return 字符串或数字。Agent 发布接口的动态读数使用 value_api。",
         },
         "icons": {
             "library": "Iconify",
@@ -537,6 +568,7 @@ def project_fields(payload: Submission, assets: dict[str, str]) -> tuple[dict, s
             {
                 "id": f"info-{index}", "label": item.label, "value": item.value,
                 "valueCode": "", "icon": item.icon, "order": index,
+                **({"valueApi": item.value_api.model_dump(mode="json")} if item.value_api else {}),
                 "showInHomepage": index < HOMEPAGE_OVERVIEW_SIZE,
                 "showInSidebar": index < SIDEBAR_OVERVIEW_SIZE,
                 "showInHero": index < HERO_OVERVIEW_SIZE,
@@ -576,7 +608,7 @@ async def publish(
         if not target and not all(
             (payload.name, payload.description, payload.introduction, payload.highlights, payload.overview)
         ):
-            raise HTTPException(422, "创建作品需要名称、简介、正文、至少一个亮点和 24 项概览")
+            raise HTTPException(422, f"创建作品需要名称、简介、正文、至少一个亮点和 {OVERVIEW_SIZE} 项概览")
         asset_paths = {}
         redirects = db.read_json("_system", "agent_cos_redirects.json")
         for asset in connection.execute(

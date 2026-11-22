@@ -69,7 +69,7 @@ def sample():
         "highlights": [{"title": "Workflow", "description": "Run and inspect the result."}],
         "overview": [{"label": "Runtime", "value": "FastAPI", "icon": "lucide:server"}] + [
             {"label": f"Aspect {number}", "value": f"Verified {number}", "icon": "logos:vue"}
-            for number in range(2, 25)
+            for number in range(2, 21)
         ],
     }
 
@@ -117,7 +117,7 @@ def test_create_from_agent_and_retry(panelshow):
     assert project["heroAttributes"][0]["value"] == "FastAPI"
     assert project["heroAttributes"][0]["icon"] == "lucide:server"
     assert project["sidebarAttributes"][1]["icon"] == "logos:vue"
-    assert len(project["projectInfos"]) == 24
+    assert len(project["projectInfos"]) == 20
     assert len(project["homeAttributes"]) == 4
     assert len(project["sidebarAttributes"]) == 8
     assert project["projectInfos"][8]["showInSidebar"] is False
@@ -203,7 +203,7 @@ def test_expired_key_and_invalid_content(panelshow):
     assert client.post("/api/agent/v1/publish", headers=agent, json=sample()).status_code == 401
 
 
-def test_overview_requires_24_distinct_items(panelshow):
+def test_overview_requires_20_distinct_items(panelshow):
     client, bind, _ = panelshow
     owner = bind("1", "first-site")
     _, agent = issue(client, owner)
@@ -211,9 +211,12 @@ def test_overview_requires_24_distinct_items(panelshow):
     assert client.post("/api/agent/v1/publish", headers=agent, json={
         **body, "overview": body["overview"][:-1]
     }).status_code == 422
-    repeated = [body["overview"][0]] * 24
+    repeated = [body["overview"][0]] * 20
     assert client.post("/api/agent/v1/publish", headers=agent, json={
         **body, "overview": repeated
+    }).status_code == 422
+    assert client.post("/api/agent/v1/publish", headers=agent, json={
+        **body, "overview": body["overview"] + [{"label": "Extra", "value": "Extra", "icon": "lucide:plus"}]
     }).status_code == 422
 
     body["overview"][0]["icon"] = "server"
@@ -222,12 +225,35 @@ def test_overview_requires_24_distinct_items(panelshow):
     assert client.post("/api/agent/v1/publish", headers=agent, json=body).status_code == 422
 
 
+def test_project_overview_accepts_public_api_values(panelshow):
+    client, bind, _ = panelshow
+    owner = bind("1", "first-site")
+    _, agent = issue(client, owner)
+    body = sample()
+    metric = body["overview"][0]
+    metric["value_api"] = {"url": "https://api.example.test/metrics", "json_path": ["data", "stars"], "suffix": " stars"}
+    for invalid_url in ("http://api.example.test/metrics", "https://127.0.0.1/", "https://service.internal/", "https://user@api.example.test/"):
+        invalid = {**metric, "value_api": {**metric["value_api"], "url": invalid_url}}
+        assert client.post("/api/agent/v1/publish", headers=agent, json={
+            **body, "overview": [invalid, *body["overview"][1:]]
+        }).status_code == 422
+
+    result = client.post("/api/agent/v1/publish", headers=agent, json=body)
+    assert result.status_code == 200, result.text
+    project = client.get(f"/api/projects/first-site/{result.json()['project_id']}").json()["data"]
+    for collection in ("projectInfos", "homeAttributes", "sidebarAttributes", "heroAttributes"):
+        saved = project[collection][0]
+        assert saved["value"] == metric["value"] and saved["valueCode"] == ""
+        assert saved["valueApi"] == {"prefix": "", **metric["value_api"]}
+
+
 def test_create_without_screenshots_goes_first(panelshow):
     client, bind, db = panelshow
     owner = bind("1", "first-site")
     db.write_json("first-site", "projects.json", [
         {"id": "formerly-first", "order": "-3"}, {"id": "legacy"}, {"id": "last", "order": 10}
     ])
+    assert client.get("/api/agent/onboarding", headers=owner).json() == {"show": False}
     _, agent = issue(client, owner)
     response = client.post("/api/agent/v1/publish", headers=agent, json=sample())
     assert response.status_code == 200, response.text

@@ -48,7 +48,7 @@ import {
 } from "lucide-react";
 import { ProjectInfo } from "@/types/store";
 import { TimelineItem } from "@/types/timeline";
-import { useExecuteCode } from "@/hooks/useExecuteCode";
+import { useProjectInfoValue } from "@/hooks/useProjectInfoValue";
 
 interface MobileNavigationData {
   activeSection: string
@@ -187,8 +187,8 @@ const getColorTheme = (index: number): string => {
 };
 
 const ProjectStatItem = ({ attribute, colorClass }: { attribute: ProjectInfo; colorClass: string }) => {
-  const { value, loading } = useExecuteCode(attribute.valueCode, attribute.value ?? "")
-  const displayValue = attribute.valueCode ? (loading ? "计算中..." : value) : (attribute.value ?? "")
+  const { value, loading } = useProjectInfoValue(attribute)
+  const displayValue = loading ? "计算中..." : value
 
   return (
     <div className="space-y-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useExecuteCode } from '@/hooks/useExecuteCode';
+import { useProjectInfoValue } from '@/hooks/useProjectInfoValue';
 import type { ProjectInfo } from '@/types/store';
 import * as LucideIcons from 'lucide-react';
 import { Loader2 } from 'lucide-react';
@@ -62,7 +62,7 @@ const renderAttributeIcon = (iconName: string | undefined, iconClassName: string
 };
 
 export function ProjectAttributeItem({ attribute, theme }: ProjectAttributeItemProps) {
-  const { value, loading } = useExecuteCode(attribute.valueCode, '加载中...');
+  const { value, loading } = useProjectInfoValue(attribute);
 
   return (
     <div className="text-center space-y-1">
@@ -81,7 +81,7 @@ export function ProjectAttributeItem({ attribute, theme }: ProjectAttributeItemP
             <span>计算中...</span>
           </>
         ) : (
-          value
+          value || '—'
         )}
       </p>
     </div>

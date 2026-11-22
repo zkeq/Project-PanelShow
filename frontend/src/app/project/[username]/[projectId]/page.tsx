@@ -10,6 +10,7 @@ import ProjectContent from '@/components/project/ProjectContent'
 import BackgroundDecorations from '@/components/layout/BackgroundDecorations'
 import { fetchProject } from '@/lib/api'
 import { parseFeatureChipAppearance, type FeatureChipAppearance } from '@/lib/feature-chips'
+import { readProjectValueApi } from '@/lib/project-info'
 import type { ProjectInfo } from '@/types/store'
 import type { TimelineItem } from '@/types/timeline'
 import { useProfileData } from '@/hooks/useProfileData'
@@ -90,6 +91,7 @@ const mapProjectInfo = (raw: unknown, fallbackId: string): ProjectInfo | null =>
     icon,
     label,
     valueCode,
+    valueApi: readProjectValueApi(raw.valueApi),
     showInHomepage: Boolean(raw.showInHomepage),
     showInSidebar: Boolean(raw.showInSidebar),
     showInHero: Boolean(raw.showInHero),

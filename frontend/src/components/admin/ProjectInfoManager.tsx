@@ -10,7 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Icon } from '@iconify/react';
 import { IconPicker } from './IconPicker';
-import { useExecuteCode } from '@/hooks/useExecuteCode';
+import { useProjectInfoValue } from '@/hooks/useProjectInfoValue';
+import type { ProjectValueApi } from '@/types/store';
 import { Loader2 } from 'lucide-react';
 import { JS_CODE_EXECUTOR_GUIDE } from '@/constants/projectJsonPrompt';
 import {
@@ -48,6 +49,7 @@ export interface ProjectInfo {
   label: string;
   valueCode: string;
   value?: string;
+  valueApi?: ProjectValueApi;
   showInHomepage: boolean;
   showInSidebar: boolean;
   showInHero: boolean;
@@ -96,7 +98,7 @@ const colorThemes = [
 
 // 预览项组件
 function PreviewItem({ info }: { info: ProjectInfo }) {
-  const { value, loading } = useExecuteCode(info.valueCode, info.value ?? '');
+  const { value, loading } = useProjectInfoValue(info);
 
   return (
     <div className="space-y-2">
@@ -352,8 +354,9 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
 
   const handleAddInfo = () => {
     // 检查限制
-    const homepageCount = infos.filter(info => info.showInHomepage).length;
-    const sidebarCount = infos.filter(info => info.showInSidebar).length;
+    const otherInfos = infos.filter(info => info.id !== editingInfo?.id);
+    const homepageCount = otherInfos.filter(info => info.showInHomepage).length;
+    const sidebarCount = otherInfos.filter(info => info.showInSidebar).length;
 
     if (formData.showInHomepage && homepageCount >= 4) {
       alert('首页最多只能展示4个信息');
@@ -412,6 +415,7 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
       label: info.label,
       valueCode: info.valueCode,
       value: info.value,
+      valueApi: info.valueApi,
       showInHomepage: info.showInHomepage,
       showInSidebar: info.showInSidebar,
       showInHero: info.showInHero,
@@ -518,6 +522,17 @@ export function ProjectInfoManager({ projectInfos, onChange }: ProjectInfoManage
               placeholder="如：Next.js + FastAPI"
             />
           </div>
+
+          {formData.valueApi && (
+            <div className="space-y-2 rounded-md border p-3">
+              <p className="text-sm font-medium">Agent 配置的公开 API</p>
+              <p className="break-all text-xs text-muted-foreground">{formData.valueApi.url}</p>
+              <p className="text-xs text-muted-foreground">读取字段 {formData.valueApi.json_path.join(' → ')}</p>
+              <Button type="button" variant="outline" size="sm" onClick={() => setFormData(prev => ({ ...prev, valueApi: undefined }))}>
+                移除 API 取值
+              </Button>
+            </div>
+          )}
 
           {/* 信息值代码 */}
           <div className="space-y-2">
