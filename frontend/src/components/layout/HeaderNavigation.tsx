@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Settings, ArrowLeft } from 'lucide-react'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { useRouter } from 'next/navigation'
+import { usePortfolioHomePath } from '@/hooks/usePortfolioHomePath'
 
 interface HeaderNavigationProps {
   username: string
@@ -24,13 +25,14 @@ export default function HeaderNavigation({
   titleHref
 }: HeaderNavigationProps) {
   const router = useRouter()
+  const homePath = usePortfolioHomePath(username)
 
   const handleManageClick = () => {
     router.push('/admin')
   }
 
   const hasBackButton = typeof backHref === 'string' && backHref.trim().length > 0
-  const resolvedTitleHref = titleHref ?? `/project/${encodeURIComponent(username)}`
+  const resolvedTitleHref = titleHref ?? homePath
   const trimmedAvatar = typeof avatar === 'string' && avatar.trim().length > 0 ? avatar.trim() : undefined
   const trimmedDisplayName =
     typeof displayName === 'string' && displayName.trim().length > 0 ? displayName.trim() : undefined

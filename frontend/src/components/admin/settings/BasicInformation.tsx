@@ -164,15 +164,8 @@ export function BasicInformation() {
 
       setForm(mapped);
       setStatusBanner(null);
-      if (mapped.siteAddress) {
-        setSiteAddressStatus("available");
-        setSiteAddressMessage(
-          `你的站点将在 https://${typeof window !== "undefined" ? window.location.host : "localhost"}/project/${mapped.siteAddress} 生效`
-        );
-      } else {
-        setSiteAddressStatus("idle");
-        setSiteAddressMessage("");
-      }
+      setSiteAddressStatus(mapped.siteAddress ? "available" : "idle");
+      setSiteAddressMessage("");
     } catch (error) {
       const message = error instanceof Error ? error.message : "加载个人资料失败";
       setStatusBanner({ type: "error", message });
@@ -204,9 +197,7 @@ export function BasicInformation() {
 
     if (effectiveUsername && trimmedValue === effectiveUsername.toLowerCase()) {
       setSiteAddressStatus("available");
-      setSiteAddressMessage(
-        `你的站点将在 https://${typeof window !== "undefined" ? window.location.host : "localhost"}/project/${trimmedValue} 生效`
-      );
+      setSiteAddressMessage("");
       return;
     }
 
@@ -220,9 +211,7 @@ export function BasicInformation() {
         if (form.siteAddress.trim().toLowerCase() !== currentValue) return;
         if (result.available) {
           setSiteAddressStatus("available");
-          setSiteAddressMessage(
-            `你的站点将在 https://${typeof window !== "undefined" ? window.location.host : "localhost"}/project/${currentValue} 生效`
-          );
+          setSiteAddressMessage("");
         } else {
           setSiteAddressStatus("unavailable");
           setSiteAddressMessage(result.message || "站点地址不可用");
@@ -323,9 +312,7 @@ export function BasicInformation() {
       setRawProfile(payload);
       setForm((prev) => ({ ...prev, siteAddress: targetUsername }));
       setSiteAddressStatus("available");
-      setSiteAddressMessage(
-        `你的站点将在 https://${typeof window !== "undefined" ? window.location.host : "localhost"}/project/${targetUsername} 生效`
-      );
+      setSiteAddressMessage("");
       setStatusBanner({ type: "success", message: "基本信息已保存" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "保存失败，请稍后重试";

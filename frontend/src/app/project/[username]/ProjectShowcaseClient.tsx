@@ -7,6 +7,7 @@ import { AlertCircle, Loader2 } from 'lucide-react'
 
 import { checkUsername } from '@/lib/api'
 import { useProfileData } from '@/hooks/useProfileData'
+import { usePortfolioHomePath } from '@/hooks/usePortfolioHomePath'
 import { useProjectsAndTimeline } from '@/hooks/useProjectsAndTimeline'
 import { useTechStackConfig } from '@/hooks/useTechStackConfig'
 import HeaderNavigation from '@/components/layout/HeaderNavigation'
@@ -76,6 +77,7 @@ const deriveSelectionFromSegments = (segments: readonly string[]) => {
 
 export default function ProjectShowcaseClient({ username, children }: ProjectShowcaseClientProps) {
   const router = useRouter()
+  const homePath = usePortfolioHomePath(username)
   const encodedUsername = encodeURIComponent(username)
   const basePath = `/project/${encodedUsername}`
 
@@ -219,7 +221,7 @@ export default function ProjectShowcaseClient({ username, children }: ProjectSho
 
       if (section === 'all-projects') {
         setActiveSection(section)
-        router.push(basePath)
+        router.push(homePath)
         return
       }
 
@@ -238,7 +240,7 @@ export default function ProjectShowcaseClient({ username, children }: ProjectSho
       setActiveSection(section)
       router.push(`${basePath}/category/${encodeURIComponent(section)}`)
     },
-    [activeTab, basePath, router]
+    [activeTab, basePath, homePath, router]
   )
 
   useEffect(() => {
@@ -260,13 +262,13 @@ export default function ProjectShowcaseClient({ username, children }: ProjectSho
       setActiveTab(tab)
       if (tab === 'projects') {
         setActiveSection('all-projects')
-        router.push(basePath)
+        router.push(homePath)
       } else {
         setActiveSection('all-timeline')
         router.push(`${basePath}/timeline`)
       }
     },
-    [basePath, router]
+    [basePath, homePath, router]
   )
 
   const handleSidebarToggle = () => {
@@ -358,7 +360,6 @@ export default function ProjectShowcaseClient({ username, children }: ProjectSho
         username={username}
         avatar={headerAvatar}
         displayName={headerDisplayName}
-        titleHref={basePath}
       />
 
       <div className="flex">

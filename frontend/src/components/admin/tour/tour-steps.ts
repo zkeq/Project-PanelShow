@@ -27,7 +27,7 @@ const dashboardSteps: TourStep[] = [
     id: 'site-url',
     target: 'site-banner',
     title: '这是你的公开站点地址',
-    body: '看右侧预览窗顶部的绿色横幅：绑定用户名后，那里就是你的线上主页。点「前往」即可在新标签页实时预览访客视角——改任何内容，刷新即生效。',
+    body: '绑定站点后，这里会显示作品集地址。每条地址都可以复制分享，也可以直接打开预览。',
     icon: Globe2,
     route: '/admin',
   },

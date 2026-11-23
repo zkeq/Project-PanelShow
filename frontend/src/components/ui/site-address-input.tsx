@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { CANONICAL_SITE_ORIGIN, getPortfolioSiteUrl } from '@/lib/site-domain';
 import { cn } from '@/lib/utils';
 
 export type AddressAvailabilityStatus = 'idle' | 'checking' | 'available' | 'unavailable' | 'error';
@@ -80,18 +81,17 @@ export function SiteAddressInput({
     return 'bg-muted-foreground/40';
   }, [hasError, hasRemoteIssue, isAvailable, isChecking]);
 
-  const host = typeof window !== 'undefined' ? window.location.host : 'localhost';
+  const siteOrigin = typeof window !== 'undefined' ? window.location.origin : CANONICAL_SITE_ORIGIN;
 
   const primaryMessage = useMemo(() => {
     if (hasError) return error;
     if (hasRemoteIssue) return statusMessage || '站点地址已被使用';
     if (isChecking) return statusMessage || '正在检查站点地址可用性...';
-    if (isAvailable) return `你的站点将在 https://${host}/project/${value} 有效`;
     if (value.length > 0) {
-      return statusMessage || `你的站点将在 https://${host}/project/${value} 有效`;
+      return `你的公开作品集地址为 ${getPortfolioSiteUrl(value, siteOrigin)}`;
     }
     return '';
-  }, [error, hasError, hasRemoteIssue, isChecking, isAvailable, statusMessage, host, value]);
+  }, [error, hasError, hasRemoteIssue, isChecking, statusMessage, siteOrigin, value]);
 
   const primaryMessageClass = hasError || hasRemoteIssue
     ? 'text-sm text-red-600 dark:text-red-400'
@@ -130,7 +130,7 @@ export function SiteAddressInput({
       {/* 错误信息或提示信息 */}
       <div className="min-h-[1.25rem] space-y-1">
         {primaryMessage && (
-          <p className={primaryMessageClass}>{primaryMessage}</p>
+          <p className={cn(primaryMessageClass, 'break-all')}>{primaryMessage}</p>
         )}
         <p className="text-xs text-muted-foreground">
           站点地址不可重复，可在设置页修改

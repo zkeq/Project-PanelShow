@@ -12,7 +12,7 @@ export function agentPublishPrompt({
   projectId: string | null;
 }) {
   const action = projectId
-    ? `更新 ${site} 的作品 ${projectId}。先读取 ${apiOrigin}/api/projects/${encodeURIComponent(site)}/${encodeURIComponent(projectId)}，仅提交需要更新的字段。`
+    ? `更新 ${site} 的现有作品 ${projectId}。先读取 ${apiOrigin}/api/projects/${encodeURIComponent(site)}/${encodeURIComponent(projectId)}，按用户指定的范围执行以下步骤，只提交修改的字段。`
     : `为 ${site} 创建一个新的公开作品。请在本轮实际发布。`;
 
   return `请阅读当前工作区的项目，把它整理成一份可公开展示的 PanelShow 技术作品。 ${action}
@@ -29,9 +29,9 @@ export function agentPublishPrompt({
 
 name 填项目正式名称，可加简短用途，例如「Tempo · 个人音乐时间轴」。编辑已有作品时沿用原名。description 用一句话说明项目做什么。
 
-introduction 用作品集的语言，以 Markdown 对项目做详细的总结，简洁明了，不要废话。直接写核心功能、关键技术、实现原理和可核实的亮点。小节用无编号的功能标题，同一个实现只讲一次。第三方接入按用户指定的公开范围写 SDK 或接口职责。
+introduction 用作品集的语言写成简洁、易扫读的 Markdown 项目简介，讲清项目做什么、用了哪些技术、有哪些特点和亮点、架构怎么组织。根据项目自定结构和详略，复杂项目用 Mermaid 展示架构。
 
-复杂项目通过下面两个 API 读取 data.projectIntroduction，参考它们解释技术实现的写法，再用 mermaid 代码围栏画一张简洁架构图。
+复杂项目可读取以下 API 的 data.projectIntroduction 作为参考。
 
 - SparkAI 视频生成平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/sparkai-video-extend-v6.6.4
 - SparkAI 前端 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/sparkai-frontend-v6.6.4-new
@@ -54,7 +54,7 @@ overview 必须是 20 个不同的项，每项填写 label、简短 value 和语
 
 提交前按 schema 核对字段、概览顺序、图标和演示链接。
 
-当 Agent 具备截图能力时，先完成第 4 步的主动截图，再把通过检查的图片上传到对应图集。检查单张文件大小符合 schema 的 asset_upload.max_bytes，再向 reserve 接口发送 JSON，按文件填写 content_type 和实际字节数 size。使用响应中 upload.url 和 upload.headers，将原始文件以 PUT 直传腾讯云 COS，逐项带上签名所需的请求头。COS 请求无需 Agent SK。上传成功后，用同一把 SK 调用 complete 接口，再将已确认的 asset_id 填入对应图集。签名 URL 和 SK 都只用于对应请求，避免把它们写进作品说明或交付内容。
+发布范围包含截图且 Agent 具备截图能力时，先完成第 4 步的主动截图，再把通过检查的图片上传到对应图集。检查单张文件大小符合 schema 的 asset_upload.max_bytes，再向 reserve 接口发送 JSON，按文件填写 content_type 和实际字节数 size。使用响应中 upload.url 和 upload.headers，将原始文件以 PUT 直传腾讯云 COS，逐项带上签名所需的请求头。COS 请求无需 Agent SK。上传成功后，用同一把 SK 调用 complete 接口，再将已确认的 asset_id 填入对应图集。签名 URL 和 SK 都只用于对应请求，避免把它们写进作品说明或交付内容。
 
 SK 七天内可重复使用，只作为 Authorization 请求头中的 Bearer 凭证发送给指定发布 API。每次新提交使用一个新的 Idempotency-Key，同一笔超时重试沿用原键和原内容。
 

@@ -14,6 +14,7 @@ import { readProjectValueApi } from '@/lib/project-info'
 import type { ProjectInfo } from '@/types/store'
 import type { TimelineItem } from '@/types/timeline'
 import { useProfileData } from '@/hooks/useProfileData'
+import { usePortfolioHomePath } from '@/hooks/usePortfolioHomePath'
 
 type ProjectStatus = 'active' | 'maintained' | 'archived' | 'building'
 
@@ -428,7 +429,7 @@ export default function ProjectDetailPage() {
   const params = useParams()
   const username = params.username as string
   const projectId = params.projectId as string
-  const encodedUsername = encodeURIComponent(username)
+  const homePath = usePortfolioHomePath(username)
   const [activeSection, setActiveSection] = useState('overview')
   const [projectData, setProjectData] = useState<ProjectDetailViewModel | null>(null)
   const [loading, setLoading] = useState(true)
@@ -559,8 +560,7 @@ export default function ProjectDetailPage() {
         username={username}
         avatar={headerAvatar}
         displayName={headerDisplayName}
-        backHref={`/project/${encodedUsername}`}
-        titleHref={`/project/${encodedUsername}`}
+        backHref={homePath}
       />
 
       <div className="flex">

@@ -1,5 +1,5 @@
 import type { NextConfig } from "next"
-import { resolveApiOrigin } from "./src/lib/site-domain"
+import { LOCAL_PORTFOLIO_DOMAIN, resolveApiOrigin } from "./src/lib/site-domain"
 
 type RemotePattern = {
   protocol: "http" | "https"
@@ -53,6 +53,7 @@ const nextConfig: NextConfig = {
   },
   // 添加开发时的热重载配置
   ...(process.env.NODE_ENV === "development" && {
+    allowedDevOrigins: [`*.${LOCAL_PORTFOLIO_DOMAIN}`],
     webpack: (config, { dev }) => {
       if (dev && config.watchOptions) {
         config.watchOptions = {

@@ -6,11 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  ArrowUpRight,
+  Check,
   Plus,
   Search,
   BarChart3,
   Calendar,
   Clock,
+  Copy,
+  Link2,
   Users,
   Loader2,
   Globe2,
@@ -19,6 +23,7 @@ import {
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { readProjectValueApi } from '@/lib/project-info';
+import { CANONICAL_SITE_ORIGIN, getPathBasedPortfolioUrl, getPortfolioSiteUrl } from '@/lib/site-domain';
 import { useGlobalStore } from '@/store/useGlobalStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useTourStore } from '@/components/admin/tour/useTourStore';
@@ -308,6 +313,65 @@ interface AdminDashboardProps {
   className?: string;
 }
 
+function SiteAddressRow({ label, url, independent = false }: { label: string; url: string; independent?: boolean }) {
+  const [copyStatus, setCopyStatus] = useState<'copied' | 'failed'>();
+  const Icon = independent ? Check : Link2;
+
+  const copyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('failed');
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-0.5 py-2 sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:gap-x-3">
+      <p className="col-start-1 row-start-1 flex items-center gap-1.5 text-sm font-medium">
+        <Icon aria-hidden="true" className={cn('size-3.5 shrink-0', independent ? 'text-emerald-600 dark:text-emerald-300' : 'text-emerald-800/55 dark:text-emerald-200/55')} />
+        {label}
+      </p>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="col-start-1 row-start-2 break-all pl-5 font-mono text-xs leading-relaxed text-emerald-800 underline-offset-4 hover:underline dark:text-emerald-100 sm:col-start-2 sm:row-start-1 sm:pl-0 sm:text-sm"
+      >
+        {url}
+      </a>
+      <div className="col-start-2 row-span-2 row-start-1 flex items-center gap-1 sm:col-start-3 sm:row-span-1 sm:gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900 max-sm:size-8 max-sm:px-0 dark:text-emerald-100 dark:hover:bg-emerald-500/20 dark:hover:text-emerald-50 sm:min-w-18"
+          onClick={copyUrl}
+          aria-label={`复制${label}`}
+          title={`复制${label}`}
+        >
+          {copyStatus === 'copied' ? <Check aria-hidden="true" className="size-3.5" /> : <Copy aria-hidden="true" className="size-3.5" />}
+          <span className="hidden sm:inline">{copyStatus === 'copied' ? '已复制' : '复制'}</span>
+        </Button>
+        <Button asChild variant={independent ? 'default' : 'outline'} size="sm" className={cn(
+          'max-sm:size-8 max-sm:px-0 sm:w-18',
+          independent
+            ? 'bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400'
+            : 'border-emerald-300/80 bg-transparent text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-500/40 dark:text-emerald-100 dark:hover:bg-emerald-500/20 dark:hover:text-emerald-50'
+        )}>
+          <a href={url} target="_blank" rel="noopener noreferrer" aria-label={`打开${label}`} title={`打开${label}`}>
+            <span className="hidden sm:inline">前往</span>
+            <ArrowUpRight aria-hidden="true" className="size-3.5" />
+          </a>
+        </Button>
+      </div>
+      <span role="status" className={copyStatus === 'failed' ? 'col-span-full pl-5 text-xs text-destructive' : 'sr-only'}>
+        {copyStatus === 'copied' ? `${label}已复制` : copyStatus === 'failed' ? '复制失败，可手动选择地址复制。' : ''}
+      </span>
+    </div>
+  );
+}
+
 export function AdminDashboard({ className }: AdminDashboardProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('projects');
@@ -324,7 +388,7 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
     if (process.env.NEXT_PUBLIC_SITE_ORIGIN) {
       return process.env.NEXT_PUBLIC_SITE_ORIGIN;
     }
-    return 'https://projects.icodeq.com';
+    return CANONICAL_SITE_ORIGIN;
   });
 
   const hydratedAuth = useAuthStore((state) => state.hydrated);
@@ -501,69 +565,49 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
     });
   }, [timelineItems, searchQuery]);
 
-  const siteUrl = useMemo(() => {
-    if (!boundUsername) return null;
-    if (!siteOrigin) return null;
-    const normalizedOrigin = siteOrigin.replace(/\/$/, '');
-    return `${normalizedOrigin}/project/${encodeURIComponent(boundUsername)}`;
-  }, [siteOrigin, boundUsername]);
+  const siteUrl = boundUsername ? getPortfolioSiteUrl(boundUsername, siteOrigin) : null;
+  const mainSiteUrl = boundUsername ? getPathBasedPortfolioUrl(boundUsername, siteOrigin) : null;
 
   return (
     <>
         {/* 主内容区域 */}
         <div className={cn('relative z-10 container mx-auto p-6 space-y-6 pt-6', className)}>
         {boundUsername && agentToken && <AgentOnboardingCard token={agentToken} />}
-        <div className="flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-emerald-900 shadow-sm dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100 sm:flex-row sm:items-center sm:justify-between" data-tour="site-banner">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
-              <Globe2 className="h-4 w-4" />
+        <section className="rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 text-emerald-900 shadow-sm dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100" data-tour="site-banner">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-200">
+                <Globe2 aria-hidden="true" className="size-4" />
+              </div>
+              <h2 className="text-sm font-semibold">站点访问地址</h2>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium">站点访问地址</p>
-              {siteUrl ? (
-                <p className="text-sm font-mono break-all text-emerald-800 dark:text-emerald-100">{siteUrl}</p>
-              ) : (
-                <p className="text-sm text-emerald-800/80 dark:text-emerald-200/80">
-                  {boundUsername
-                    ? '正在准备站点访问地址...'
-                    : '尚未绑定站点地址，请在欢迎页或设置中完成绑定后查看访问地址'}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href="/admin/agent">Agent 发布</Link>
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              data-tour-launcher
-              onPointerEnter={() => useTourStore.getState().preload()}
-              onFocus={() => useTourStore.getState().preload()}
-              onClick={() => useTourStore.getState().start()}
-              className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-500/40 dark:text-emerald-100 dark:hover:bg-emerald-500/20"
-            >
-              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-              互动引导
-            </Button>
-            {siteUrl ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href="/admin/agent">Agent 发布</Link>
+              </Button>
               <Button
-                asChild
                 size="sm"
-                className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:text-emerald-950 dark:hover:bg-emerald-400"
+                variant="outline"
+                data-tour-launcher
+                onPointerEnter={() => useTourStore.getState().preload()}
+                onFocus={() => useTourStore.getState().preload()}
+                onClick={() => useTourStore.getState().start()}
+                className="border-emerald-300 bg-transparent text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900 dark:border-emerald-500/40 dark:text-emerald-100 dark:hover:bg-emerald-500/20 dark:hover:text-emerald-50"
               >
-                <a href={siteUrl} target="_blank" rel="noopener noreferrer">
-                  前往
-                </a>
+                <Sparkles className="size-3.5" />
+                互动引导
               </Button>
-            ) : (
-              <Button size="sm" disabled className="bg-emerald-500/60 text-white dark:bg-emerald-500/30 dark:text-emerald-200">
-                前往
-              </Button>
-            )}
+            </div>
           </div>
-        </div>
+          {mainSiteUrl ? (
+            <div className="mt-3 divide-y divide-emerald-200/75 border-t border-emerald-200/75 pt-1 dark:divide-emerald-500/20 dark:border-emerald-500/20">
+              {siteUrl && siteUrl !== mainSiteUrl && <SiteAddressRow key={siteUrl} label="独立站点地址" url={siteUrl} independent />}
+              <SiteAddressRow key={mainSiteUrl} label="主站地址" url={mainSiteUrl} />
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-emerald-800/80 dark:text-emerald-200/80">在欢迎页或设置中绑定站点后，即可获得公开作品集地址。</p>
+          )}
+        </section>
         {(fetchError || isFetchingRemote) && (
           <div className="space-y-3">
             {isFetchingRemote && (

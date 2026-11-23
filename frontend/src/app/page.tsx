@@ -13,6 +13,7 @@ import {
   OpenSourceStarSection,
 } from "@/components/home/OpenSourceStarGuide";
 import { CNB_REPO_URL, GITHUB_REPO_URL } from "@/constants/open-source";
+import { getPortfolioSiteUrl } from "@/lib/site-domain";
 import { useState } from "react";
 
 function MobileMenu() {
@@ -91,7 +92,7 @@ export default function Home() {
   };
 
   const handleStartHome = () => {
-    window.location.href = "/project/zkeq"
+    window.location.href = getPortfolioSiteUrl("zkeq", window.location.origin);
   }
 
   return (

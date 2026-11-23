@@ -8,6 +8,7 @@ import TimelineCard from "@/components/TimelineCard";
 import { TimelineItem } from "@/types/timeline";
 import { Calendar, ChevronDown, ChevronUp, Activity } from "lucide-react";
 import { getProfile } from "@/lib/api";
+import { usePortfolioHomePath } from "@/hooks/usePortfolioHomePath";
 
 interface DevelopmentTimelineSectionProps {
   projectId: string;
@@ -20,6 +21,7 @@ export default function DevelopmentTimelineSection({
   username,
   initialTimelineItems,
 }: DevelopmentTimelineSectionProps) {
+  const homePath = usePortfolioHomePath(username);
   const [isExpanded, setIsExpanded] = useState(false);
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(Array.isArray(initialTimelineItems) ? initialTimelineItems : []);
   const [loading, setLoading] = useState(true);
@@ -141,7 +143,7 @@ export default function DevelopmentTimelineSection({
                 {timelineItems.length > 0 && (
                   <div className="text-center pt-4 border-t">
                     <Button variant="link" size="sm" asChild>
-                      <a href={`/project/${username}`} className="text-primary hover:underline">
+                      <a href={homePath} className="text-primary hover:underline">
                         前往全部动态页面查看更多 →
                       </a>
                     </Button>
