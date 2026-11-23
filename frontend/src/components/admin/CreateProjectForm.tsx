@@ -982,11 +982,11 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
         <Bot aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
         <div className="space-y-1">
           <p className="text-sm font-semibold">{isEditMode ? '用 Agent 更新此作品' : '用 Agent 发布新作品'}</p>
-          <p className="text-sm text-muted-foreground">把工作台里的提示词交给能访问项目仓库的 Agent，它会整理作品说明和素材并提交。</p>
+          <p className="text-sm text-muted-foreground">{isEditMode ? '更新沿用你的 Agent SK。工作台会把此作品的项目 ID 填进提示词。' : '把工作台里的提示词交给能访问项目仓库的 Agent，它会整理作品说明和素材并提交。'}</p>
         </div>
       </div>
       <Button asChild size="sm" className="shrink-0 self-start sm:self-auto">
-        <Link href={agentHref} prefetch={false}>打开 Agent 工作台</Link>
+        <Link href={agentHref} prefetch={false}>{isEditMode ? '打开 Agent 更新工作台' : '打开 Agent 工作台'}</Link>
       </Button>
     </aside>
   );

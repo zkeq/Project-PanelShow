@@ -12,14 +12,14 @@ export function agentPublishPrompt({
   projectId: string | null;
 }) {
   const action = projectId
-    ? `更新 ${site} 的现有作品 ${projectId}。先读取 ${apiOrigin}/api/projects/${encodeURIComponent(site)}/${encodeURIComponent(projectId)}，按用户指定的范围执行以下步骤，只提交修改的字段。`
-    : `为 ${site} 创建一个新的公开作品。请在本轮实际发布。`;
+    ? `更新 ${site} 的现有作品 ${projectId}。先读取 ${apiOrigin}/api/projects/${encodeURIComponent(site)}/${encodeURIComponent(projectId)}。发布 JSON 必须包含 "project_id": ${JSON.stringify(projectId)}，其余字段只提交用户要求修改的内容。确认返回 operation 为 update 且 project_id 一致。`
+    : `为 ${site} 创建一个新的公开作品，发布 JSON 省略 project_id。请在本轮实际发布。`;
 
   return `请阅读当前工作区的项目，把它整理成一份可公开展示的 PanelShow 技术作品。 ${action}
 
 接口规范：${apiOrigin}/api/agent/v1/schema
 发布 API：${apiOrigin}
-本次发布密钥：${key}
+Agent SK：${key}
 
 ### 1. 找到能代表项目的体验
 
@@ -29,12 +29,19 @@ export function agentPublishPrompt({
 
 name 填项目正式名称，可加简短用途，例如「Tempo · 个人音乐时间轴」。编辑已有作品时沿用原名。description 用一句话说明项目做什么。
 
-introduction 用作品集的语言写成简洁、易扫读的 Markdown 项目简介，讲清项目做什么、用了哪些技术、有哪些特点和亮点、架构怎么组织。根据项目自定结构和详略，复杂项目用 Mermaid 展示架构。
+写正文前，从以下标准作品中挑 2–3 个与当前项目接近的案例，读取 API 响应里的 data.projectIntroduction，参考技术信息的组织、深度和作品集语气。
 
-复杂项目可读取以下 API 的 data.projectIntroduction 作为参考。
-
-- SparkAI 视频生成平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/sparkai-video-extend-v6.6.4
 - SparkAI 前端 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/sparkai-frontend-v6.6.4-new
+- SparkAI 视频生成平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/sparkai-video-extend-v6.6.4
+- IMYAI 智能助手官网 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/imyai-intelligent-assistant
+- Self Music 私人音乐流媒体平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/self-music-platform
+- Project-PanelShow 作品集平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/project-panelshow-2025
+- 渺软公益 CDN 平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/miaorun-free-cdn-platform
+- Self Cinema 私人影院系统 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/self-cinema-private-theater-system
+
+introduction 用作品集的语言写 Markdown 项目说明。简短概述项目用途，用列表或表格按实际层次列明技术栈及各自职责。用短条目展示核心功能和技术亮点，选有代表性的实现，结合源码说清组件、机制和结果。
+
+「项目架构」单独写，说明各层模块的职责、接口如何连接、核心数据如何经过这些模块，以及实际部署方式。复杂项目补一张分层 Mermaid 架构图，标出关键数据流。结构和篇幅按项目的复杂度决定。
 
 ### 3. 准备 20 项概览并规划展示位
 
@@ -56,7 +63,7 @@ overview 必须是 20 个不同的项，每项填写 label、简短 value 和语
 
 发布范围包含截图且 Agent 具备截图能力时，先完成第 4 步的主动截图，再把通过检查的图片上传到对应图集。检查单张文件大小符合 schema 的 asset_upload.max_bytes，再向 reserve 接口发送 JSON，按文件填写 content_type 和实际字节数 size。使用响应中 upload.url 和 upload.headers，将原始文件以 PUT 直传腾讯云 COS，逐项带上签名所需的请求头。COS 请求无需 Agent SK。上传成功后，用同一把 SK 调用 complete 接口，再将已确认的 asset_id 填入对应图集。签名 URL 和 SK 都只用于对应请求，避免把它们写进作品说明或交付内容。
 
-SK 七天内可重复使用，只作为 Authorization 请求头中的 Bearer 凭证发送给指定发布 API。每次新提交使用一个新的 Idempotency-Key，同一笔超时重试沿用原键和原内容。
+使用上方的 SK 作为 Authorization: Bearer 凭证，调用 POST ${apiOrigin}/api/agent/v1/publish。同一把 SK 在七天内可新建、更新和上传图片。每次新提交使用新的 Idempotency-Key，同一笔超时重试沿用原键和原内容。
 
 发布成功后，只用返回的 project_id 发起一次 GET ${apiOrigin}/api/projects/${encodeURIComponent(site)}/<project_id>，核对 JSON 中的 data.id 和 data.name，随后交付项目名和发布接口返回的公开链接。`;
 }

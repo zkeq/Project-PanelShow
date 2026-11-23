@@ -179,6 +179,46 @@ def test_edit_preserves_existing_fields_and_detects_stale_keys(panelshow):
     assert db.read_json("first-site", "projects.json")[0]["name"] == "Later agent edit"
 
 
+def test_same_site_key_creates_and_updates_by_project_id(panelshow):
+    client, bind, db = panelshow
+    owner = bind("1", "first-site")
+    other = bind("2", "second-site")
+    db.write_json("first-site", "projects.json", [{"id": "original", "name": "Original", "order": 3}])
+    db.write_json("second-site", "projects.json", [{"id": "other-project", "name": "Other", "order": 1}])
+    key, agent = issue(client, owner)
+
+    path = "/api/agent/v1/publish"
+    created = client.post(path, headers=agent, json=sample())
+    assert created.status_code == 200, created.text
+    assert created.json()["operation"] == "create"
+    new_id = created.json()["project_id"]
+    edited = {"project_id": "original", "description": "Updated card", "introduction": "## Revised architecture"}
+    edit_headers = {**agent, "Idempotency-Key": "test-shared-key-update"}
+    updated = client.post(path, headers=edit_headers, json=edited)
+    assert updated.status_code == 200, updated.text
+    assert updated.json() == {
+        "project_id": "original", "operation": "update", "url": "https://projects.example.test/project/first-site/original"
+    }
+    assert client.post(path, headers=edit_headers, json=edited).json() == updated.json()
+    assert client.post(path, headers=edit_headers, json={**edited, "project_id": new_id}).status_code == 409
+
+    foreign_attempt = {**agent, "Idempotency-Key": "test-foreign-update"}
+    assert client.post(path, headers=foreign_attempt, json={"project_id": "other-project", "name": "Wrong site"}).status_code == 404
+    _, other_agent = issue(client, other)
+    assert client.post(path, headers=other_agent, json=edited).status_code == 404
+    _, legacy_agent = issue(client, owner, "original")
+    assert client.post(path, headers=legacy_agent, json={"project_id": new_id, "name": "Wrong project"}).status_code == 403
+
+    records = client.get("/api/projects/first-site").json()["data"]
+    assert [record["id"] for record in records] == [new_id, "original"]
+    assert records[1]["name"] == "Original" and records[1]["order"] == 3
+    assert records[1]["description"] == edited["description"]
+    assert records[1]["projectIntroduction"] == edited["introduction"]
+    assert db.read_json("second-site", "projects.json")[0]["name"] == "Other"
+    shared_key = next(item for item in client.get("/api/agent/keys", headers=owner).json()["keys"] if item["id"] == key["id"])
+    assert shared_key["project_id"] is None and shared_key["status"] == "ready"
+
+
 def test_expired_key_and_invalid_content(panelshow):
     client, bind, db = panelshow
     owner = bind("1", "first-site")

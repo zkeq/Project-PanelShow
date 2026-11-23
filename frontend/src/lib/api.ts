@@ -90,11 +90,11 @@ export function fetchAgentKeys(token: string, signal?: AbortSignal) {
   return request<{ keys: AgentKey[]; site: string }>('/api/agent/keys', { token, signal, cache: 'no-store' });
 }
 
-export function issueAgentKey(token: string, projectId: string | null) {
+export function issueAgentKey(token: string) {
   return request<{ id: string; token: string; expires_at: number; site: string }>('/api/agent/keys', {
     method: 'POST',
     token,
-    body: JSON.stringify({ project_id: projectId }),
+    body: JSON.stringify({}),
   });
 }
 

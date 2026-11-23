@@ -121,6 +121,10 @@ class ProjectInfo(Input):
 
 
 class Submission(Input):
+    project_id: str | None = Field(
+        default=None, min_length=1, max_length=160,
+        description="更新时填写同一站点下的现有作品 ID，省略此字段则新建作品。",
+    )
     slug: str | None = Field(
         default=None, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$", max_length=64,
         description="仅新建可用的链接前缀，服务会补上唯一后缀。",
@@ -128,7 +132,7 @@ class Submission(Input):
     name: ShortText | None = Field(default=None, description="公开作品名称。")
     description: Summary | None = Field(default=None, description="首页卡片上的一句话项目简介。")
     introduction: str | None = Field(
-        default=None, max_length=24000, description="详情页的 Markdown 项目说明，便于扫读关键技术、机制和亮点。"
+        default=None, max_length=24000, description="作品集风格的 Markdown 项目说明，包含技术栈、关键实现和架构。"
     )
     tags: list[ShortText] | None = Field(default=None, max_length=8, description="项目分类标签。")
     status: Literal["active", "building", "iterated", "archived"] | None = Field(
@@ -307,7 +311,7 @@ async def list_keys(user: dict = Depends(auth.require_auth)) -> dict:
         initialize(connection)
         rows = connection.execute(
             """SELECT * FROM agent_keys WHERE owner = ? AND site = ?
-               ORDER BY rowid DESC LIMIT 10""",
+               ORDER BY target IS NOT NULL, rowid DESC LIMIT 10""",
             (owner, site),
         ).fetchall()
     return {"keys": [key_info(row) for row in rows], "site": site}
@@ -416,7 +420,8 @@ async def publication_schema() -> dict:
             "path": "/api/agent/v1/publish",
             "idempotency_header": "Idempotency-Key",
             "create_required": ["name", "description", "introduction", "highlights", "overview"],
-            "ordering": "新建排在作品集最前；定向更新保留原有位置。",
+            "update": "使用同一把 Agent SK，填写现有作品的 project_id 和需要修改的字段。作品必须属于密钥绑定的站点。",
+            "ordering": "新建排在作品集最前，更新保留原有位置。",
         },
         "overview_display": {
             "total": OVERVIEW_SIZE,
@@ -443,7 +448,7 @@ async def publication_schema() -> dict:
             "search_url_template": "https://api.iconify.design/search?query={keyword}",
         },
         "authorization": "Bearer <Agent SK>",
-        "key": {"valid_days": KEY_TTL // 86400, "reusable": True},
+        "key": {"valid_days": KEY_TTL // 86400, "reusable": True, "scope": "同一站点内新建、更新与图片上传"},
         "result_fields": ["project_id", "url", "operation"],
     }
 
@@ -602,7 +607,10 @@ async def publish(
                 raise HTTPException(409, "此幂等键已用于另一份提交内容")
             return json.loads(receipt["result"])
 
-        site, target = key["site"], key["target"]
+        site, bound_target = key["site"], key["target"]
+        if bound_target and payload.project_id and payload.project_id != bound_target:
+            raise HTTPException(403, "此密钥仅能更新绑定的作品")
+        target = bound_target or payload.project_id
         if target and payload.slug:
             raise HTTPException(422, "编辑作品时不能修改地址")
         if not target and not all(
@@ -628,7 +636,7 @@ async def publish(
         already_written = existing is not None and all(existing.get(name) == value for name, value in fields.items())
         if target and existing is None:
             raise HTTPException(404, "项目不存在")
-        if target and not already_written and revision(existing) != key["revision"]:
+        if bound_target and not already_written and revision(existing) != key["revision"]:
             raise HTTPException(409, "作品内容已变更，请重新生成编辑密钥")
         if not target and existing and not already_written:
             raise HTTPException(409, "作品已存在，请重新生成密钥")
@@ -658,7 +666,7 @@ async def publish(
         )
         connection.execute(
             "UPDATE agent_keys SET request_key = ?, request_digest = ?, result = ?, revision = ? WHERE id = ?",
-            (request_key, request_digest, serialized_result, revision(project) if target else None, key["id"]),
+            (request_key, request_digest, serialized_result, revision(project) if bound_target else None, key["id"]),
         )
         connection.executemany(
             "UPDATE agent_assets SET committed = 1 WHERE key_id = ? AND id = ?",

@@ -113,9 +113,7 @@ export function AgentPublishing({
         const { keys, site } = await fetchAgentKeys(token, controller.signal);
         if (controller.signal.aborted) return;
         setSite(site);
-        const key = activeKeyId
-          ? keys.find((item) => item.id === activeKeyId)
-          : keys.find((item) => item.project_id === projectId);
+        const key = keys.find((item) => item.project_id === null);
         setActiveKey(key);
         if (key?.status !== "ready") setSecret(undefined);
         if (key?.status === "ready") timer = setTimeout(check, 4000);
@@ -129,7 +127,7 @@ export function AgentPublishing({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [token, projectId, activeKeyId, keyStatus, isPreview]);
+  }, [token, activeKeyId, keyStatus, isPreview]);
 
   useEffect(() => {
     if (!activeKeyId || keyStatus !== "ready" || !keyRecoverable || keyValue) return;
@@ -180,11 +178,11 @@ export function AgentPublishing({
     setMessage("");
     setCopied(undefined);
     try {
-      const key = await issueAgentKey(token, projectId);
+      const key = await issueAgentKey(token);
       setSite(key.site);
       setActiveKey({
         id: key.id,
-        project_id: projectId,
+        project_id: null,
         expires_at: key.expires_at,
         status: "ready",
         recoverable: true,
@@ -192,7 +190,7 @@ export function AgentPublishing({
       });
       setSecret({ id: key.id, value: key.token });
       if (onboarding) await copy("prompt", formatPrompt(key.site, key.token));
-      else setMessage("发布密钥已生成，可以复制提示词。");
+      else setMessage("Agent SK 已生成，可以复制提示词。");
     } catch (failure) {
       setError(errorMessage(failure));
     } finally {
@@ -231,9 +229,10 @@ export function AgentPublishing({
     }
   }
 
-  const publication = activeKey?.result;
+  const lastResult = activeKey?.result;
+  const publication = !projectId || lastResult?.project_id === projectId ? lastResult : undefined;
   const keyReady = keyStatus === "ready";
-  const generateLabel = keyReady ? "重新生成" : "生成密钥";
+  const generateLabel = keyReady ? "重新生成" : "生成 Agent SK";
 
   return (
     <Card className="border-primary/20">
@@ -243,14 +242,18 @@ export function AgentPublishing({
           {onboarding ? "用 Agent 发布第一个作品" : projectId ? "用 Agent 更新此作品" : "用 Agent 发布作品"}
         </CardTitle>
         <CardDescription>
-          {isPreview ? "引导预览。请在独立的工作台生成密钥并复制提示词。" : "把提示词粘贴给能访问项目仓库的 Agent。它会整理介绍和截图，并提交到你的作品集。"}
+          {isPreview
+            ? "引导预览。请在独立的工作台生成密钥并复制提示词。"
+            : projectId
+              ? "复制完整提示词交给 Agent。工作台会填入同一把 Agent SK 和此作品的项目 ID。"
+              : "把提示词粘贴给能访问项目仓库的 Agent。它会整理介绍和截图，并提交到你的作品集。"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <section data-tour="agent-key" className="space-y-3 rounded-xl border bg-muted/30 p-4" aria-labelledby={keyFieldId + "-label"}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Label id={keyFieldId + "-label"} htmlFor={keyFieldId}>发布密钥（SK）</Label>
+              <Label id={keyFieldId + "-label"} htmlFor={keyFieldId}>Agent SK</Label>
               <Badge variant={keyReady ? "secondary" : "outline"}>
                 {keyStatus ? keyStatusLabels[keyStatus] : "待生成"}
               </Badge>
@@ -294,7 +297,8 @@ export function AgentPublishing({
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            同一把密钥可上传图片，并在 7 天内{projectId ? "多次更新这个作品" : "多次发布作品"}。
+            同一把 SK 在 7 天内可新建作品、更新作品和上传图片。
+            {projectId && <>更新目标 <code className="break-all">{projectId}</code>。</>}
             {keyReady && activeKey
               ? `有效至 ${new Date(activeKey.expires_at * 1000).toLocaleString("zh-CN", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}。`
               : ""}
