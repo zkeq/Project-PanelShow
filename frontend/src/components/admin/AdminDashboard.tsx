@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ArrowUpRight,
+  Bot,
   Check,
   Plus,
   Search,
@@ -582,8 +583,16 @@ export function AdminDashboard({ className }: AdminDashboardProps) {
               <h2 className="text-sm font-semibold">站点访问地址</h2>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button asChild variant="outline" size="sm">
-                <Link href="/admin/agent">Agent 发布</Link>
+              <Button asChild size="sm" className={cn(
+                'relative isolate overflow-hidden font-semibold',
+                'before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:opacity-30',
+                'before:[background-image:radial-gradient(circle,currentColor_0.65px,transparent_0.85px)] before:[background-size:6px_6px]',
+                'before:[mask-image:linear-gradient(to_right,transparent_15%,black)]'
+              )}>
+                <Link href="/admin/agent">
+                  <Bot aria-hidden="true" className="size-4" />
+                  Agent 发布
+                </Link>
               </Button>
               <Button
                 size="sm"
