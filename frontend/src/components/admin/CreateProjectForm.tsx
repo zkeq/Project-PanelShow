@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { DynamicTags } from './DynamicTags';
 import { ProjectStatusSelector, type ProjectStatus } from './ProjectStatusSelector';
 import { ProjectTypeSelector, type ProjectType } from './ProjectTypeSelector';
@@ -31,6 +30,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useRouter } from 'next/navigation';
 import {
+  Bot,
   Monitor,
   Smartphone,
   Github,
@@ -48,8 +48,7 @@ import {
   Sparkles,
   Save,
   Send,
-  ListOrdered,
-  Copy
+  ListOrdered
 } from 'lucide-react';
 import { StatusToast, type StatusToastState } from '@/components/admin/settings/StatusToast';
 import {
@@ -57,7 +56,6 @@ import {
   parseFeatureChipAppearance,
   type FeatureChipPresetId
 } from '@/lib/feature-chips';
-import { PROJECT_JSON_PROMPT_GUIDE } from '@/constants/projectJsonPrompt';
 
 const DEFAULT_STATUS_OPTIONS: ProjectStatus[] = [
   { id: 'active', label: '活跃项目', color: 'bg-green-500' },
@@ -314,7 +312,6 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
   const canUploadAssets = Boolean(token && boundUsername);
   const canUseDraft = !isEditMode;
   const [statusToast, setStatusToast] = useState<StatusToastState | null>(null);
-  const promptGuideRef = useRef<HTMLPreElement | null>(null);
   const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const requireAuthContext = () => {
@@ -698,32 +695,6 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
     }
   };
 
-  const handleCopyPromptGuide = useCallback(async () => {
-    if (typeof window !== 'undefined' && promptGuideRef.current) {
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        const range = document.createRange();
-        range.selectNodeContents(promptGuideRef.current);
-        selection.addRange(range);
-      }
-    }
-
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(PROJECT_JSON_PROMPT_GUIDE);
-        setStatusToast({ type: 'success', message: '提示词已复制到剪贴板' });
-      } else {
-        throw new Error('当前环境不支持自动复制，请手动复制');
-      }
-    } catch (error) {
-      console.error('复制提示词失败:', error);
-      const message =
-        error instanceof Error ? error.message : '复制提示词失败，请手动复制';
-      setStatusToast({ type: 'error', message });
-    }
-  }, [setStatusToast]);
-
   // 在组件挂载时尝试恢复草稿（仅创建模式）
   useEffect(() => {
     if (!canUseDraft) return;
@@ -1000,6 +971,25 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
     : '完善作品集信息，以便在前端页面完整展示。';
   const submitButtonLabel = isEditMode ? '更新作品集' : '创建作品集';
   const submitButtonLoadingLabel = isEditMode ? '更新中…' : '创建中…';
+  const agentHref = isEditMode && projectId ? `/admin/agent?project=${encodeURIComponent(projectId)}` : '/admin/agent';
+  const agentBanner = !projectError && (
+    <aside
+      aria-label="Agent 发布提示"
+      data-tour="agent-publishing"
+      className="flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div className="flex min-w-0 items-start gap-3">
+        <Bot aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-primary" />
+        <div className="space-y-1">
+          <p className="text-sm font-semibold">{isEditMode ? '用 Agent 更新此作品' : '用 Agent 发布新作品'}</p>
+          <p className="text-sm text-muted-foreground">把工作台里的提示词交给能访问项目仓库的 Agent，它会整理作品说明和素材并提交。</p>
+        </div>
+      </div>
+      <Button asChild size="sm" className="shrink-0 self-start sm:self-auto">
+        <Link href={agentHref} prefetch={false}>打开 Agent 工作台</Link>
+      </Button>
+    </aside>
+  );
 
   if (isEditMode && projectLoading) {
     return (
@@ -1008,6 +998,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
           <h1 className="text-3xl font-semibold text-foreground">{pageTitle}</h1>
           <p className="text-sm text-muted-foreground">正在加载项目数据，请稍候...</p>
         </div>
+        {agentBanner}
         <div className="rounded-md border border-dashed border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
           正在加载项目数据，请稍候...
         </div>
@@ -1020,12 +1011,9 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       <div className="space-y-2">
         <h1 className="text-3xl font-semibold text-foreground">{pageTitle}</h1>
         <p className="text-sm text-muted-foreground">{pageSubtitle}</p>
-        {isEditMode && projectId && !projectError && (
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/admin/agent?project=${encodeURIComponent(projectId)}`}>用 Agent 更新此作品</Link>
-          </Button>
-        )}
       </div>
+
+      {agentBanner}
 
       {settingsLoading && (
         <div className="rounded-md border border-dashed border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
@@ -1341,43 +1329,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
           </CardContent>
         </Card>
 
-        <Card data-tour="ai-prompt">
-          <CardHeader>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <CardTitle>
-                  <ListOrdered className="inline h-5 w-5 mr-2" />
-                  JSON 提示词信息
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  参考下列结构编写提示词，可快速生成符合表单要求的完整项目 JSON 配置。
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-                onClick={handleCopyPromptGuide}
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                复制提示词
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-72 w-full rounded-md border bg-muted/40">
-              <pre
-                ref={promptGuideRef}
-                className="whitespace-pre-wrap px-4 py-3 text-xs leading-5"
-              >
-                {PROJECT_JSON_PROMPT_GUIDE}
-              </pre>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
-        <Card data-tour="ai-json">
+        <Card>
           <CardHeader>
             <CardTitle>
               <FileCode className="inline h-5 w-5 mr-2" />

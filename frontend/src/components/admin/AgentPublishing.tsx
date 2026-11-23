@@ -64,11 +64,13 @@ export function AgentPublishing({
   token,
   projectId = null,
   onboarding = false,
+  previewSite,
   onDismiss,
 }: {
   token: string;
   projectId?: string | null;
   onboarding?: boolean;
+  previewSite?: string;
   onDismiss?: () => void;
 }) {
   const keyFieldId = useId();
@@ -87,6 +89,7 @@ export function AgentPublishing({
   const keyStatus = activeKey?.status;
   const keyRecoverable = activeKey?.recoverable;
   const keyValue = secret?.id === activeKeyId && keyStatus === "ready" ? secret?.value ?? "" : "";
+  const isPreview = previewSite !== undefined;
 
   function formatPrompt(targetSite: string, key: string) {
     return agentPublishPrompt({
@@ -97,9 +100,11 @@ export function AgentPublishing({
     });
   }
 
-  const prompt = site ? formatPrompt(site, keyValue || "〈生成发布密钥后自动填入〉") : "";
+  const promptSite = previewSite ?? site;
+  const prompt = promptSite ? formatPrompt(promptSite, keyValue || "〈生成发布密钥后自动填入〉") : "";
 
   useEffect(() => {
+    if (isPreview) return;
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -124,7 +129,7 @@ export function AgentPublishing({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [token, projectId, activeKeyId, keyStatus]);
+  }, [token, projectId, activeKeyId, keyStatus, isPreview]);
 
   useEffect(() => {
     if (!activeKeyId || keyStatus !== "ready" || !keyRecoverable || keyValue) return;
@@ -238,11 +243,11 @@ export function AgentPublishing({
           {onboarding ? "用 Agent 发布第一个作品" : projectId ? "用 Agent 更新此作品" : "用 Agent 发布作品"}
         </CardTitle>
         <CardDescription>
-          把提示词粘贴给能访问项目仓库的 Agent。它会整理介绍和截图，并提交到你的作品集。
+          {isPreview ? "引导预览。请在独立的工作台生成密钥并复制提示词。" : "把提示词粘贴给能访问项目仓库的 Agent。它会整理介绍和截图，并提交到你的作品集。"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <section className="space-y-3 rounded-xl border bg-muted/30 p-4" aria-labelledby={keyFieldId + "-label"}>
+        <section data-tour="agent-key" className="space-y-3 rounded-xl border bg-muted/30 p-4" aria-labelledby={keyFieldId + "-label"}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Label id={keyFieldId + "-label"} htmlFor={keyFieldId}>发布密钥（SK）</Label>
@@ -254,7 +259,7 @@ export function AgentPublishing({
               {keyReady && (
                 <Button variant="ghost" size="sm" onClick={() => void revoke()} disabled={!!pending}>撤销密钥</Button>
               )}
-              <Button variant="outline" size="sm" onClick={() => void generate()} disabled={!!pending}>
+              <Button variant="outline" size="sm" onClick={() => void generate()} disabled={isPreview || !!pending}>
                 {pending === "generate" ? <Loader2 className="animate-spin" /> : <KeyRound aria-hidden="true" />}
                 {onboarding ? generateLabel + "并复制提示词" : generateLabel}
               </Button>
@@ -296,7 +301,7 @@ export function AgentPublishing({
             {keyReady && !keyRecoverable && "这是旧版密钥，重新生成一次即可在有效期内随时查看。"}
           </p>
         </section>
-        {(!onboarding || keyValue) && <section className="space-y-3" aria-labelledby={promptFieldId + "-label"}>
+        {(!onboarding || keyValue) && <section data-tour="agent-prompt" className="space-y-3" aria-labelledby={promptFieldId + "-label"}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
               <Label id={promptFieldId + "-label"} htmlFor={promptFieldId}>Agent 提示词</Label>
@@ -364,9 +369,11 @@ export function AgentOnboardingCard({ token }: { token: string }) {
 
 export function AgentPublishingPage({ projectId }: { projectId: string | null }) {
   const token = useAuthStore((state) => state.token);
+  const boundUsername = useAuthStore((state) => state.user?.bound_username);
+  const previewSite = typeof window !== "undefined" && window.parent !== window ? boundUsername ?? "" : undefined;
   return (
     <div className="relative mx-auto max-w-4xl px-4 py-8">
-      {token && <AgentPublishing key={projectId ?? "create"} token={token} projectId={projectId} />}
+      {token && <AgentPublishing key={projectId ?? "create"} token={token} projectId={projectId} previewSite={previewSite} />}
     </div>
   );
 }
