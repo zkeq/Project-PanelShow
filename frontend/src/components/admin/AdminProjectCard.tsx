@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  EyeOff,
   Calendar,
   BarChart3,
   Code,
@@ -40,6 +41,7 @@ import {
 import NextLink from "next/link";
 import { useState } from "react";
 import Markdown from "@/components/Markdown";
+import { getPortfolioPath } from '@/lib/site-domain';
 import { Project } from '@/types/store';
 import {
   DropdownMenu,
@@ -108,6 +110,7 @@ export function AdminProjectCard({
   isReordering = false,
 }: AdminProjectCardProps) {
   const [localExpanded, setLocalExpanded] = useState(false);
+  const [linkCopyStatus, setLinkCopyStatus] = useState<'copied' | 'failed'>();
 
   // 使用传入的展开状态或本地状态
   const isExpanded = expandedProjects.includes(project.id) || localExpanded;
@@ -222,7 +225,17 @@ export function AdminProjectCard({
     "linear-gradient(to bottom, rgba(99, 102, 241, 0.15), rgba(13, 13, 13, 0.9))", // indigo - 更深
   ];
 
-  const projectUrl = username ? `/project/${username}/${project.id}` : null;
+  const projectUrl = username ? `${getPortfolioPath(username)}/${encodeURIComponent(project.id)}` : null;
+
+  const copyProjectLink = async () => {
+    if (!projectUrl) return;
+    try {
+      await navigator.clipboard.writeText(new URL(projectUrl, window.location.origin).href);
+      setLinkCopyStatus('copied');
+    } catch {
+      setLinkCopyStatus('failed');
+    }
+  };
 
   return (
     <Card
@@ -417,6 +430,23 @@ export function AdminProjectCard({
                 {project.name}
               </h3>
             </div>
+            {project.hidden && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary">
+                  <EyeOff aria-hidden="true" className="size-3" />
+                  隐藏作品
+                </Badge>
+                {projectUrl && (
+                  <Button type="button" variant="ghost" size="sm" className="h-7" onClick={copyProjectLink}>
+                    <Link2 aria-hidden="true" className="size-3.5" />
+                    {linkCopyStatus === 'copied' ? '已复制' : '复制访问链接'}
+                  </Button>
+                )}
+                <span role="status" className="text-xs text-muted-foreground">
+                  {linkCopyStatus === 'failed' && '无法复制，请打开作品后复制地址。'}
+                </span>
+              </div>
+            )}
 
             {/* 项目简介 */}
             <div className="relative">

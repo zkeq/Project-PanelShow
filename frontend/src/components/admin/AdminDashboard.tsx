@@ -208,6 +208,7 @@ const mapProjectFromApi = (raw: unknown, fallbackIndex = 0): Project => {
     id: pickString(raw['id'], pickString(raw['project_id'], `${Date.now()}`)),
     name: pickString(raw['name'], '未命名项目'),
     description: pickString(raw['description'], '暂无项目描述'),
+    hidden: raw['hidden'] === true,
     status,
     category: pickString(raw['category'], 'general'),
     previewImage: previewFallback,

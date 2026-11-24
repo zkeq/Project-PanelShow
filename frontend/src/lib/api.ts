@@ -259,11 +259,15 @@ export function fetchProjectStats(username: string, token: string) {
   );
 }
 
-export function fetchProjects(username: string, token: string) {
-  return request<ProjectListResponse>(
-    `/api/projects/${encodeURIComponent(username)}`,
-    { token }
+function fetchPortfolioList<T>(resource: 'projects' | 'tech-stacks' | 'timeline', username: string, token?: string) {
+  return request<T>(
+    `/api/${resource}/${encodeURIComponent(username)}${token ? '?include_hidden=true' : ''}`,
+    { token, cache: 'no-store' }
   );
+}
+
+export function fetchProjects(username: string, token: string) {
+  return fetchPortfolioList<ProjectListResponse>('projects', username, token);
 }
 
 export function reorderProjects(
@@ -293,11 +297,7 @@ export interface TechStackUpdateResponse {
 }
 
 export function fetchTechStacks(username: string, token?: string) {
-  const options = token ? { token } : undefined;
-  return request<TechStackListResponse>(
-    `/api/tech-stacks/${encodeURIComponent(username)}`,
-    options
-  );
+  return fetchPortfolioList<TechStackListResponse>('tech-stacks', username, token);
 }
 
 export function updateTechStacks(
@@ -356,15 +356,12 @@ export function fetchProjectDetail(
 ) {
   return request<ProjectDetailResponse>(
     `/api/projects/${encodeURIComponent(username)}/${encodeURIComponent(projectId)}`,
-    options
+    { cache: 'no-store', ...options }
   );
 }
 
 export function fetchTimeline(username: string, token: string) {
-  return request<TimelineListResponse>(
-    `/api/timeline/${encodeURIComponent(username)}`,
-    { token }
-  );
+  return fetchPortfolioList<TimelineListResponse>('timeline', username, token);
 }
 
 export function createTimeline(
@@ -557,7 +554,7 @@ export function fetchProject<T = Record<string, unknown>>(
 ) {
   return request<ProjectDetailResponse<T>>(
     `/api/projects/${encodeURIComponent(username)}/${encodeURIComponent(projectId)}`,
-    { token }
+    { token, cache: 'no-store' }
   );
 }
 

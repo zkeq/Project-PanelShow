@@ -255,6 +255,8 @@ async def notify_site_initialized(username: str) -> None:
 
 
 async def notify_project_created(username: str, project: Dict[str, Any]) -> None:
+    if db.is_project_hidden(project):
+        return
     title = _resolve_title(project, "title", "name")
     lines = [
         f"用户 {username} 新建项目《{title}》",
@@ -268,6 +270,8 @@ async def notify_project_created(username: str, project: Dict[str, Any]) -> None
 
 
 async def notify_project_updated(username: str, project: Dict[str, Any]) -> None:
+    if db.is_project_hidden(project):
+        return
     title = _resolve_title(project, "title", "name")
     lines = [
         f"用户 {username} 更新项目《{title}》",
@@ -280,7 +284,20 @@ async def notify_project_updated(username: str, project: Dict[str, Any]) -> None
     await _post_notification(message)
 
 
+def _timeline_project_is_hidden(username: str, item: Dict[str, Any]) -> bool:
+    project_id = item.get("project_id") or item.get("projectId")
+    if not project_id:
+        return False
+    return any(
+        project.get("id") == project_id
+        for project in db.read_json(username, "projects.json")
+        if db.is_project_hidden(project)
+    )
+
+
 async def notify_timeline_created(username: str, item: Dict[str, Any]) -> None:
+    if _timeline_project_is_hidden(username, item):
+        return
     title = _resolve_title(item, "title", "summary", "content")
     lines = [
         f"用户 {username} 新建动态《{title}》",
@@ -294,6 +311,8 @@ async def notify_timeline_created(username: str, item: Dict[str, Any]) -> None:
 
 
 async def notify_timeline_updated(username: str, item: Dict[str, Any]) -> None:
+    if _timeline_project_is_hidden(username, item):
+        return
     title = _resolve_title(item, "title", "summary", "content")
     lines = [
         f"用户 {username} 更新动态《{title}》",

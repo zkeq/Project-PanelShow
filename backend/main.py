@@ -16,7 +16,7 @@ from urllib import parse as urllib_parse
 from urllib import request as urllib_request
 from urllib.parse import quote
 
-from fastapi import FastAPI, HTTPException, Depends, Body, Path, UploadFile, File, Query, Request
+from fastapi import FastAPI, HTTPException, Depends, Body, Path, UploadFile, File, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import RedirectResponse
@@ -142,6 +142,26 @@ def check_bound_username(current_user: dict, username: str):
         raise HTTPException(status_code=403, detail="只能管理绑定的用户数据")
 
     return bound_username
+
+
+def project_list_visibility(
+    username: str, response: Response, request: Request, include_hidden: bool = False
+) -> bool:
+    response.headers["Cache-Control"] = "no-store"
+    if include_hidden:
+        credentials = request.headers.get("Authorization", "")
+        scheme, _, token = credentials.partition(" ")
+        if scheme.lower() != "bearer" or not token.strip():
+            raise HTTPException(401, "查看隐藏作品需要登录", headers={"WWW-Authenticate": "Bearer"})
+        check_bound_username(auth.resolve_user_from_token(token.strip()), username)
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers["Vary"] = "Authorization"
+    return include_hidden
+
+
+def validate_project_hidden(data: Dict[str, Any]) -> None:
+    if "hidden" in data and not isinstance(data["hidden"], bool):
+        raise HTTPException(422, "hidden 必须为布尔值")
 
 
 # ==================== 认证接口 ====================
@@ -444,6 +464,7 @@ async def create_project(
     """
     # 检查绑定的用户名
     check_bound_username(current_user, username)
+    validate_project_hidden(data)
 
     with db.project_write():
         projects = db.read_json(username, "projects.json")
@@ -475,12 +496,14 @@ async def create_project(
 
 
 @app.get("/api/projects/{username}", tags=["项目管理"])
-async def get_projects(username: str):
+async def get_projects(username: str, include_hidden: bool = Depends(project_list_visibility)):
     """获取项目列表"""
-    raw_projects = db.read_json(username, "projects.json")
+    raw_projects = get_user_projects_and_ids(username)
 
     ordered_records = []
     for index, project in enumerate(raw_projects):
+        if not include_hidden and db.is_project_hidden(project):
+            continue
         if isinstance(project, dict):
             order_value = parse_order_value(project.get("order"), index)
             project["order"] = order_value
@@ -516,10 +539,12 @@ async def get_projects(username: str):
 
 
 @app.get("/api/tech-stacks/{username}", tags=["项目管理"])
-async def get_tech_stack_configuration(username: str):
+async def get_tech_stack_configuration(username: str, include_hidden: bool = Depends(project_list_visibility)):
     """获取技术栈分类配置（公开接口）"""
 
     projects = get_user_projects_and_ids(username)
+    if not include_hidden:
+        projects = [project for project in projects if not db.is_project_hidden(project)]
     valid_project_ids = extract_valid_project_ids(projects)
 
     raw_config = db.read_json(username, "settings_techStacks.json")
@@ -580,13 +605,17 @@ async def update_tech_stack_configuration(
 
 
 @app.get("/api/projects/{username}/{project_id}", tags=["项目管理"])
-async def get_project(username: str, project_id: str):
+async def get_project(username: str, project_id: str, response: Response):
     """获取项目详情（包含关联的时间线）"""
     projects = db.read_json(username, "projects.json")
     project = next((p for p in projects if p.get("id") == project_id), None)
 
     if not project:
         raise HTTPException(status_code=404, detail="项目不存在")
+
+    if db.is_project_hidden(project):
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+        response.headers["Cache-Control"] = "no-store"
 
     # 获取该项目相关的时间线
     timeline = db.read_json(username, "timeline.json")
@@ -632,6 +661,7 @@ async def update_project(
     """
     # 检查绑定的用户名
     check_bound_username(current_user, username)
+    validate_project_hidden(data)
 
     with db.project_write():
         projects = db.read_json(username, "projects.json")
@@ -651,6 +681,8 @@ async def update_project(
 
         # 处理 order
         existing_project = projects[project_index] if isinstance(projects[project_index], dict) else {}
+        if "hidden" in existing_project:
+            data.setdefault("hidden", existing_project["hidden"])
         existing_order = parse_order_value(existing_project.get("order"), project_index)
         if "order" in data:
             data["order"] = parse_order_value(data.get("order"), existing_order)
@@ -866,11 +898,22 @@ async def create_timeline(
 
 
 @app.get("/api/timeline/{username}", tags=["时间线管理"])
-async def get_timeline(username: str):
+async def get_timeline(username: str, include_hidden: bool = Depends(project_list_visibility)):
     """获取时间线列表，按时间倒序返回"""
     timeline = db.read_json(username, "timeline.json")
     if not isinstance(timeline, list):
         timeline = []
+
+    if not include_hidden:
+        hidden_ids = {
+            project.get("id") for project in get_user_projects_and_ids(username)
+            if db.is_project_hidden(project) and isinstance(project.get("id"), str)
+        }
+        if hidden_ids:
+            timeline = [
+                item for item in timeline
+                if not isinstance(item, dict) or str(item.get("project_id") or item.get("projectId")) not in hidden_ids
+            ]
 
     reversed_timeline = list(reversed(timeline))
     return {"success": True, "data": reversed_timeline, "total": len(reversed_timeline)}

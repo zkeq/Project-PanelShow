@@ -219,6 +219,77 @@ def test_same_site_key_creates_and_updates_by_project_id(panelshow):
     assert shared_key["project_id"] is None and shared_key["status"] == "ready"
 
 
+def test_hidden_projects_are_unlisted_but_accessible_by_link(panelshow):
+    client, bind, db = panelshow
+    owner = bind("1", "first-site")
+    visitor = bind("2", "second-site")
+    projects_url = "/api/projects/first-site"
+    timeline_url = "/api/timeline/first-site"
+    stacks_url = "/api/tech-stacks/first-site"
+    hidden_project = {"id": "share-by-link", "name": "Hidden", "hidden": True}
+    assert client.post(projects_url, headers=owner, json={"id": "public", "name": "Public"}).status_code == 200
+    assert client.post(projects_url, headers=owner, json=hidden_project).status_code == 200
+    db.write_json("first-site", "timeline.json", [
+        {"id": "public-log", "project_id": "public"}, {"id": "hidden-log", "project_id": "share-by-link"},
+    ])
+    db.write_json("first-site", "settings_techStacks.json", {"categories": [{
+        "id": "backend", "label": "Backend", "children": [{
+            "id": "python", "label": "Python", "projectIds": ["public", "share-by-link"],
+        }],
+    }]})
+
+    public_list = client.get(projects_url).json()
+    assert public_list["total"] == 1
+    assert [project["id"] for project in public_list["data"]] == ["public"]
+    assert [item["id"] for item in client.get(timeline_url).json()["data"]] == ["public-log"]
+    assignments = client.get(stacks_url).json()["data"]["projectAssignments"]
+    assert set(assignments) == {"public"}
+
+    detail = client.get(f"{projects_url}/share-by-link")
+    assert detail.status_code == 200
+    assert detail.headers["X-Robots-Tag"] == "noindex, nofollow"
+    assert detail.json()["data"]["hidden"] is True
+    assert [item["id"] for item in detail.json()["data"]["timeline_items"]] == ["hidden-log"]
+
+    for url in (projects_url, timeline_url, stacks_url):
+        private_url = f"{url}?include_hidden=true"
+        assert client.get(private_url).status_code == 401
+        assert client.get(private_url, headers=visitor).status_code == 403
+        private_response = client.get(private_url, headers=owner)
+        assert private_response.status_code == 200
+        assert private_response.headers["Cache-Control"] == "private, no-store"
+        assert "Authorization" in private_response.headers["Vary"]
+        assert "share-by-link" in private_response.text
+
+    detail_url = f"{projects_url}/share-by-link"
+    assert client.put(detail_url, headers=owner, json={"name": "Renamed"}).json()["data"]["hidden"] is True
+    assert client.get(projects_url).json()["total"] == 1
+    assert client.put(detail_url, headers=owner, json={"name": "Renamed", "hidden": "false"}).status_code == 422
+    assert client.put(detail_url, headers=owner, json={"name": "Renamed", "hidden": False}).status_code == 200
+    assert client.get(projects_url).json()["total"] == 2
+    assert "X-Robots-Tag" not in client.get(detail_url).headers
+
+
+def test_agent_can_publish_hidden_project_and_make_it_listed(panelshow):
+    client, bind, _ = panelshow
+    owner = bind("1", "first-site")
+    _, key_headers = issue(client, owner)
+    publish_url = "/api/agent/v1/publish"
+    assert client.post(publish_url, headers=key_headers, json={**sample(), "hidden": "true"}).status_code == 422
+    submission = client.post(publish_url, headers=key_headers, json={**sample(), "hidden": True})
+    assert submission.status_code == 200, submission.text
+    project_id = submission.json()["project_id"]
+    projects_url = "/api/projects/first-site"
+    assert client.get(projects_url).json()["total"] == 0
+    assert client.get(f"{projects_url}/{project_id}").json()["data"]["hidden"] is True
+
+    updated = client.post(publish_url, headers={**key_headers, "Idempotency-Key": "make-listed"}, json={
+        "project_id": project_id, "hidden": False,
+    })
+    assert updated.status_code == 200, updated.text
+    assert client.get(projects_url).json()["data"][0]["id"] == project_id
+
+
 def test_expired_key_and_invalid_content(panelshow):
     client, bind, db = panelshow
     owner = bind("1", "first-site")

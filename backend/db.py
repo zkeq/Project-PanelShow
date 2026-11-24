@@ -15,6 +15,10 @@ from typing import Any, Iterator, List
 DATA_DIR = Path(__file__).parent / "data"
 
 
+def is_project_hidden(project: Any) -> bool:
+    return isinstance(project, dict) and project.get("hidden") is True
+
+
 def get_user_dir(username: str) -> Path:
     """获取用户数据目录"""
     return DATA_DIR / "users" / username

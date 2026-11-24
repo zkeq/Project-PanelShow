@@ -99,6 +99,7 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
         const overview: ProjectOverview = {
           name: toStringOrFallback(data.name, "项目演示"),
           description: typeof data.description === "string" ? data.description : "",
+          hidden: data.hidden === true,
           tags: Array.isArray(data.tags)
             ? data.tags.filter((tag): tag is string => typeof tag === "string")
             : [],
@@ -267,6 +268,7 @@ export default function ProjectMainDemoPage({ params }: DemoPageProps) {
 
   return (
     <div className="min-h-screen bg-background relative">
+      {projectInfo?.hidden && <meta name="robots" content="noindex, nofollow" />}
       <div className="fixed inset-0 z-0">
         <BackgroundDecorations />
       </div>

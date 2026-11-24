@@ -130,6 +130,7 @@ class Submission(Input):
         description="仅新建可用的链接前缀，服务会补上唯一后缀。",
     )
     name: ShortText | None = Field(default=None, description="公开作品名称。")
+    hidden: bool | None = Field(default=None, strict=True, description="为 true 时从公开列表隐藏作品，持有链接仍可访问。")
     description: Summary | None = Field(default=None, description="首页卡片上的一句话项目简介。")
     introduction: str | None = Field(
         default=None, max_length=24000, description="作品集风格的 Markdown 项目说明，包含技术栈、关键实现和架构。"
@@ -536,7 +537,7 @@ def project_fields(payload: Submission, assets: dict[str, str]) -> tuple[dict, s
             })
         return result
 
-    fields = payload.model_dump(include={"name", "description", "tags", "is_open_source"}, exclude_none=True)
+    fields = payload.model_dump(include={"name", "description", "tags", "is_open_source", "hidden"}, exclude_none=True)
     if payload.is_open_source is not None:
         fields["isOpenSource"] = fields.pop("is_open_source")
     for input_field, output_field in (("source_url", "sourceUrl"), ("demo_url", "previewUrl")):

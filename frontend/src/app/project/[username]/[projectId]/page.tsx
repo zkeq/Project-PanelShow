@@ -51,6 +51,7 @@ interface ProjectDetailViewModel {
   id: string
   name: string
   description: string
+  hidden: boolean
   status: ProjectStatus
   statusLabel?: string
   projectType?: string
@@ -406,6 +407,7 @@ const mapProjectDetail = (raw: unknown): ProjectDetailViewModel | null => {
     id,
     name,
     description,
+    hidden: raw.hidden === true,
     status: statusResult.id,
     statusLabel: statusResult.label,
     projectType,
@@ -556,6 +558,7 @@ export default function ProjectDetailPage() {
 
   return (
     <div ref={pageRef} className="min-h-screen bg-background">
+      {projectData.hidden && <meta name="robots" content="noindex, nofollow" />}
       <HeaderNavigation
         username={username}
         avatar={headerAvatar}

@@ -31,6 +31,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useRouter } from 'next/navigation';
 import {
   Bot,
+  EyeOff,
   Monitor,
   Smartphone,
   Github,
@@ -235,6 +236,7 @@ interface ProjectFormData {
   leftSidebarMarkdown: string;
   rightSidebarMarkdown: string;
   isOpenSource: boolean;
+  hidden: boolean;
   readme: string;
   screenshots: Array<{
     id: string;
@@ -267,6 +269,7 @@ const INITIAL_FORM_DATA: ProjectFormData = {
   leftSidebarMarkdown: '',
   rightSidebarMarkdown: '',
   isOpenSource: false,
+  hidden: false,
   readme: '',
   screenshots: [],
   projectInfos: [],
@@ -617,6 +620,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
         isOpenSource: typeof projectRecord.isOpenSource === 'boolean'
           ? projectRecord.isOpenSource
           : Boolean(sourceUrl),
+        hidden: projectRecord.hidden === true,
         readme,
         screenshots,
         projectInfos,
@@ -683,6 +687,10 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       delete cleanedRecord.heroAttributes;
       delete cleanedRecord.timeline_items;
 
+      if ('hidden' in cleanedRecord && typeof cleanedRecord.hidden !== 'boolean') {
+        throw new Error('hidden 必须为布尔值');
+      }
+      cleanedRecord.hidden ??= formData.hidden;
       const mapped = mapProjectRecordToFormData(cleanedRecord as Record<string, unknown>, formData.id);
       setFormData(mapped);
       setJsonEditorDirty(false);
@@ -704,7 +712,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
         const draftData = JSON.parse(savedDraft);
         const { lastSaved, ...projectData } = draftData;
 
-        setFormData(projectData);
+        setFormData({ ...INITIAL_FORM_DATA, ...projectData, hidden: projectData.hidden === true });
         if (typeof lastSaved === 'string') {
           setDraftRestoredAt(new Date(lastSaved).toLocaleString());
         } else {
@@ -1257,6 +1265,23 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
                 <Github className="inline h-4 w-4 mr-1" />
                 项目开源
               </Label>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-lg border bg-muted/30 p-4">
+              <div className="space-y-1">
+                <Label htmlFor="projectHidden" className="flex items-center gap-2">
+                  <EyeOff aria-hidden="true" className="size-4" />
+                  隐藏作品
+                </Label>
+                <p id="projectHiddenDescription" className="text-sm text-muted-foreground">
+                  开启后，作品从公开列表隐藏。任何拿到链接的人仍可访问。
+                </p>
+              </div>
+              <Switch
+                id="projectHidden"
+                aria-describedby="projectHiddenDescription"
+                checked={formData.hidden}
+                onCheckedChange={(hidden) => setFormData(prev => ({ ...prev, hidden }))}
+              />
             </div>
           </CardContent>
         </Card>

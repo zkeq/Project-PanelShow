@@ -163,6 +163,7 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
         const overview: ProjectOverview = {
           name,
           description: typeof data.description === "string" ? data.description : "",
+          hidden: data.hidden === true,
           tags: Array.isArray(data.tags)
             ? data.tags.filter((tag): tag is string => typeof tag === "string")
             : [],
@@ -346,6 +347,7 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
 
   return (
     <div className="min-h-screen bg-background relative">
+      {projectInfo?.hidden && <meta name="robots" content="noindex, nofollow" />}
       <div className="fixed inset-0 z-0 overflow-hidden">
         <BackgroundDecorations />
         <div className="absolute inset-0 overflow-hidden">

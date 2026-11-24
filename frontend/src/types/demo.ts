@@ -2,6 +2,7 @@ export interface ProjectOverview {
   name: string
   description: string
   tags: string[]
+  hidden?: boolean
 }
 
 export interface DemoContent {
@@ -37,6 +38,7 @@ export interface ProjectDetailApiData {
   id: string
   name: string
   description: string
+  hidden?: boolean
   tags?: string[]
   previewUrl?: string
   mobilePreviewUrl?: string

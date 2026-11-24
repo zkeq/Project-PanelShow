@@ -59,6 +59,7 @@ export interface Project {
   id: string
   name: string
   description: string
+  hidden?: boolean
   status: 'active' | 'maintained' | 'completed' | 'building'
   category: string
   techStacks?: string[]
