@@ -29,7 +29,7 @@ Agent SK：${key}
 
 name 填项目正式名称，可加简短用途，例如「Tempo · 个人音乐时间轴」。编辑已有作品时沿用原名。description 用一句话说明项目做什么。
 
-写正文前，从以下标准作品中挑 2–3 个与当前项目接近的案例，读取 API 响应里的 data.projectIntroduction，参考技术信息的组织、深度和作品集语气。
+写正文前，从以下作品集中找到与当前项目对应的案例，读取 API 响应里的 data.projectIntroduction。直接参考该作品正文的语言、组织方式、篇幅和技术深度。
 
 - SparkAI 前端 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/sparkai-frontend-v6.6.4-new
 - SparkAI 视频生成平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/sparkai-video-extend-v6.6.4
@@ -38,8 +38,6 @@ name 填项目正式名称，可加简短用途，例如「Tempo · 个人音乐
 - Project-PanelShow 作品集平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/project-panelshow-2025
 - 渺软公益 CDN 平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/miaorun-free-cdn-platform
 - Self Cinema 私人影院系统 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/self-cinema-private-theater-system
-
-introduction 用作品集的语言写 Markdown 项目说明。简短概述项目用途，用列表或表格按实际层次列明技术栈及各自职责。用短条目展示核心功能和技术亮点，选有代表性的实现，结合源码说清组件、机制和结果。
 
 「项目架构」单独写，说明各层模块的职责、接口如何连接、核心数据如何经过这些模块，以及实际部署方式。复杂项目补一张分层 Mermaid 架构图，标出关键数据流。结构和篇幅按项目的复杂度决定。
 
@@ -53,7 +51,7 @@ overview 必须是 20 个不同的项，每项填写 label、简短 value 和语
 
 ### 4. 主动截图并准备演示
 
-选择 3–6 个有区分度的亮点，把核心体验排第一。先检查能否使用浏览器、设备或截图工具。当 Agent 具备截图能力时，必须主动打开线上演示或启动本地项目，亲手操作关键功能，并在本轮拍摄真实运行画面。每个可视化亮点拍摄 4–6 张，覆盖关键动作和不同状态。动态效果至少拍摄两个可辨别的实际时刻。
+从适合演示的功能中选 3–6 项制作亮点图集，把核心体验排第一。先检查能否使用浏览器、设备或截图工具。当 Agent 具备截图能力时，必须主动打开线上演示或启动本地项目，亲手操作关键功能，并在本轮拍摄真实运行画面。每个可视化亮点拍摄 4–6 张，覆盖关键动作和不同状态。动态效果至少拍摄两个可辨别的实际时刻。
 
 桌面默认输出 2560×1440，移动端保持原比例，长边目标 2560 像素。每次截图前等内容、字体和可见图片加载完成，确认没有骨架屏、裂图或空白。首张主图是封面，为每张图提供简短 title 和说明确切状态的 caption。demo_url 指向可直接体验的页面。检查截图和正文中的敏感内容。确实没有截图能力时，跳过截图字段并继续发布。
 
