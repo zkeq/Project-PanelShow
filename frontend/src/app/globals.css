@@ -64,9 +64,26 @@
   box-shadow: inset 0 0 0 1px rgb(100 116 139 / 0.42);
 }
 
-/* Sequence sections use author-supplied fills even when Mermaid renders in dark mode. */
-.dark :is(.markdown-body, .bytemd-preview) .mermaid svg[aria-roledescription="sequence"] rect.rect {
-  filter: brightness(0.25) saturate(5);
+/* Mermaid gives sequence backgrounds fixed fills and scopes its text styles to the SVG ID. */
+.dark :is(.markdown-body, .bytemd-preview) .mermaid svg[aria-roledescription="sequence"] {
+  --sequence-arrow: rgb(219 229 242);
+
+  rect.rect {
+    fill-opacity: 0.14;
+  }
+
+  :is(.messageText, .labelText, .loopText, .noteText),
+  :is(.labelText, .loopText, .noteText) > tspan {
+    fill: rgb(238 243 250) !important;
+  }
+
+  :is(.messageLine0, .messageLine1, :is(marker[id="arrowhead"], marker[id="filled-head"], marker[id="crosshead"]) path) {
+    stroke: var(--sequence-arrow) !important;
+  }
+
+  :is(marker[id="arrowhead"], marker[id="filled-head"]) path {
+    fill: var(--sequence-arrow) !important;
+  }
 }
 
 .markdown-body .mermaid-error {
