@@ -294,6 +294,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
   const [formData, setFormData] = useState<ProjectFormData>(() => ({
     ...INITIAL_FORM_DATA,
   }));
+  const [orderInput, setOrderInput] = useState<string | null>(null);
   const [jsonEditorValue, setJsonEditorValue] = useState(() => JSON.stringify(INITIAL_FORM_DATA, null, 2));
   const [jsonEditorDirty, setJsonEditorDirty] = useState(false);
   const [jsonEditorError, setJsonEditorError] = useState<string | null>(null);
@@ -693,6 +694,7 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
       cleanedRecord.hidden ??= formData.hidden;
       const mapped = mapProjectRecordToFormData(cleanedRecord as Record<string, unknown>, formData.id);
       setFormData(mapped);
+      setOrderInput(null);
       setJsonEditorDirty(false);
       setJsonEditorError(null);
       setStatusToast({ type: 'success', message: 'JSON 已成功应用到表单' });
@@ -1155,17 +1157,23 @@ export function CreateProjectForm({ mode = 'create', projectId }: CreateProjectF
               </Label>
               <Input
                 id="order"
-                type="number"
-                value={formData.order}
+                type="text"
+                pattern="-?[0-9]+"
+                title="请输入整数，例如 -10"
+                value={orderInput ?? formData.order}
                 onChange={(e) => {
-                  const value = ensureOrderValue(e.target.value, 0);
-                  setFormData((prev) => ({ ...prev, order: value }));
+                  const { value, validity } = e.currentTarget;
+                  setOrderInput(value);
+                  if (validity.valid) {
+                    setFormData((prev) => ({ ...prev, order: ensureOrderValue(value) }));
+                  }
                 }}
-                min={0}
-                step={1}
+                onBlur={(e) => {
+                  if (e.currentTarget.validity.valid) setOrderInput(null);
+                }}
               />
               <p className="text-xs text-muted-foreground">
-                数值越小越靠前，保存后也可以在项目列表中通过按钮快速调整顺序。
+                支持负整数，例如 -10。数值越小越靠前。
               </p>
             </div>
 
