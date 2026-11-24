@@ -15,6 +15,7 @@ import type { ProjectInfo } from '@/types/store'
 import type { TimelineItem } from '@/types/timeline'
 import { useProfileData } from '@/hooks/useProfileData'
 import { usePortfolioHomePath } from '@/hooks/usePortfolioHomePath'
+import { usePortfolioPageTitle } from '@/hooks/usePortfolioPageTitle'
 
 type ProjectStatus = 'active' | 'maintained' | 'archived' | 'building'
 
@@ -437,6 +438,7 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const profileData = useProfileData(username)
+  usePortfolioPageTitle(username, profileData.profile, projectData?.name)
   const pageRef = useRef<HTMLDivElement | null>(null)
   const getPageNode = useCallback(() => pageRef.current, [])
   const headerAvatar =

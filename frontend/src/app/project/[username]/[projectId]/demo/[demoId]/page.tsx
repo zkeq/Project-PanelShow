@@ -13,6 +13,7 @@ import ProjectInfo from '@/components/demo/ProjectInfo'
 import DemoInfo from '@/components/demo/DemoInfo'
 import FeatureGallery from '@/components/project/FeatureGallery'
 import { fetchProjectDetail } from '@/lib/api'
+import { usePortfolioPageTitle } from '@/hooks/usePortfolioPageTitle'
 import type {
   DemoContent,
   DemoScreenshot,
@@ -116,6 +117,7 @@ export default function ProjectDemoPage({ params }: DemoPageProps) {
   const encodedUsername = encodeURIComponent(username)
   const encodedProjectId = encodeURIComponent(projectId)
   const profileData = useProfileData(username)
+  usePortfolioPageTitle(username, profileData.profile, projectInfo?.name)
   const headerAvatar =
     typeof profileData.profile?.avatar === 'string' && profileData.profile.avatar.trim().length > 0
       ? profileData.profile.avatar

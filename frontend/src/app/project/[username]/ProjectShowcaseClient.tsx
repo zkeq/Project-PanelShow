@@ -8,6 +8,7 @@ import { AlertCircle, Loader2 } from 'lucide-react'
 import { checkUsername } from '@/lib/api'
 import { useProfileData } from '@/hooks/useProfileData'
 import { usePortfolioHomePath } from '@/hooks/usePortfolioHomePath'
+import { usePortfolioPageTitle } from '@/hooks/usePortfolioPageTitle'
 import { useProjectsAndTimeline } from '@/hooks/useProjectsAndTimeline'
 import { useTechStackConfig } from '@/hooks/useTechStackConfig'
 import HeaderNavigation from '@/components/layout/HeaderNavigation'
@@ -132,6 +133,7 @@ export default function ProjectShowcaseClient({ username, children }: ProjectSho
   )
 
   const profileData = useProfileData(username)
+  usePortfolioPageTitle(username, profileData.profile)
   const headerAvatar = useMemo(() => {
     const rawAvatar = profileData.profile?.avatar
     if (typeof rawAvatar === 'string') {
