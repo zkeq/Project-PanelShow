@@ -39,7 +39,7 @@ name 填项目正式名称，可加简短用途，例如「Tempo · 个人音乐
 - 渺软公益 CDN 平台 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/miaorun-free-cdn-platform
 - Self Cinema 私人影院系统 ${CANONICAL_API_ORIGIN}/api/projects/zkeq/self-cinema-private-theater-system
 
-参考2-4篇相似的示例项目进行组织正文。
+参考2-4篇相似的示例项目进行组织正文。多用 emoji，参考示例项目，然后要点简洁清楚，技术点明确
 
 「项目架构」单独写，说明各层模块的职责、接口如何连接、核心数据如何经过这些模块，以及实际部署方式。复杂项目补一张分层 Mermaid 架构图，标出关键数据流。结构和篇幅按项目的复杂度决定。
 
