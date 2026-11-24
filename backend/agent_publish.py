@@ -28,7 +28,7 @@ KEY_TTL = 7 * 24 * 60 * 60
 KEY_ISSUE_WINDOW = 60 * 60
 UPLOAD_TTL = 15 * 60
 MAX_ASSET_BYTES = 64 * 1024 * 1024
-MAX_ASSETS = 48
+MAX_PENDING_ASSETS = 48
 OVERVIEW_SIZE = 20
 HOMEPAGE_OVERVIEW_SIZE = 4
 SIDEBAR_OVERVIEW_SIZE = 8
@@ -146,7 +146,7 @@ class Submission(Input):
         default=None, max_length=12, description="项目主图集，首张为封面。没有截图能力时可省略。"
     )
     highlights: list[Highlight] | None = Field(
-        default=None, max_length=8, description="特色功能卡片，可各自提供演示链接和图集。"
+        default=None, description="特色功能卡片，可各自提供演示链接和图集。"
     )
     overview: list[ProjectInfo] | None = Field(
         default=None, min_length=OVERVIEW_SIZE, max_length=OVERVIEW_SIZE,
@@ -411,7 +411,8 @@ async def publication_schema() -> dict:
                 "expires_in": UPLOAD_TTL,
             },
             "complete": {"method": "POST", "path": "/api/agent/v1/assets/{asset_id}/complete"},
-            "max_pending_assets_per_key": MAX_ASSETS,
+            "max_pending_assets_per_key": MAX_PENDING_ASSETS,
+            "pending_assets": "只计入尚未通过 complete 接口确认的上传。确认完成的图片可以在同一次作品发布中提交。",
             "max_bytes": MAX_ASSET_BYTES,
             "formats": ["PNG", "JPEG", "WebP"],
             "desktop_capture": {"width": 2560, "height": 1440},
@@ -465,10 +466,10 @@ async def reserve_asset(
         initialize(connection)
         key = authorized_key(connection, credentials.credentials)
         count = connection.execute(
-            "SELECT COUNT(*) FROM agent_assets WHERE key_id = ? AND committed = 0", (key["id"],)
+            "SELECT COUNT(*) FROM agent_assets WHERE key_id = ? AND verified = 0", (key["id"],)
         ).fetchone()[0]
-        if count >= MAX_ASSETS:
-            raise HTTPException(409, "此密钥待提交的图片已达到上限")
+        if count >= MAX_PENDING_ASSETS:
+            raise HTTPException(409, "尚未确认的上传过多，请先确认已上传的图片")
         try:
             cos_key = build_cos_key(key["site"], "agent-projects", f"{asset_id}{IMAGE_EXTENSIONS[payload.content_type]}")
             url = public_cos_url(cos_key)

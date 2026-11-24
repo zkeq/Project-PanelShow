@@ -373,11 +373,38 @@ def test_create_without_screenshots_goes_first(panelshow):
     assert [record["id"] for record in records] == [project_id, "formerly-first", "legacy", "last"]
 
 
+def test_agent_can_publish_more_than_eight_galleries_and_48_images(panelshow):
+    client, bind, _ = panelshow
+    _, agent = issue(client, bind("1", "first-site"))
+
+    galleries = []
+    images = []
+    for group in range(9):
+        screenshots = []
+        for image in range(6):
+            reserved = reserve_image(client, agent)
+            assert reserved.status_code == 201, reserved.text
+            asset_id = reserved.json()["asset_id"]
+            assert complete_image(client, agent, asset_id).status_code == 200
+            images.append(asset_id)
+            screenshots.append({"asset_id": asset_id, "caption": f"Screenshot {image + 1}"})
+        galleries.append({"title": f"Feature {group + 1}", "description": "A feature demo.", "screenshots": screenshots})
+
+    submission = client.post("/api/agent/v1/publish", headers=agent, json={**sample(), "highlights": galleries})
+    assert submission.status_code == 200, submission.text
+    project_id = submission.json()["project_id"]
+    project = client.get(f"/api/projects/first-site/{project_id}").json()["data"]
+    highlights = project["featureHighlights"]
+    assert len(highlights) == 9
+    assert all(len(feature["screenshots"]) == 6 for feature in highlights)
+    assert [image["id"] for feature in highlights for image in feature["screenshots"]] == images
+
+
 def test_key_can_reuse_upload_and_publish_without_losing_previous_receipts(panelshow, monkeypatch):
     import agent_publish
 
     client, bind, _ = panelshow
-    monkeypatch.setattr(agent_publish, "MAX_ASSETS", 1)
+    monkeypatch.setattr(agent_publish, "MAX_PENDING_ASSETS", 1)
     owner = bind("1", "first-site")
     _, agent = issue(client, owner)
     reserved = reserve_image(client, agent)
