@@ -325,6 +325,10 @@
   background-color: transparent !important;
 }
 
+.dark .markdown-body blockquote {
+  color: var(--muted-foreground);
+}
+
 .dark .markdown-body table,
 .dark .markdown-body thead,
 .dark .markdown-body tbody,
